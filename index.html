@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Precompeonato - Torneio de Commander</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>PRECOMPEONATO</h1>
+            <nav>
+                <a href="index.html">Início</a>
+                <a href="index.html#inscricao">Inscrição</a>
+                <a href="index.html#rodadas">Rodadas</a>
+                <a href="index.html#metagame">Metagame</a>
+                <a href="estatisticas.html">Estatísticas</a>
+                <a href="regras.html">Regras</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section id="home" class="hero">
+            <div class="container">
+                <h2>Torneio de Commander - Precons</h2>
+                <p>Campeonato multiplayer com decks pré-montados oficiais</p>
+                <a href="#inscricao" class="btn-primary">Inscreva-se Agora</a>
+            </div>
+        </section>
+
+        <section id="inscricao" class="section">
+            <div class="container">
+                <h2>Inscrição</h2>
+                <form id="inscricaoForm">
+                    <input type="text" name="nome" placeholder="Nome completo" required>
+                    <input type="email" name="email" placeholder="E-mail autorizado" required>
+                    <div style="position: relative;">
+                        <input type="text" id="deckBusca" placeholder="Buscar deck precon..." autocomplete="off">
+                        <div id="deckSugestoes" style="display: none; position: absolute; background: white; border: 1px solid #ddd; width: 100%; max-height: 200px; overflow-y: auto; z-index: 1000;"></div>
+                    </div>
+                    <input type="hidden" name="deckId" id="deckId" required>
+                    <input type="hidden" name="deckNome" id="deckNome" required>
+                    <div id="deckSelecionado" style="display: none; padding: 1rem; background: #f0f0f0; border-radius: 5px; margin: 0.5rem 0;">
+                        <strong>Deck selecionado:</strong> <span id="deckInfo"></span>
+                    </div>
+                    <button type="submit" class="btn-primary">Confirmar Inscrição</button>
+                </form>
+            </div>
+        </section>
+
+        <section id="rodadas" class="section">
+            <div class="container">
+                <h2>Rodadas</h2>
+                <div id="rodadasList"></div>
+            </div>
+        </section>
+
+        <section id="metagame" class="section">
+            <div class="container">
+                <h2>Metagame</h2>
+                <div id="metagameStats"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Precompeonato - Todos os direitos reservados</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

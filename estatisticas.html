@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Veja suas estatísticas detalhadas de partidas">
+    <title>Estatísticas - Precompeonato</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🎴 PRECOMPEONATO</h1>
+            <nav>
+                <a href="index.html">Início</a>
+                <a href="index.html#inscricao">Inscrição</a>
+                <a href="index.html#rodadas">Rodadas</a>
+                <a href="index.html#metagame">Metagame</a>
+                <a href="estatisticas.html">Estatísticas</a>
+                <a href="regras.html">Regras</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="section">
+            <div class="container">
+                <h2>📈 Minhas Estatísticas</h2>
+                
+                <form id="buscarJogadorForm" style="max-width: 700px; margin: 0 auto 2rem;">
+                    <input type="email" id="emailJogador" placeholder="Digite seu email" required>
+                    <select id="filtroCampeonato">
+                        <option value="">📅 Todos os campeonatos</option>
+                    </select>
+                    <button type="submit" class="btn-primary">🔍 Buscar Estatísticas</button>
+                </form>
+
+                <div id="statsContainer" style="display: none;">
+                    <!-- Resumo Geral -->
+                    <div class="stats-resumo">
+                        <h3>🏆 Resumo Geral</h3>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="totalPartidas">0</div>
+                                <div class="stat-label">Partidas Jogadas</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="totalVitorias">0</div>
+                                <div class="stat-label">Vitórias</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="winRate">0%</div>
+                                <div class="stat-label">Win Rate</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="totalPontos">0</div>
+                                <div class="stat-label">Pontos Totais</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Decks Utilizados -->
+                    <div class="stats-section">
+                        <h3>🎴 Meus Decks</h3>
+                        <div id="meusDecks"></div>
+                    </div>
+
+                    <!-- Performance por Deck -->
+                    <div class="stats-section">
+                        <h3>⚔️ Performance por Deck</h3>
+                        <div id="performanceDeck"></div>
+                    </div>
+
+                    <!-- Matchups -->
+                    <div class="stats-section">
+                        <h3>🎯 Matchups (Contra quais decks você joga)</h3>
+                        <div id="matchupsContra"></div>
+                    </div>
+
+                    <!-- Histórico de Partidas -->
+                    <div class="stats-section">
+                        <h3>📜 Histórico de Partidas</h3>
+                        <div id="historicoPartidas"></div>
+                    </div>
+                </div>
+
+                <div id="nenhumDado" class="empty-state" style="display: none;">
+                    <p>😔 Nenhuma estatística encontrada para este email.</p>
+                    <p style="font-size: 0.9rem; margin-top: 0.5rem;">Verifique se você já jogou alguma partida ou se o email está correto.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Precompeonato - Todos os direitos reservados</p>
+        </div>
+    </footer>
+
+    <script src="estatisticas.js"></script>
+</body>
+</html>

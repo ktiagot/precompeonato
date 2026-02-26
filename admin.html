@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Precompeonato</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>PRECOMPEONATO - Admin</h1>
+            <nav>
+                <a href="index.html">Voltar ao Site</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="section">
+            <div class="container">
+                <h2>Criar Campeonato</h2>
+                <form id="campeonatoForm">
+                    <input type="text" name="nome" placeholder="Nome do campeonato" required>
+                    <input type="text" name="edicao" placeholder="Edição (ex: Etapa #1 2026)" required>
+                    <input type="date" name="data_inicio" required>
+                    <textarea name="descricao" placeholder="Descrição" rows="3"></textarea>
+                    <button type="submit" class="btn-primary">Criar Campeonato</button>
+                </form>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <h2>Gerenciar Campeonatos</h2>
+                <div id="campeonatosList"></div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <h2>Cadastrar Precon</h2>
+                <form id="preconForm">
+                    <input type="text" name="nome" placeholder="Nome do deck" required>
+                    <input type="text" name="set_nome" placeholder="Set/Coleção" required>
+                    <input type="text" name="comandante" placeholder="Comandante" required>
+                    <input type="text" name="cores" placeholder="Cores (ex: WU, BRG)" required>
+                    <input type="number" name="ano" placeholder="Ano" required>
+                    <button type="submit" class="btn-primary">Adicionar Precon</button>
+                </form>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <h2>Adicionar Email Permitido</h2>
+                <form id="emailForm">
+                    <input type="email" name="email" placeholder="email@exemplo.com" required>
+                    <button type="submit" class="btn-primary">Adicionar Email</button>
+                </form>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <h2>Gerar Pareamento</h2>
+                <form id="parearForm">
+                    <input type="number" name="rodadaNumero" placeholder="Número da rodada" required>
+                    <input type="date" name="dataRodada" required>
+                    <button type="submit" class="btn-primary">Gerar Pareamento</button>
+                </form>
+                <div id="resultadoPareamento" style="margin-top: 1rem;"></div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <h2>Reportar Resultado</h2>
+                <form id="resultadoForm">
+                    <input type="number" name="mesaId" placeholder="ID da Mesa" required>
+                    <input type="number" name="vencedorId" placeholder="ID do Vencedor" required>
+                    <input type="number" name="segundoId" placeholder="ID do Segundo Lugar">
+                    <button type="submit" class="btn-primary">Salvar Resultado</button>
+                </form>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <h2>Inscritos</h2>
+                <div id="inscritosList"></div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000/api' 
+            : '/api';
+
+        // Criar campeonato
+        document.getElementById('campeonatoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            const response = await fetch(`${API_URL}/campeonatos`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            if (response.ok) {
+                alert('Campeonato criado!');
+                e.target.reset();
+                carregarCampeonatos();
+            } else {
+                alert('Erro ao criar campeonato');
+            }
+        });
+
+        // Listar campeonatos
+        async function carregarCampeonatos() {
+            const response = await fetch(`${API_URL}/campeonatos`);
+            const campeonatos = await response.json();
+            const container = document.getElementById('campeonatosList');
+            
+            container.innerHTML = campeonatos.map(c => `
+                <div class="mesa">
+                    <p><strong>${c.nome}</strong> - ${c.edicao}</p>
+                    <p>Início: ${new Date(c.data_inicio).toLocaleDateString('pt-BR')}</p>
+                    <p>Status: ${c.status}</p>
+                    <button onclick="mudarStatus(${c.id}, 'inscricoes')" class="btn-primary" style="margin: 0.5rem 0.5rem 0 0;">Abrir Inscrições</button>
+                    <button onclick="mudarStatus(${c.id}, 'em_andamento')" class="btn-primary" style="margin: 0.5rem 0.5rem 0 0;">Iniciar</button>
+                    <button onclick="mudarStatus(${c.id}, 'finalizado')" class="btn-primary" style="margin: 0.5rem 0.5rem 0 0;">Finalizar</button>
+                </div>
+            `).join('');
+        }
+
+        window.mudarStatus = async function(id, status) {
+            const response = await fetch(`${API_URL}/campeonatos/${id}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            });
+            
+            if (response.ok) {
+                alert('Status atualizado!');
+                carregarCampeonatos();
+            }
+        };
+
+        // Cadastrar precon
+        document.getElementById('preconForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            const response = await fetch(`${API_URL}/precons`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            if (response.ok) {
+                alert('Precon cadastrado!');
+                e.target.reset();
+            } else {
+                alert('Erro ao cadastrar precon');
+            }
+        });
+
+        // Adicionar email
+        document.getElementById('emailForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            const response = await fetch(`${API_URL}/emails-permitidos`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            if (response.ok) {
+                alert('Email adicionado!');
+                e.target.reset();
+            } else {
+                alert('Erro ao adicionar email');
+            }
+        });
+
+        // Gerar pareamento
+        document.getElementById('parearForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            const response = await fetch(`${API_URL}/parear`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                document.getElementById('resultadoPareamento').innerHTML = `
+                    <div class="mesa" style="background: #d4edda; border-color: #28a745;">
+                        <p><strong>Pareamento gerado!</strong></p>
+                        <p>Rodada: ${result.numero}</p>
+                        <p>Mesas criadas: ${result.mesasCriadas}</p>
+                        <p>Total de jogadores: ${result.totalJogadores}</p>
+                    </div>
+                `;
+                e.target.reset();
+            } else {
+                alert('Erro: ' + result.error);
+            }
+        });
+
+        // Reportar resultado
+        document.getElementById('resultadoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            const response = await fetch(`${API_URL}/resultado`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            if (response.ok) {
+                alert('Resultado salvo!');
+                e.target.reset();
+                carregarInscritos();
+            } else {
+                alert('Erro ao salvar resultado');
+            }
+        });
+
+        // Listar inscritos
+        async function carregarInscritos() {
+            const response = await fetch(`${API_URL}/inscricoes`);
+            const inscricoes = await response.json();
+            const container = document.getElementById('inscritosList');
+            
+            container.innerHTML = inscricoes.map(i => `
+                <div class="mesa">
+                    <p><strong>ID: ${i.id} - ${i.nome}</strong></p>
+                    <p>Email: ${i.email}</p>
+                    <p>Deck: ${i.deck_nome} (${i.comandante})</p>
+                    <p>Pontos: ${i.pontos} | Vitórias: ${i.vitorias} | 2º Lugares: ${i.segundos_lugares}</p>
+                </div>
+            `).join('');
+        }
+
+        carregarInscritos();
+        carregarCampeonatos();
+    </script>
+</body>
+</html>
