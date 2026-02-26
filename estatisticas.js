@@ -2,13 +2,49 @@ const API_URL = window.location.hostname === 'localhost'
     ? 'http://localhost:3000/api' 
     : '/api';
 
-// Carregar campeonatos para filtro
+// Gerenciar tabs
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const tabName = btn.dataset.tab;
+        
+        // Atualizar botões
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // Atualizar conteúdo
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+            content.style.display = 'none';
+        });
+        
+        const activeTab = document.getElementById(`tab-${tabName}`);
+        activeTab.classList.add('active');
+        activeTab.style.display = 'block';
+        
+        // Carregar dados da tab ativa
+        if (tabName === 'geral') {
+            carregarEstatisticasGerais();
+        }
+    });
+});
+
+// Carregar campeonatos para filtros
 async function carregarCampeonatos() {
     try {
         const response = await fetch(`${API_URL}/campeonatos`);
         const campeonatos = await response.json();
-        const select = document.getElementById('filtroCampeonato');
         
+        // Filtro das estatísticas gerais
+        const selectGeral = document.getElementById('filtroCampeonatoGeral');
+        campeonatos.forEach(c => {
+            const option = document.createElement('option');
+            option.value = c.id;
+            option.textContent = `${c.nome} - ${c.edicao}`;
+            selectGeral.appendChild(option);
+        });
+        
+        // Filtro das minhas estatísticas
+        const select = document.getElementById('filtroCampeonato');
         campeonatos.forEach(c => {
             const option = document.createElement('option');
             option.value = c.id;
@@ -19,6 +55,78 @@ async function carregarCampeonatos() {
         console.error('Erro ao carregar campeonatos:', error);
     }
 }
+
+// Carregar estatísticas gerais
+async function carregarEstatisticasGerais() {
+    const campeonatoId = document.getElementById('filtroCampeonatoGeral').value;
+    
+    try {
+        let url = `${API_URL}/estatisticas/geral`;
+        if (campeonatoId) {
+            url += `?campeonato_id=${campeonatoId}`;
+        }
+        
+        const response = await fetch(url);
+        const stats = await response.json();
+        
+        exibirEstatisticasGerais(stats);
+    } catch (error) {
+        console.error('Erro ao carregar estatísticas gerais:', error);
+    }
+}
+
+function exibirEstatisticasGerais(stats) {
+    // Números gerais
+    document.getElementById('totalPartidasGeral').textContent = stats.totalPartidas || 0;
+    document.getElementById('totalJogadoresGeral').textContent = stats.totalJogadores || 0;
+    document.getElementById('totalDecksGeral').textContent = stats.totalDecks || 0;
+    document.getElementById('totalRodadasGeral').textContent = stats.totalRodadas || 0;
+    
+    // Metagame - Decks mais usados
+    const metagameHtml = (stats.metagame || []).map(d => `
+        <div class="metagame-item">
+            <h4>${d.deck_nome}</h4>
+            <p style="margin: 0.25rem 0; color: var(--gray-600);"><strong>${d.comandante}</strong> - ${d.set_nome}</p>
+            <div class="metagame-stats">
+                <span><strong>Usado:</strong> ${d.vezes_usado} vezes (${d.porcentagem}%)</span>
+                <span><strong>Vitórias:</strong> ${d.vitorias}</span>
+                <span><strong>Win Rate:</strong> ${d.winrate}%</span>
+            </div>
+        </div>
+    `).join('');
+    document.getElementById('metagameGeral').innerHTML = metagameHtml || '<p>Nenhum dado disponível</p>';
+    
+    // Top decks por win rate
+    const topDecksHtml = (stats.topDecks || []).map(d => `
+        <div class="metagame-item">
+            <h4>${d.deck_nome}</h4>
+            <p style="margin: 0.25rem 0; color: var(--gray-600);"><strong>${d.comandante}</strong></p>
+            <div class="metagame-stats">
+                <span><strong>Partidas:</strong> ${d.partidas}</span>
+                <span><strong>Vitórias:</strong> ${d.vitorias}</span>
+                <span><strong>Win Rate:</strong> ${d.winrate}%</span>
+                <span><strong>Pontos Médios:</strong> ${d.pontos_medios}</span>
+            </div>
+        </div>
+    `).join('');
+    document.getElementById('topDecks').innerHTML = topDecksHtml || '<p>Nenhum dado disponível</p>';
+    
+    // Matchups mais comuns
+    const matchupsHtml = (stats.matchupsComuns || []).map(m => `
+        <div class="matchup-item">
+            <h4>${m.deck1} vs ${m.deck2}</h4>
+            <div class="matchup-stats">
+                <span><strong>Enfrentamentos:</strong> ${m.total}</span>
+                <span><strong>${m.deck1} venceu:</strong> ${m.deck1_vitorias} vezes</span>
+                <span><strong>${m.deck2} venceu:</strong> ${m.deck2_vitorias} vezes</span>
+            </div>
+        </div>
+    `).join('');
+    document.getElementById('matchupsComuns').innerHTML = matchupsHtml || '<p>Nenhum matchup registrado</p>';
+}
+
+// Listener para mudança de filtro nas estatísticas gerais
+document.getElementById('filtroCampeonatoGeral').addEventListener('change', carregarEstatisticasGerais);
 
 // Buscar estatísticas
 document.getElementById('buscarJogadorForm').addEventListener('submit', async (e) => {
@@ -122,3 +230,4 @@ function exibirEstatisticas(stats) {
 
 // Inicializar
 carregarCampeonatos();
+carregarEstatisticasGerais(); // Carregar estatísticas gerais ao iniciar

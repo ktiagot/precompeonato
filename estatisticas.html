@@ -6,11 +6,82 @@
     <meta name="description" content="Veja suas estatísticas detalhadas de partidas">
     <title>Estatísticas - Precompeonato</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid var(--gray-300);
+            margin-bottom: 2rem;
+        }
+        
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: var(--gray-600);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: -2px;
+        }
+        
+        .tab-btn:hover {
+            color: var(--primary);
+        }
+        
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .stats-filter select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .metagame-item, .matchup-item {
+            background: var(--white);
+            border: 1px solid var(--gray-300);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .metagame-item h4, .matchup-item h4 {
+            margin: 0 0 0.5rem 0;
+            color: var(--dark);
+        }
+        
+        .metagame-stats, .matchup-stats {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+        
+        .metagame-stats span, .matchup-stats span {
+            display: inline-block;
+        }
+    </style>
 </head>
 <body>
     <header>
         <div class="container">
-            <h1>🎴 PRECOMPEONATO</h1>
+            <h1>Precompeonato</h1>
             <nav>
                 <a href="index.html">Início</a>
                 <a href="index.html#inscricao">Inscrição</a>
@@ -23,26 +94,94 @@
     </header>
 
     <main>
-        <section class="section">
+        <section class="hero">
             <div class="container">
-                <h2>📈 Minhas Estatísticas</h2>
-                
+                <h2>Estatísticas</h2>
+                <p>Metagame geral e estatísticas individuais dos jogadores</p>
+            </div>
+        </section>
+
+        <!-- Tabs de navegação -->
+        <section class="section" style="padding-top: 1rem;">
+            <div class="container">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="geral">Estatísticas Gerais</button>
+                    <button class="tab-btn" data-tab="minhas">Minhas Estatísticas</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab: Estatísticas Gerais -->
+        <section class="section tab-content active" id="tab-geral">
+            <div class="container">
+                <div class="stats-filter" style="max-width: 400px; margin: 0 auto 2rem;">
+                    <select id="filtroCampeonatoGeral">
+                        <option value="">Todos os campeonatos</option>
+                    </select>
+                </div>
+
+                <!-- Metagame Geral -->
+                <div class="stats-section">
+                    <h3>Metagame - Decks Mais Usados</h3>
+                    <div id="metagameGeral"></div>
+                </div>
+
+                <!-- Decks com Melhor Performance -->
+                <div class="stats-section">
+                    <h3>Decks com Melhor Win Rate</h3>
+                    <div id="topDecks"></div>
+                </div>
+
+                <!-- Matchups Mais Comuns -->
+                <div class="stats-section">
+                    <h3>Matchups Mais Comuns</h3>
+                    <div id="matchupsComuns"></div>
+                </div>
+
+                <!-- Estatísticas Gerais -->
+                <div class="stats-resumo">
+                    <h3>Números Gerais</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalPartidasGeral">0</div>
+                            <div class="stat-label">Partidas Jogadas</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalJogadoresGeral">0</div>
+                            <div class="stat-label">Jogadores</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalDecksGeral">0</div>
+                            <div class="stat-label">Decks Diferentes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalRodadasGeral">0</div>
+                            <div class="stat-label">Rodadas</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab: Minhas Estatísticas -->
+        <section class="section tab-content" id="tab-minhas" style="display: none;">
+            <div class="container">
                 <form id="buscarJogadorForm" style="max-width: 700px; margin: 0 auto 2rem;">
                     <input type="email" id="emailJogador" placeholder="Digite seu email" required>
                     <select id="filtroCampeonato">
-                        <option value="">📅 Todos os campeonatos</option>
+                        <option value="">Todos os campeonatos</option>
                     </select>
-                    <button type="submit" class="btn-primary">🔍 Buscar Estatísticas</button>
+                    <button type="submit" class="btn-primary">Buscar Minhas Estatísticas</button>
                 </form>
 
                 <div id="statsContainer" style="display: none;">
                     <!-- Resumo Geral -->
                     <div class="stats-resumo">
-                        <h3>🏆 Resumo Geral</h3>
+                        <h3>Resumo Geral</h3>
                         <div class="stats-grid">
                             <div class="stat-card">
                                 <div class="stat-value" id="totalPartidas">0</div>
-                                <div class="stat-label">Partidas Jogadas</div>
+                                <div class="stat-label">Partidas</div>
                             </div>
                             <div class="stat-card">
                                 <div class="stat-value" id="totalVitorias">0</div>
@@ -54,39 +193,39 @@
                             </div>
                             <div class="stat-card">
                                 <div class="stat-value" id="totalPontos">0</div>
-                                <div class="stat-label">Pontos Totais</div>
+                                <div class="stat-label">Pontos</div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Decks Utilizados -->
                     <div class="stats-section">
-                        <h3>🎴 Meus Decks</h3>
+                        <h3>Meus Decks</h3>
                         <div id="meusDecks"></div>
                     </div>
 
                     <!-- Performance por Deck -->
                     <div class="stats-section">
-                        <h3>⚔️ Performance por Deck</h3>
+                        <h3>Performance por Deck</h3>
                         <div id="performanceDeck"></div>
                     </div>
 
                     <!-- Matchups -->
                     <div class="stats-section">
-                        <h3>🎯 Matchups (Contra quais decks você joga)</h3>
+                        <h3>Matchups</h3>
                         <div id="matchupsContra"></div>
                     </div>
 
                     <!-- Histórico de Partidas -->
                     <div class="stats-section">
-                        <h3>📜 Histórico de Partidas</h3>
+                        <h3>Histórico de Partidas</h3>
                         <div id="historicoPartidas"></div>
                     </div>
                 </div>
 
                 <div id="nenhumDado" class="empty-state" style="display: none;">
-                    <p>😔 Nenhuma estatística encontrada para este email.</p>
-                    <p style="font-size: 0.9rem; margin-top: 0.5rem;">Verifique se você já jogou alguma partida ou se o email está correto.</p>
+                    <p>Nenhuma estatística encontrada para este email.</p>
+                    <p style="font-size: 0.875rem; margin-top: 0.5rem;">Verifique se você já jogou alguma partida ou se o email está correto.</p>
                 </div>
             </div>
         </section>
@@ -94,7 +233,7 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2026 Precompeonato - Todos os direitos reservados</p>
+            <p>&copy; 2026 Precompeonato. Todos os direitos reservados.</p>
         </div>
     </footer>
 

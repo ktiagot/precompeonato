@@ -429,6 +429,100 @@ app.get('/api/metagame', async (req, res) => {
 });
 
 // ========== ESTATÍSTICAS ==========
+
+// Estatísticas gerais (públicas)
+app.get('/api/estatisticas/geral', async (req, res) => {
+    try {
+        const { campeonato_id } = req.query;
+        const campeonatoFilter = campeonato_id ? 'WHERE h.campeonato_id = ?' : '';
+        const params = campeonato_id ? [campeonato_id] : [];
+        
+        // Números gerais
+        const [statsGerais] = await db.query(`
+            SELECT 
+                COUNT(DISTINCT h.jogador_id) as total_jogadores,
+                COUNT(DISTINCT h.deck_id) as total_decks,
+                COUNT(DISTINCT h.mesa_id) as total_partidas,
+                COUNT(DISTINCT r.id) as total_rodadas
+            FROM historico_partidas h
+            JOIN mesas m ON h.mesa_id = m.id
+            JOIN rodadas r ON m.rodada_id = r.id
+            ${campeonatoFilter}
+        `, params);
+        
+        // Metagame - Decks mais usados
+        const [metagame] = await db.query(`
+            SELECT 
+                p.nome as deck_nome,
+                p.comandante,
+                p.set_nome,
+                COUNT(h.id) as vezes_usado,
+                SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
+                ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(h.id)), 1) as winrate,
+                ROUND((COUNT(h.id) * 100.0 / (SELECT COUNT(*) FROM historico_partidas ${campeonatoFilter})), 1) as porcentagem
+            FROM historico_partidas h
+            JOIN precons p ON h.deck_id = p.id
+            ${campeonatoFilter}
+            GROUP BY p.id, p.nome, p.comandante, p.set_nome
+            ORDER BY vezes_usado DESC
+            LIMIT 20
+        `, params);
+        
+        // Top decks por win rate (mínimo 3 partidas)
+        const [topDecks] = await db.query(`
+            SELECT 
+                p.nome as deck_nome,
+                p.comandante,
+                COUNT(h.id) as partidas,
+                SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
+                ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(h.id)), 1) as winrate,
+                ROUND(AVG(h.pontos_ganhos), 1) as pontos_medios
+            FROM historico_partidas h
+            JOIN precons p ON h.deck_id = p.id
+            ${campeonatoFilter}
+            GROUP BY p.id, p.nome, p.comandante
+            HAVING COUNT(h.id) >= 3
+            ORDER BY winrate DESC, vitorias DESC
+            LIMIT 15
+        `, params);
+        
+        // Matchups mais comuns
+        const [matchupsComuns] = await db.query(`
+            SELECT 
+                p1.nome as deck1,
+                p2.nome as deck2,
+                COUNT(*) as total,
+                SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as deck1_vitorias,
+                SUM(CASE WHEN h.posicao_final != 1 THEN 1 ELSE 0 END) as deck2_vitorias
+            FROM historico_partidas h
+            JOIN precons p1 ON h.deck_id = p1.id
+            JOIN precons p2 ON (
+                p2.id = h.oponente1_deck_id OR 
+                p2.id = h.oponente2_deck_id OR 
+                p2.id = h.oponente3_deck_id
+            )
+            ${campeonatoFilter}
+            GROUP BY p1.id, p1.nome, p2.id, p2.nome
+            HAVING COUNT(*) >= 2
+            ORDER BY total DESC
+            LIMIT 15
+        `, params);
+        
+        res.json({
+            totalJogadores: parseInt(statsGerais[0].total_jogadores),
+            totalDecks: parseInt(statsGerais[0].total_decks),
+            totalPartidas: parseInt(statsGerais[0].total_partidas),
+            totalRodadas: parseInt(statsGerais[0].total_rodadas),
+            metagame,
+            topDecks,
+            matchupsComuns
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Estatísticas individuais (por email)
 app.get('/api/estatisticas', async (req, res) => {
     try {
         const { email, campeonato_id } = req.query;

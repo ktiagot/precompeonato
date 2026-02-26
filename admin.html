@@ -9,7 +9,7 @@
 <body>
     <header>
         <div class="container">
-            <h1>PRECOMPEONATO - Admin</h1>
+            <h1>Precompeonato Admin</h1>
             <nav>
                 <a href="index.html">Voltar ao Site</a>
             </nav>
@@ -98,7 +98,6 @@
             ? 'http://localhost:3000/api' 
             : '/api';
 
-        // Criar campeonato
         document.getElementById('campeonatoForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
@@ -114,25 +113,24 @@
                 alert('Campeonato criado!');
                 e.target.reset();
                 carregarCampeonatos();
-            } else {
-                alert('Erro ao criar campeonato');
             }
         });
 
-        // Listar campeonatos
         async function carregarCampeonatos() {
             const response = await fetch(`${API_URL}/campeonatos`);
             const campeonatos = await response.json();
             const container = document.getElementById('campeonatosList');
             
             container.innerHTML = campeonatos.map(c => `
-                <div class="mesa">
+                <div class="card">
                     <p><strong>${c.nome}</strong> - ${c.edicao}</p>
                     <p>Início: ${new Date(c.data_inicio).toLocaleDateString('pt-BR')}</p>
                     <p>Status: ${c.status}</p>
-                    <button onclick="mudarStatus(${c.id}, 'inscricoes')" class="btn-primary" style="margin: 0.5rem 0.5rem 0 0;">Abrir Inscrições</button>
-                    <button onclick="mudarStatus(${c.id}, 'em_andamento')" class="btn-primary" style="margin: 0.5rem 0.5rem 0 0;">Iniciar</button>
-                    <button onclick="mudarStatus(${c.id}, 'finalizado')" class="btn-primary" style="margin: 0.5rem 0.5rem 0 0;">Finalizar</button>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
+                        <button onclick="mudarStatus(${c.id}, 'inscricoes')" class="btn-primary" style="flex: 1;">Inscrições</button>
+                        <button onclick="mudarStatus(${c.id}, 'em_andamento')" class="btn-primary" style="flex: 1;">Iniciar</button>
+                        <button onclick="mudarStatus(${c.id}, 'finalizado')" class="btn-primary" style="flex: 1;">Finalizar</button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -150,7 +148,6 @@
             }
         };
 
-        // Cadastrar precon
         document.getElementById('preconForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
@@ -165,12 +162,9 @@
             if (response.ok) {
                 alert('Precon cadastrado!');
                 e.target.reset();
-            } else {
-                alert('Erro ao cadastrar precon');
             }
         });
 
-        // Adicionar email
         document.getElementById('emailForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
@@ -185,12 +179,9 @@
             if (response.ok) {
                 alert('Email adicionado!');
                 e.target.reset();
-            } else {
-                alert('Erro ao adicionar email');
             }
         });
 
-        // Gerar pareamento
         document.getElementById('parearForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
@@ -206,20 +197,17 @@
             
             if (response.ok) {
                 document.getElementById('resultadoPareamento').innerHTML = `
-                    <div class="mesa" style="background: #d4edda; border-color: #28a745;">
+                    <div class="card" style="border-left: 3px solid var(--success);">
                         <p><strong>Pareamento gerado!</strong></p>
                         <p>Rodada: ${result.numero}</p>
-                        <p>Mesas criadas: ${result.mesasCriadas}</p>
-                        <p>Total de jogadores: ${result.totalJogadores}</p>
+                        <p>Mesas: ${result.mesasCriadas}</p>
+                        <p>Jogadores: ${result.totalJogadores}</p>
                     </div>
                 `;
                 e.target.reset();
-            } else {
-                alert('Erro: ' + result.error);
             }
         });
 
-        // Reportar resultado
         document.getElementById('resultadoForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
@@ -235,23 +223,20 @@
                 alert('Resultado salvo!');
                 e.target.reset();
                 carregarInscritos();
-            } else {
-                alert('Erro ao salvar resultado');
             }
         });
 
-        // Listar inscritos
         async function carregarInscritos() {
             const response = await fetch(`${API_URL}/inscricoes`);
             const inscricoes = await response.json();
             const container = document.getElementById('inscritosList');
             
             container.innerHTML = inscricoes.map(i => `
-                <div class="mesa">
+                <div class="card">
                     <p><strong>ID: ${i.id} - ${i.nome}</strong></p>
                     <p>Email: ${i.email}</p>
-                    <p>Deck: ${i.deck_nome} (${i.comandante})</p>
-                    <p>Pontos: ${i.pontos} | Vitórias: ${i.vitorias} | 2º Lugares: ${i.segundos_lugares}</p>
+                    <p>Deck: ${i.deck_nome}</p>
+                    <p>Pontos: ${i.pontos} | Vitórias: ${i.vitorias}</p>
                 </div>
             `).join('');
         }
