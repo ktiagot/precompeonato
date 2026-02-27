@@ -8,6 +8,14 @@ const db = require('./db');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Log de inicialização
+console.log('🔧 Iniciando servidor...');
+console.log('📊 Variáveis de ambiente:');
+console.log('  - DB_HOST:', process.env.DB_HOST || 'NÃO DEFINIDO');
+console.log('  - DB_USER:', process.env.DB_USER || 'NÃO DEFINIDO');
+console.log('  - DB_NAME:', process.env.DB_NAME || 'NÃO DEFINIDO');
+console.log('  - PORT:', PORT);
+
 app.use(cors());
 app.use(express.json());
 app.use(express.static('.'));
