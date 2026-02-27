@@ -15,20 +15,10 @@ const pool = mysql.createPool({
     port: process.env.DB_PORT,
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0,
-    // Forçar IPv4
-    family: 4
+    queueLimit: 0
 });
 
-// Testar conexão
-pool.getConnection()
-    .then(connection => {
-        console.log('✅ Conexão com banco de dados estabelecida!');
-        connection.release();
-    })
-    .catch(error => {
-        console.error('❌ Erro ao conectar no banco:', error.message);
-        console.error('   Code:', error.code);
-    });
+// Não testar conexão na inicialização para não crashar
+console.log('⚠️  Pool de conexões criado (conexão será testada sob demanda)');
 
 module.exports = pool;
