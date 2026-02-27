@@ -1,8 +1,4 @@
-// Não usar dotenv em produção - variáveis vêm do painel Hostinger
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
-
+require('dotenv').config();
 const mysql = require('mysql2/promise');
 
 const pool = mysql.createPool({

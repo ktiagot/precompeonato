@@ -1,7 +1,12 @@
-# Redirecionar para HTTPS (se disponível)
-RewriteEngine On
-RewriteCond %{HTTPS} off
-RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# Proxy para aplicação Node.js
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Se não for arquivo ou diretório existente, proxy para Node.js
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ http://localhost:3000/$1 [P,L]
+</IfModule>
 
 # Configurações de segurança
 <IfModule mod_headers.c>
