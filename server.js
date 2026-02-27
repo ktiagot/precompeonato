@@ -13,15 +13,21 @@ app.use(express.json());
 app.use(express.static('.'));
 
 // Configurar transporte de email
-const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: process.env.EMAIL_PORT || 587,
-    secure: false,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD
-    }
-});
+let transporter = null;
+if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+    transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+        port: process.env.EMAIL_PORT || 587,
+        secure: false,
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASSWORD
+        }
+    });
+    console.log('✉️  Email configurado');
+} else {
+    console.log('⚠️  Email não configurado - autenticação desabilitada');
+}
 
 // Middleware de autenticação
 async function authMiddleware(req, res, next) {
@@ -63,9 +69,27 @@ function adminMiddleware(req, res, next) {
 app.get('/api/health', async (req, res) => {
     try {
         await db.query('SELECT 1');
-        res.json({ status: 'ok', database: 'connected' });
+        res.json({ 
+            status: 'ok', 
+            database: 'connected',
+            env: {
+                hasDbHost: !!process.env.DB_HOST,
+                hasDbUser: !!process.env.DB_USER,
+                hasDbName: !!process.env.DB_NAME,
+                hasEmail: !!process.env.EMAIL_USER
+            }
+        });
     } catch (error) {
-        res.status(500).json({ status: 'error', message: error.message });
+        res.status(500).json({ 
+            status: 'error', 
+            message: error.message,
+            code: error.code,
+            env: {
+                hasDbHost: !!process.env.DB_HOST,
+                hasDbUser: !!process.env.DB_USER,
+                hasDbName: !!process.env.DB_NAME
+            }
+        });
     }
 });
 
@@ -74,6 +98,10 @@ app.get('/api/health', async (req, res) => {
 // Solicitar código de verificação
 app.post('/api/auth/solicitar-codigo', async (req, res) => {
     try {
+        if (!transporter) {
+            return res.status(503).json({ error: 'Sistema de email não configurado. Contate o administrador.' });
+        }
+        
         const { email } = req.body;
         
         if (!email) {
