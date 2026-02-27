@@ -912,12 +912,30 @@ async function limparDadosExpirados() {
 // Executar limpeza a cada 5 minutos
 setInterval(limparDadosExpirados, 5 * 60 * 1000);
 
-// Executar limpeza inicial ao iniciar o servidor
-limparDadosExpirados();
+// Executar limpeza inicial ao iniciar o servidor (com delay para não bloquear)
+setTimeout(limparDadosExpirados, 10000);
+
+// Tratamento de erros não capturados
+process.on('uncaughtException', (error) => {
+    console.error('❌ Erro não capturado:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ Promise rejeitada não tratada:', reason);
+});
 
 // Iniciar servidor
-app.listen(PORT, () => {
-    console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
-    console.log(`📊 Database: ${process.env.DB_NAME}`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Servidor rodando na porta ${PORT}`);
+    console.log(`📊 Database: ${process.env.DB_NAME || 'não configurado'}`);
+    console.log(`📧 Email: ${process.env.EMAIL_USER ? 'configurado' : 'não configurado'}`);
     console.log(`🧹 Limpeza automática ativada (a cada 5 minutos)`);
+    console.log(`✅ Aplicação iniciada com sucesso!`);
+});
+
+server.on('error', (error) => {
+    console.error('❌ Erro ao iniciar servidor:', error);
+    if (error.code === 'EADDRINUSE') {
+        console.error(`Porta ${PORT} já está em uso`);
+    }
 });
