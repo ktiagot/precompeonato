@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Precompeonato</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .login-container {
+            max-width: 450px;
+            margin: 4rem auto;
+            padding: 2rem;
+            background: var(--white);
+            border: 1px solid var(--gray-300);
+            border-radius: 0.75rem;
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .login-header h2 {
+            margin: 0 0 0.5rem 0;
+            color: var(--dark);
+        }
+        
+        .login-header p {
+            margin: 0;
+            color: var(--gray-600);
+            font-size: 0.875rem;
+        }
+        
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .login-form input {
+            padding: 0.875rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .login-form button {
+            padding: 0.875rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .login-form button:hover {
+            background: var(--primary-dark);
+        }
+        
+        .login-form button:disabled {
+            background: var(--gray-400);
+            cursor: not-allowed;
+        }
+        
+        .code-input {
+            display: none;
+        }
+        
+        .code-input.active {
+            display: block;
+        }
+        
+        .message {
+            padding: 0.875rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+        
+        .message.success {
+            background: rgba(34, 197, 94, 0.1);
+            color: #16a34a;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        
+        .message.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .back-link {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        
+        .back-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Precompeonato</h1>
+            <nav>
+                <a href="index.html">Início</a>
+                <a href="estatisticas.html">Estatísticas</a>
+                <a href="regras.html">Regras</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="login-container">
+            <div class="login-header">
+                <h2>Login</h2>
+                <p>Entre com seu email para acessar o sistema</p>
+            </div>
+
+            <div id="messageContainer"></div>
+
+            <!-- Etapa 1: Solicitar código -->
+            <form id="emailForm" class="login-form">
+                <input 
+                    type="email" 
+                    id="emailInput" 
+                    placeholder="seu@email.com" 
+                    required
+                    autocomplete="email"
+                >
+                <button type="submit" id="sendCodeBtn">Enviar Código</button>
+            </form>
+
+            <!-- Etapa 2: Verificar código -->
+            <form id="codeForm" class="login-form code-input">
+                <p style="margin: 0 0 1rem 0; color: var(--gray-600); font-size: 0.875rem;">
+                    Enviamos um código de 6 dígitos para <strong id="emailDisplay"></strong>
+                </p>
+                <input 
+                    type="text" 
+                    id="codeInput" 
+                    placeholder="000000" 
+                    maxlength="6"
+                    pattern="[0-9]{6}"
+                    required
+                    autocomplete="one-time-code"
+                >
+                <button type="submit" id="verifyCodeBtn">Verificar Código</button>
+                <button type="button" id="backBtn" style="background: var(--gray-500);">Voltar</button>
+            </form>
+
+            <div class="back-link">
+                <a href="index.html">← Voltar para o início</a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Precompeonato. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="login.js"></script>
+</body>
+</html>

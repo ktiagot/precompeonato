@@ -1,6 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 const db = require('./db');
 
 const app = express();
@@ -10,6 +12,53 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('.'));
 
+// Configurar transporte de email
+const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+    port: process.env.EMAIL_PORT || 587,
+    secure: false,
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD
+    }
+});
+
+// Middleware de autenticação
+async function authMiddleware(req, res, next) {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) {
+        return res.status(401).json({ error: 'Token não fornecido' });
+    }
+    
+    try {
+        const [sessoes] = await db.query(
+            'SELECT * FROM sessoes WHERE token = ? AND expira_em > NOW()',
+            [token]
+        );
+        
+        if (sessoes.length === 0) {
+            return res.status(401).json({ error: 'Sessão inválida ou expirada' });
+        }
+        
+        req.user = {
+            email: sessoes[0].email,
+            isAdmin: sessoes[0].is_admin
+        };
+        next();
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao verificar autenticação' });
+    }
+}
+
+// Middleware para verificar se é admin
+function adminMiddleware(req, res, next) {
+    if (!req.user?.isAdmin) {
+        return res.status(403).json({ error: 'Acesso negado. Apenas administradores.' });
+    }
+    next();
+}
+
 // Rota de teste
 app.get('/api/health', async (req, res) => {
     try {
@@ -17,6 +66,145 @@ app.get('/api/health', async (req, res) => {
         res.json({ status: 'ok', database: 'connected' });
     } catch (error) {
         res.status(500).json({ status: 'error', message: error.message });
+    }
+});
+
+// ========== AUTENTICAÇÃO ==========
+
+// Solicitar código de verificação
+app.post('/api/auth/solicitar-codigo', async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({ error: 'Email é obrigatório' });
+        }
+        
+        // Verificar se o email está autorizado (emails_permitidos ou admins)
+        const [emailPermitido] = await db.query(
+            'SELECT * FROM emails_permitidos WHERE email = ? AND ativo = TRUE',
+            [email]
+        );
+        
+        const [admin] = await db.query(
+            'SELECT * FROM admins WHERE email = ? AND ativo = TRUE',
+            [email]
+        );
+        
+        if (emailPermitido.length === 0 && admin.length === 0) {
+            return res.status(403).json({ error: 'Email não autorizado' });
+        }
+        
+        // Gerar código de 6 dígitos
+        const codigo = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Salvar código no banco (expira em 15 minutos)
+        const expiraEm = new Date(Date.now() + 15 * 60 * 1000);
+        await db.query(
+            'INSERT INTO codigos_verificacao (email, codigo, expira_em) VALUES (?, ?, ?)',
+            [email, codigo, expiraEm]
+        );
+        
+        // Enviar email
+        const isAdmin = admin.length > 0;
+        const mailOptions = {
+            from: process.env.EMAIL_FROM || 'Precompeonato <noreply@precompeonato.com.br>',
+            to: email,
+            subject: 'Seu código de acesso - Precompeonato',
+            html: `
+                <h2>Código de Acesso</h2>
+                <p>Olá${isAdmin ? ', Admin' : ''}!</p>
+                <p>Seu código de acesso é:</p>
+                <h1 style="font-size: 32px; letter-spacing: 8px; color: #2563eb;">${codigo}</h1>
+                <p>Este código expira em 15 minutos.</p>
+                <p>Se você não solicitou este código, ignore este email.</p>
+                <hr>
+                <p style="font-size: 12px; color: #666;">Precompeonato - Sistema de Torneios</p>
+            `
+        };
+        
+        await transporter.sendMail(mailOptions);
+        
+        res.json({ 
+            message: 'Código enviado para seu email',
+            expiresIn: 15 
+        });
+    } catch (error) {
+        console.error('Erro ao enviar código:', error);
+        res.status(500).json({ error: 'Erro ao enviar código' });
+    }
+});
+
+// Verificar código e criar sessão
+app.post('/api/auth/verificar-codigo', async (req, res) => {
+    try {
+        const { email, codigo } = req.body;
+        
+        if (!email || !codigo) {
+            return res.status(400).json({ error: 'Email e código são obrigatórios' });
+        }
+        
+        // Buscar código válido
+        const [codigos] = await db.query(
+            'SELECT * FROM codigos_verificacao WHERE email = ? AND codigo = ? AND expira_em > NOW() AND usado = FALSE ORDER BY created_at DESC LIMIT 1',
+            [email, codigo]
+        );
+        
+        if (codigos.length === 0) {
+            return res.status(401).json({ error: 'Código inválido ou expirado' });
+        }
+        
+        // Marcar código como usado
+        await db.query(
+            'UPDATE codigos_verificacao SET usado = TRUE WHERE id = ?',
+            [codigos[0].id]
+        );
+        
+        // Verificar se é admin
+        const [admin] = await db.query(
+            'SELECT * FROM admins WHERE email = ? AND ativo = TRUE',
+            [email]
+        );
+        
+        const isAdmin = admin.length > 0;
+        
+        // Criar token de sessão
+        const token = crypto.randomBytes(32).toString('hex');
+        const expiraEm = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 dias
+        
+        await db.query(
+            'INSERT INTO sessoes (token, email, is_admin, expira_em) VALUES (?, ?, ?, ?)',
+            [token, email, isAdmin, expiraEm]
+        );
+        
+        res.json({
+            token,
+            email,
+            isAdmin,
+            expiresIn: 7 * 24 * 60 * 60 // segundos
+        });
+    } catch (error) {
+        console.error('Erro ao verificar código:', error);
+        res.status(500).json({ error: 'Erro ao verificar código' });
+    }
+});
+
+// Verificar sessão atual
+app.get('/api/auth/me', authMiddleware, async (req, res) => {
+    res.json({
+        email: req.user.email,
+        isAdmin: req.user.isAdmin
+    });
+});
+
+// Logout
+app.post('/api/auth/logout', authMiddleware, async (req, res) => {
+    try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        await db.query('DELETE FROM sessoes WHERE token = ?', [token]);
+        res.json({ message: 'Logout realizado com sucesso' });
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao fazer logout' });
     }
 });
 
@@ -670,8 +858,38 @@ app.get('/api/estatisticas', async (req, res) => {
     }
 });
 
+// ========== LIMPEZA AUTOMÁTICA ==========
+// Limpar códigos e sessões expiradas periodicamente
+
+async function limparDadosExpirados() {
+    try {
+        // Limpar códigos expirados ou usados
+        const [resultCodigos] = await db.query(
+            'DELETE FROM codigos_verificacao WHERE expira_em < NOW() OR usado = TRUE'
+        );
+        
+        // Limpar sessões expiradas
+        const [resultSessoes] = await db.query(
+            'DELETE FROM sessoes WHERE expira_em < NOW()'
+        );
+        
+        if (resultCodigos.affectedRows > 0 || resultSessoes.affectedRows > 0) {
+            console.log(`🧹 Limpeza automática: ${resultCodigos.affectedRows} códigos e ${resultSessoes.affectedRows} sessões removidos`);
+        }
+    } catch (error) {
+        console.error('❌ Erro na limpeza automática:', error.message);
+    }
+}
+
+// Executar limpeza a cada 5 minutos
+setInterval(limparDadosExpirados, 5 * 60 * 1000);
+
+// Executar limpeza inicial ao iniciar o servidor
+limparDadosExpirados();
+
 // Iniciar servidor
 app.listen(PORT, () => {
     console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
     console.log(`📊 Database: ${process.env.DB_NAME}`);
+    console.log(`🧹 Limpeza automática ativada (a cada 5 minutos)`);
 });

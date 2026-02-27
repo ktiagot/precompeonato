@@ -5,13 +5,156 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Precompeonato</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-email {
+            color: var(--gray-600);
+            font-size: 0.875rem;
+        }
+        
+        .btn-logout {
+            padding: 0.5rem 1rem;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+        
+        .tabs-admin {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid var(--gray-300);
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+        
+        .tab-admin-btn {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: -2px;
+            white-space: nowrap;
+        }
+        
+        .tab-admin-btn:hover {
+            color: var(--primary);
+        }
+        
+        .tab-admin-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        
+        .tab-admin-content {
+            display: none;
+        }
+        
+        .tab-admin-content.active {
+            display: block;
+        }
+        
+        .mesa-card {
+            background: var(--white);
+            border: 1px solid var(--gray-300);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .mesa-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        .jogador-item {
+            padding: 0.5rem;
+            background: var(--gray-50);
+            border-radius: 0.25rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .badge-success {
+            background: rgba(34, 197, 94, 0.1);
+            color: #16a34a;
+        }
+        
+        .badge-warning {
+            background: rgba(251, 191, 36, 0.1);
+            color: #d97706;
+        }
+        
+        .badge-info {
+            background: rgba(59, 130, 246, 0.1);
+            color: #2563eb;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .alert-success {
+            background: rgba(34, 197, 94, 0.1);
+            color: #16a34a;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+    </style>
 </head>
 <body>
     <header>
         <div class="container">
             <h1>Precompeonato Admin</h1>
             <nav>
-                <a href="index.html">Voltar ao Site</a>
+                <a href="index.html">Site</a>
+                <a href="estatisticas.html">Estatísticas</a>
+                <a href="regras.html">Regras</a>
             </nav>
         </div>
     </header>
@@ -19,230 +162,133 @@
     <main>
         <section class="section">
             <div class="container">
-                <h2>Criar Campeonato</h2>
-                <form id="campeonatoForm">
-                    <input type="text" name="nome" placeholder="Nome do campeonato" required>
-                    <input type="text" name="edicao" placeholder="Edição (ex: Etapa #1 2026)" required>
-                    <input type="date" name="data_inicio" required>
-                    <textarea name="descricao" placeholder="Descrição" rows="3"></textarea>
-                    <button type="submit" class="btn-primary">Criar Campeonato</button>
-                </form>
-            </div>
-        </section>
+                <div class="admin-header">
+                    <h2>Painel Administrativo</h2>
+                    <div class="user-info">
+                        <span class="user-email" id="userEmail"></span>
+                        <button class="btn-logout" onclick="logout()">Sair</button>
+                    </div>
+                </div>
 
-        <section class="section">
-            <div class="container">
-                <h2>Gerenciar Campeonatos</h2>
-                <div id="campeonatosList"></div>
-            </div>
-        </section>
+                <div class="tabs-admin">
+                    <button class="tab-admin-btn active" data-tab="pareamento">Pareamento</button>
+                    <button class="tab-admin-btn" data-tab="resultados">Resultados</button>
+                    <button class="tab-admin-btn" data-tab="campeonatos">Campeonatos</button>
+                    <button class="tab-admin-btn" data-tab="inscritos">Inscritos</button>
+                    <button class="tab-admin-btn" data-tab="precons">Precons</button>
+                    <button class="tab-admin-btn" data-tab="emails">Emails</button>
+                </div>
 
-        <section class="section">
-            <div class="container">
-                <h2>Cadastrar Precon</h2>
-                <form id="preconForm">
-                    <input type="text" name="nome" placeholder="Nome do deck" required>
-                    <input type="text" name="set_nome" placeholder="Set/Coleção" required>
-                    <input type="text" name="comandante" placeholder="Comandante" required>
-                    <input type="text" name="cores" placeholder="Cores (ex: WU, BRG)" required>
-                    <input type="number" name="ano" placeholder="Ano" required>
-                    <button type="submit" class="btn-primary">Adicionar Precon</button>
-                </form>
-            </div>
-        </section>
+                <!-- Tab: Pareamento -->
+                <div class="tab-admin-content active" id="tab-pareamento">
+                    <div id="alertContainer"></div>
+                    
+                    <div class="card">
+                        <h3>Gerar Nova Rodada</h3>
+                        <form id="parearForm">
+                            <div class="form-grid">
+                                <div>
+                                    <label>Campeonato</label>
+                                    <select id="campeonatoParear" required></select>
+                                </div>
+                                <div>
+                                    <label>Número da Rodada</label>
+                                    <input type="number" id="rodadaNumero" min="1" required>
+                                </div>
+                                <div>
+                                    <label>Data da Rodada</label>
+                                    <input type="date" id="dataRodada" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-primary" style="margin-top: 1rem;">Gerar Pareamento</button>
+                        </form>
+                    </div>
 
-        <section class="section">
-            <div class="container">
-                <h2>Adicionar Email Permitido</h2>
-                <form id="emailForm">
-                    <input type="email" name="email" placeholder="email@exemplo.com" required>
-                    <button type="submit" class="btn-primary">Adicionar Email</button>
-                </form>
-            </div>
-        </section>
+                    <h3 style="margin-top: 2rem;">Rodadas Existentes</h3>
+                    <div id="rodadasList"></div>
+                </div>
 
-        <section class="section">
-            <div class="container">
-                <h2>Gerar Pareamento</h2>
-                <form id="parearForm">
-                    <input type="number" name="rodadaNumero" placeholder="Número da rodada" required>
-                    <input type="date" name="dataRodada" required>
-                    <button type="submit" class="btn-primary">Gerar Pareamento</button>
-                </form>
-                <div id="resultadoPareamento" style="margin-top: 1rem;"></div>
-            </div>
-        </section>
+                <!-- Tab: Resultados -->
+                <div class="tab-admin-content" id="tab-resultados">
+                    <div class="card">
+                        <h3>Reportar Resultado de Mesa</h3>
+                        <form id="resultadoForm">
+                            <div class="form-grid">
+                                <div>
+                                    <label>Rodada</label>
+                                    <select id="rodadaResultado" required></select>
+                                </div>
+                                <div>
+                                    <label>Mesa</label>
+                                    <select id="mesaResultado" required></select>
+                                </div>
+                            </div>
+                            <div id="jogadoresMesa" style="margin-top: 1rem;"></div>
+                            <button type="submit" class="btn-primary" style="margin-top: 1rem;">Salvar Resultado</button>
+                        </form>
+                    </div>
 
-        <section class="section">
-            <div class="container">
-                <h2>Reportar Resultado</h2>
-                <form id="resultadoForm">
-                    <input type="number" name="mesaId" placeholder="ID da Mesa" required>
-                    <input type="number" name="vencedorId" placeholder="ID do Vencedor" required>
-                    <input type="number" name="segundoId" placeholder="ID do Segundo Lugar">
-                    <button type="submit" class="btn-primary">Salvar Resultado</button>
-                </form>
-            </div>
-        </section>
+                    <h3 style="margin-top: 2rem;">Mesas Pendentes</h3>
+                    <div id="mesasPendentes"></div>
+                </div>
 
-        <section class="section">
-            <div class="container">
-                <h2>Inscritos</h2>
-                <div id="inscritosList"></div>
+                <!-- Tab: Campeonatos -->
+                <div class="tab-admin-content" id="tab-campeonatos">
+                    <div class="card">
+                        <h3>Criar Campeonato</h3>
+                        <form id="campeonatoForm">
+                            <input type="text" name="nome" placeholder="Nome do campeonato" required>
+                            <input type="text" name="edicao" placeholder="Edição" required>
+                            <input type="date" name="data_inicio" required>
+                            <textarea name="descricao" placeholder="Descrição" rows="3"></textarea>
+                            <button type="submit" class="btn-primary">Criar Campeonato</button>
+                        </form>
+                    </div>
+
+                    <h3 style="margin-top: 2rem;">Campeonatos</h3>
+                    <div id="campeonatosList"></div>
+                </div>
+
+                <!-- Tab: Inscritos -->
+                <div class="tab-admin-content" id="tab-inscritos">
+                    <div id="inscritosList"></div>
+                </div>
+
+                <!-- Tab: Precons -->
+                <div class="tab-admin-content" id="tab-precons">
+                    <div class="card">
+                        <h3>Cadastrar Precon</h3>
+                        <form id="preconForm">
+                            <input type="text" name="nome" placeholder="Nome do deck" required>
+                            <input type="text" name="set_nome" placeholder="Set/Coleção" required>
+                            <input type="text" name="comandante" placeholder="Comandante" required>
+                            <input type="text" name="cores" placeholder="Cores (ex: WU, BRG)" required>
+                            <input type="number" name="ano" placeholder="Ano" required>
+                            <button type="submit" class="btn-primary">Adicionar Precon</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Tab: Emails -->
+                <div class="tab-admin-content" id="tab-emails">
+                    <div class="card">
+                        <h3>Adicionar Email Permitido</h3>
+                        <form id="emailForm">
+                            <input type="email" name="email" placeholder="email@exemplo.com" required>
+                            <button type="submit" class="btn-primary">Adicionar Email</button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
 
-    <script>
-        const API_URL = window.location.hostname === 'localhost' 
-            ? 'http://localhost:3000/api' 
-            : '/api';
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Precompeonato. Todos os direitos reservados.</p>
+        </div>
+    </footer>
 
-        document.getElementById('campeonatoForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData);
-            
-            const response = await fetch(`${API_URL}/campeonatos`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            
-            if (response.ok) {
-                alert('Campeonato criado!');
-                e.target.reset();
-                carregarCampeonatos();
-            }
-        });
-
-        async function carregarCampeonatos() {
-            const response = await fetch(`${API_URL}/campeonatos`);
-            const campeonatos = await response.json();
-            const container = document.getElementById('campeonatosList');
-            
-            container.innerHTML = campeonatos.map(c => `
-                <div class="card">
-                    <p><strong>${c.nome}</strong> - ${c.edicao}</p>
-                    <p>Início: ${new Date(c.data_inicio).toLocaleDateString('pt-BR')}</p>
-                    <p>Status: ${c.status}</p>
-                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
-                        <button onclick="mudarStatus(${c.id}, 'inscricoes')" class="btn-primary" style="flex: 1;">Inscrições</button>
-                        <button onclick="mudarStatus(${c.id}, 'em_andamento')" class="btn-primary" style="flex: 1;">Iniciar</button>
-                        <button onclick="mudarStatus(${c.id}, 'finalizado')" class="btn-primary" style="flex: 1;">Finalizar</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        window.mudarStatus = async function(id, status) {
-            const response = await fetch(`${API_URL}/campeonatos/${id}/status`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status })
-            });
-            
-            if (response.ok) {
-                alert('Status atualizado!');
-                carregarCampeonatos();
-            }
-        };
-
-        document.getElementById('preconForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData);
-            
-            const response = await fetch(`${API_URL}/precons`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            
-            if (response.ok) {
-                alert('Precon cadastrado!');
-                e.target.reset();
-            }
-        });
-
-        document.getElementById('emailForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData);
-            
-            const response = await fetch(`${API_URL}/emails-permitidos`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            
-            if (response.ok) {
-                alert('Email adicionado!');
-                e.target.reset();
-            }
-        });
-
-        document.getElementById('parearForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData);
-            
-            const response = await fetch(`${API_URL}/parear`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            
-            const result = await response.json();
-            
-            if (response.ok) {
-                document.getElementById('resultadoPareamento').innerHTML = `
-                    <div class="card" style="border-left: 3px solid var(--success);">
-                        <p><strong>Pareamento gerado!</strong></p>
-                        <p>Rodada: ${result.numero}</p>
-                        <p>Mesas: ${result.mesasCriadas}</p>
-                        <p>Jogadores: ${result.totalJogadores}</p>
-                    </div>
-                `;
-                e.target.reset();
-            }
-        });
-
-        document.getElementById('resultadoForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData);
-            
-            const response = await fetch(`${API_URL}/resultado`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            
-            if (response.ok) {
-                alert('Resultado salvo!');
-                e.target.reset();
-                carregarInscritos();
-            }
-        });
-
-        async function carregarInscritos() {
-            const response = await fetch(`${API_URL}/inscricoes`);
-            const inscricoes = await response.json();
-            const container = document.getElementById('inscritosList');
-            
-            container.innerHTML = inscricoes.map(i => `
-                <div class="card">
-                    <p><strong>ID: ${i.id} - ${i.nome}</strong></p>
-                    <p>Email: ${i.email}</p>
-                    <p>Deck: ${i.deck_nome}</p>
-                    <p>Pontos: ${i.pontos} | Vitórias: ${i.vitorias}</p>
-                </div>
-            `).join('');
-        }
-
-        carregarInscritos();
-        carregarCampeonatos();
-    </script>
+    <script src="admin.js"></script>
 </body>
 </html>
