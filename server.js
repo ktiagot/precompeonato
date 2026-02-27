@@ -1,4 +1,8 @@
-require('dotenv').config();
+// Não usar dotenv em produção - variáveis vêm do painel Hostinger
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+}
+
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
