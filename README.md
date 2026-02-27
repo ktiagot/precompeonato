@@ -1,14 +1,20 @@
 # Precompeonato - Sistema de Torneio de Commander
 
-Sistema web completo para gerenciamento de múltiplos torneios de Magic: The Gathering Commander com decks pré-montados (precons).
+Sistema web para gerenciamento de torneios de Magic: The Gathering Commander com decks pré-montados (precons).
+
+## O que é
+
+Plataforma completa para organizar campeonatos de Commander usando apenas precons oficiais da Wizards. Permite inscrições de jogadores, pareamento automático por sistema suíço, registro de resultados e acompanhamento de estatísticas detalhadas.
 
 ## Funcionalidades
 
 ### Para Jogadores
-- ✅ Cadastro com validação de email autorizado
-- ✅ Busca inteligente de precons de Commander
-- ✅ Visualização de rodadas e pareamentos
-- ✅ Estatísticas detalhadas pessoais:
+
+- Inscrição em campeonatos com validação de email autorizado
+- Busca e seleção de precons de Commander (2011-2026)
+- Visualização de rodadas e pareamentos
+- Autenticação por código enviado ao email
+- Estatísticas pessoais:
   - Total de partidas, vitórias e win rate
   - Performance por deck utilizado
   - Matchups contra outros decks
@@ -16,215 +22,84 @@ Sistema web completo para gerenciamento de múltiplos torneios de Magic: The Gat
   - Filtro por campeonato
 
 ### Para Administradores
-- ✅ Gerenciamento de múltiplos campeonatos
-- ✅ Cadastro de precons disponíveis
-- ✅ Controle de emails permitidos
-- ✅ Pareamento automático por sistema suíço
-- ✅ Registro de resultados
-- ✅ Estatísticas de metagame
 
-### Sistema
-- ✅ Banco de dados MySQL para persistência
-- ✅ Histórico completo de todas as partidas
-- ✅ Métricas detalhadas para análise
-- ✅ Suporte a múltiplos campeonatos simultâneos
+- Autenticação por código enviado ao email
+- Gerenciamento de múltiplos campeonatos
+- Cadastro de precons disponíveis
+- Controle de emails permitidos
+- Pareamento automático por sistema suíço
+- Registro de resultados de mesas
+- Visualização de estatísticas gerais de metagame
 
-## Tecnologias
+### Estatísticas Públicas
 
-- **Backend**: Node.js + Express
-- **Database**: MySQL
-- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
+- Metagame geral (decks mais usados)
+- Top decks por win rate
+- Matchups mais comuns
+- Números gerais do campeonato
+- Filtro por campeonato
 
-## Instalação Local
+## Como Usar
 
-### 1. Pré-requisitos
+### Inscrição em Campeonato
 
-- Node.js 14+ instalado
-- MySQL 5.7+ instalado e rodando
+1. Acesse a página principal
+2. Preencha nome e email (deve estar na lista de permitidos)
+3. Busque e selecione seu precon
+4. Confirme a inscrição
 
-### 2. Clonar e Instalar
+### Acompanhar Rodadas
 
-```bash
-npm install
-```
+1. Acesse a página principal
+2. Veja as rodadas criadas
+3. Confira sua mesa e oponentes
+4. Jogue sua partida
 
-### 3. Configurar Database
+### Ver Estatísticas Pessoais
 
-1. Copie `.env.example` para `.env`
-2. Configure as credenciais do MySQL no `.env`
-3. Execute o setup:
+1. Acesse a página de Estatísticas
+2. Faça login com seu email (receba código por email)
+3. Veja suas estatísticas detalhadas
+4. Filtre por campeonato específico
 
-```bash
-npm run setup-db
-```
+### Administração (apenas admins)
 
-### 4. Iniciar Servidor
-
-```bash
-npm start
-```
-
-Ou para desenvolvimento com auto-reload:
-
-```bash
-npm run dev
-```
-
-Acesse: `http://localhost:3000`
-
-## Deploy na Hostinger
-
-Veja o guia completo em [DEPLOY.md](DEPLOY.md)
-
-## Estrutura do Banco de Dados
-
-### Tabelas Principais
-
-- **campeonatos**: Gerenciamento de múltiplos torneios
-- **precons**: Lista de decks pré-montados disponíveis
-- **emails_permitidos**: Emails autorizados a se inscrever
-- **inscricoes**: Jogadores inscritos (por campeonato)
-- **rodadas**: Rodadas de cada campeonato
-- **mesas**: Mesas de cada rodada
-- **mesa_jogadores**: Relação jogadores x mesas
-- **historico_partidas**: Registro completo de todas as partidas para estatísticas
+1. Acesse `/admin.html`
+2. Faça login com email de administrador
+3. Crie campeonatos e gerencie status
+4. Adicione emails permitidos
+5. Gere pareamentos de rodadas
+6. Registre resultados das mesas
 
 ## Páginas
 
-### `/index.html` - Página Principal
-- Inscrição no campeonato ativo
-- Visualização de rodadas
-- Metagame geral
+- `/index.html` - Página principal com inscrições e rodadas
+- `/estatisticas.html` - Estatísticas gerais e pessoais
+- `/regras.html` - Regras do torneio
+- `/admin.html` - Painel administrativo (requer autenticação)
+- `/login.html` - Login com código por email
 
-### `/estatisticas.html` - Estatísticas do Jogador
-- Busca por email
-- Filtro por campeonato
-- Métricas detalhadas:
-  - Resumo geral (partidas, vitórias, win rate, pontos)
-  - Decks utilizados
-  - Performance por deck
-  - Matchups contra outros decks
-  - Histórico completo de partidas
+## Sistema de Pontuação
 
-### `/admin.html` - Painel Administrativo
-- Criar e gerenciar campeonatos
-- Cadastrar precons
-- Adicionar emails permitidos
-- Gerar pareamentos
-- Reportar resultados
+Baseado em sistema suíço para Commander multiplayer:
 
-## API Endpoints
+- Vencedor: 3 pontos
+- Segundo lugar: 1 ponto
+- Terceiro e quarto: 0 pontos
 
-### Campeonatos
-- `GET /api/campeonatos` - Listar todos
-- `GET /api/campeonatos/:id` - Buscar específico
-- `POST /api/campeonatos` - Criar novo
-- `PUT /api/campeonatos/:id/status` - Atualizar status
+Pareamento considera pontuação acumulada e vitórias para criar mesas balanceadas.
 
-### Precons
-- `GET /api/precons?busca=termo` - Buscar precons
-- `POST /api/precons` - Cadastrar precon
+## Autenticação
 
-### Inscrições
-- `GET /api/inscricoes` - Listar inscritos
-- `POST /api/inscricoes` - Criar inscrição
+Sistema de autenticação por código de 6 dígitos enviado ao email:
 
-### Rodadas
-- `GET /api/rodadas` - Listar rodadas
-- `POST /api/parear` - Gerar pareamento
-- `POST /api/resultado` - Salvar resultado
+1. Digite seu email
+2. Receba código por email
+3. Insira o código (válido por 15 minutos)
+4. Sessão válida por 7 dias
 
-### Estatísticas
-- `GET /api/estatisticas?email=x&campeonato_id=y` - Estatísticas do jogador
-- `GET /api/metagame` - Estatísticas gerais
-
-## Uso
-
-### Criar um Campeonato
-
-1. Acesse `/admin.html`
-2. Preencha o formulário "Criar Campeonato"
-3. Gerencie o status: inscrições → em_andamento → finalizado
-
-### Inscrever Jogadores
-
-1. Adicione emails permitidos no admin
-2. Jogadores acessam a página principal
-3. Preenchem nome, email e selecionam o precon
-4. Sistema valida email e registra inscrição
-
-### Gerar Rodadas
-
-1. No admin, use "Gerar Pareamento"
-2. Sistema cria mesas de 4 jogadores por sistema suíço
-3. Jogadores veem os pareamentos na página principal
-
-### Reportar Resultados
-
-1. No admin, informe ID da mesa, vencedor e segundo lugar
-2. Sistema atualiza pontuação automaticamente
-3. Registra no histórico para estatísticas
-
-### Ver Estatísticas
-
-1. Acesse `/estatisticas.html`
-2. Digite seu email
-3. Opcionalmente filtre por campeonato
-4. Veja todas as suas métricas
-
-## Gerenciamento via SQL
-
-### Adicionar Precons
-
-```sql
-INSERT INTO precons (nome, set_nome, comandante, cores, ano) 
-VALUES ('Nome do Deck', 'Commander 2024', 'Comandante', 'WUB', 2024);
-```
-
-### Adicionar Emails Permitidos
-
-```sql
-INSERT INTO emails_permitidos (email) 
-VALUES ('jogador@email.com');
-```
-
-### Banir Precon
-
-```sql
-UPDATE precons SET banido = TRUE WHERE id = 1;
-```
-
-### Ver Estatísticas de um Jogador
-
-```sql
-SELECT * FROM historico_partidas 
-WHERE jogador_id = (SELECT id FROM inscricoes WHERE email = 'jogador@email.com')
-ORDER BY data_partida DESC;
-```
-
-## Segurança
-
-- Validação de emails permitidos
-- Proteção contra SQL injection (prepared statements)
-- HTTPS recomendado em produção
-- Variáveis de ambiente para credenciais
-- Unique constraints para evitar duplicatas
-
-## Próximas Melhorias
-
-- [ ] Autenticação para área admin
-- [ ] Sistema de check-in semanal
-- [ ] Notificações por email
-- [ ] Integração com Discord
-- [ ] Exportação de relatórios PDF
-- [ ] Dashboard com gráficos
-- [ ] Ranking geral entre campeonatos
-- [ ] Sistema de pontos ELO
+Disponível para jogadores (estatísticas pessoais) e administradores (painel admin).
 
 ## Suporte
 
-Para dúvidas sobre deploy na Hostinger, consulte [DEPLOY.md](DEPLOY.md)
-
-## Licença
-
-MIT
+Para dúvidas sobre instalação e deploy, consulte [HOSTINGER-SETUP.md](HOSTINGER-SETUP.md)
