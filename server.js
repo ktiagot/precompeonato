@@ -1,4 +1,9 @@
-// Usar apenas variáveis de ambiente do sistema (Hostinger)
+// Tentar carregar .env se existir (desenvolvimento local)
+try {
+    require('dotenv').config();
+} catch (e) {
+    // dotenv não instalado ou .env não existe - usar variáveis do sistema
+}
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
