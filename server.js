@@ -83,6 +83,21 @@ function adminMiddleware(req, res, next) {
     next();
 }
 
+// Endpoint para ver logs de erro
+app.get('/api/debug/errors', (req, res) => {
+    res.json({
+        totalErrors: global.dbErrorLog?.length || 0,
+        errors: global.dbErrorLog || [],
+        env: {
+            DB_HOST: process.env.DB_HOST,
+            DB_USER: process.env.DB_USER,
+            DB_NAME: process.env.DB_NAME,
+            DB_PORT: process.env.DB_PORT,
+            hasPassword: !!process.env.DB_PASSWORD
+        }
+    });
+});
+
 // Rota de teste
 app.get('/api/health', async (req, res) => {
     try {

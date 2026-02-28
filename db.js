@@ -18,6 +18,9 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+// Log de erros global
+global.dbErrorLog = [];
+
 // Wrapper para logar todas as queries
 const originalQuery = pool.query.bind(pool);
 pool.query = async function(...args) {
@@ -36,6 +39,19 @@ pool.query = async function(...args) {
         console.error('      Message:', error.message);
         console.error('      Code:', error.code);
         console.error('      SQL State:', error.sqlState);
+        console.error('      Address:', error.address);
+        
+        // Salvar no log global
+        global.dbErrorLog.unshift({
+            timestamp: new Date().toISOString(),
+            sql: sql.substring(0, 200),
+            message: error.message,
+            code: error.code,
+            sqlState: error.sqlState,
+            address: error.address
+        });
+        if (global.dbErrorLog.length > 50) global.dbErrorLog.pop();
+        
         throw error;
     }
 };
