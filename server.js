@@ -299,6 +299,35 @@ app.put('/api/campeonatos/:id/status', async (req, res) => {
     }
 });
 
+// Buscar tema do campeonato ativo
+app.get('/api/tema', async (req, res) => {
+    try {
+        const [campeonatos] = await db.query(`
+            SELECT cor_primaria, cor_secundaria, cor_destaque, logo_url, nome, edicao
+            FROM campeonatos 
+            WHERE status IN ('inscricoes', 'em_andamento')
+            ORDER BY data_inicio DESC 
+            LIMIT 1
+        `);
+        
+        if (campeonatos.length === 0) {
+            // Tema padrão
+            return res.json({
+                cor_primaria: '#2563eb',
+                cor_secundaria: '#16a34a',
+                cor_destaque: '#dc2626',
+                logo_url: null,
+                nome: 'Precompeonato',
+                edicao: ''
+            });
+        }
+        
+        res.json(campeonatos[0]);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // ========== PRECONS ==========
 app.get('/api/precons', async (req, res) => {
     try {
