@@ -1,5 +1,4 @@
-// Carregar .env apenas se existir (desenvolvimento local)
-require('dotenv').config();
+// Usar apenas variáveis de ambiente do sistema (Hostinger)
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');

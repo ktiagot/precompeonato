@@ -1,5 +1,4 @@
-// Carregar .env apenas se existir (desenvolvimento local)
-require('dotenv').config();
+// Usar apenas variáveis de ambiente do sistema (Hostinger)
 const mysql = require('mysql2/promise');
 
 console.log('🔌 Configurando conexão com banco de dados...');
