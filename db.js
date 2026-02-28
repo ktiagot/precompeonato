@@ -18,7 +18,28 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-// Não testar conexão na inicialização para não crashar
+// Wrapper para logar todas as queries
+const originalQuery = pool.query.bind(pool);
+pool.query = async function(...args) {
+    const sql = args[0];
+    const params = args[1];
+    
+    console.log('📊 SQL Query:', sql.substring(0, 100) + (sql.length > 100 ? '...' : ''));
+    if (params) console.log('   Params:', params);
+    
+    try {
+        const result = await originalQuery(...args);
+        console.log('   ✅ Success - Rows:', result[0]?.length || 'N/A');
+        return result;
+    } catch (error) {
+        console.error('   ❌ SQL Error:');
+        console.error('      Message:', error.message);
+        console.error('      Code:', error.code);
+        console.error('      SQL State:', error.sqlState);
+        throw error;
+    }
+};
+
 console.log('⚠️  Pool de conexões criado (conexão será testada sob demanda)');
 
 module.exports = pool;

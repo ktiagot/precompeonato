@@ -20,6 +20,16 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('.'));
 
+// Middleware de log para todas as requisições
+app.use((req, res, next) => {
+    console.log(`\n🌐 ${req.method} ${req.path}`);
+    console.log('   Query:', req.query);
+    if (req.body && Object.keys(req.body).length > 0) {
+        console.log('   Body:', req.body);
+    }
+    next();
+});
+
 // Configurar transporte de email
 let transporter = null;
 if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
@@ -301,7 +311,9 @@ app.put('/api/campeonatos/:id/status', async (req, res) => {
 
 // Buscar tema do campeonato ativo
 app.get('/api/tema', async (req, res) => {
+    console.log('🎨 Requisição /api/tema recebida');
     try {
+        console.log('  - Tentando conectar no banco...');
         const [campeonatos] = await db.query(`
             SELECT cor_primaria, cor_secundaria, cor_destaque, logo_url, nome, edicao
             FROM campeonatos 
@@ -310,7 +322,11 @@ app.get('/api/tema', async (req, res) => {
             LIMIT 1
         `);
         
+        console.log('  - Query executada com sucesso');
+        console.log('  - Campeonatos encontrados:', campeonatos.length);
+        
         if (campeonatos.length === 0) {
+            console.log('  - Nenhum campeonato ativo, usando tema padrão');
             // Tema padrão
             return res.json({
                 cor_primaria: '#2563eb',
@@ -322,9 +338,19 @@ app.get('/api/tema', async (req, res) => {
             });
         }
         
+        console.log('  - Tema encontrado:', campeonatos[0].nome);
         res.json(campeonatos[0]);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('❌ Erro em /api/tema:');
+        console.error('  - Message:', error.message);
+        console.error('  - Code:', error.code);
+        console.error('  - SQL State:', error.sqlState);
+        console.error('  - SQL Message:', error.sqlMessage);
+        res.status(500).json({ 
+            error: error.message,
+            code: error.code,
+            details: error.sqlMessage 
+        });
     }
 });
 
