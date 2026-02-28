@@ -1,4 +1,4 @@
-require('dotenv').config();
+// dotenv removido - usando variáveis de ambiente da Hostinger
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
