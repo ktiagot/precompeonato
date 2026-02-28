@@ -1,4 +1,5 @@
-// dotenv removido - usando variáveis de ambiente da Hostinger
+// Carregar .env apenas se existir (desenvolvimento local)
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');

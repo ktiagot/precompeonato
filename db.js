@@ -1,4 +1,5 @@
-// dotenv removido - usando variáveis de ambiente da Hostinger
+// Carregar .env apenas se existir (desenvolvimento local)
+require('dotenv').config();
 const mysql = require('mysql2/promise');
 
 console.log('🔌 Configurando conexão com banco de dados...');
