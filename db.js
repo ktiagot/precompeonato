@@ -1,4 +1,4 @@
-// Usar apenas variáveis de ambiente do sistema (Hostinger)
+// Variáveis de ambiente já carregadas pelo server.js
 const mysql = require('mysql2/promise');
 
 console.log('🔌 Configurando conexão com banco de dados...');
