@@ -19,46 +19,6 @@ const pool = mysql.createPool({
     socketPath: undefined // Força TCP/IP ao invés de socket Unix
 });
 
-// Log de erros global
-global.dbErrorLog = [];
-
-// Wrapper que desabilita ONLY_FULL_GROUP_BY antes de cada query
-const originalQuery = pool.query.bind(pool);
-pool.query = async function(...args) {
-    const sql = args[0];
-    const params = args[1];
-    
-    console.log('📊 SQL Query:', sql.substring(0, 100) + (sql.length > 100 ? '...' : ''));
-    if (params) console.log('   Params:', params);
-    
-    try {
-        // Primeiro, desabilitar ONLY_FULL_GROUP_BY nesta conexão
-        await originalQuery("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))");
-        
-        // Depois executar a query real
-        const result = await originalQuery(...args);
-        console.log('   ✅ Success - Rows:', result[0]?.length || 'N/A');
-        return result;
-    } catch (error) {
-        console.error('   ❌ SQL Error:');
-        console.error('      Message:', error.message);
-        console.error('      Code:', error.code);
-        console.error('      SQL State:', error.sqlState);
-        
-        // Salvar no log global
-        global.dbErrorLog.unshift({
-            timestamp: new Date().toISOString(),
-            sql: sql.substring(0, 200),
-            message: error.message,
-            code: error.code,
-            sqlState: error.sqlState
-        });
-        if (global.dbErrorLog.length > 50) global.dbErrorLog.pop();
-        
-        throw error;
-    }
-};
-
 console.log('⚠️  Pool de conexões criado (conexão será testada sob demanda)');
 
 module.exports = pool;

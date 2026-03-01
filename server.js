@@ -1100,17 +1100,20 @@ app.get('/api/estatisticas/geral', async (req, res) => {
         console.log('   2/4 - Buscando metagame...');
         const [metagame] = await db.query(`
             SELECT 
-                p.nome as deck_nome,
-                p.comandante,
-                p.set_nome,
+                deck_info.deck_nome,
+                deck_info.comandante,
+                deck_info.set_nome,
                 COUNT(h.id) as vezes_usado,
                 SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
                 ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(h.id)), 1) as winrate,
                 ROUND((COUNT(h.id) * 100.0 / (SELECT COUNT(*) FROM historico_partidas ${campeonatoFilter})), 1) as porcentagem
             FROM historico_partidas h
-            JOIN precons p ON h.deck_id = p.id
+            JOIN (
+                SELECT id, nome as deck_nome, comandante, set_nome 
+                FROM precons
+            ) deck_info ON h.deck_id = deck_info.id
             ${campeonatoFilter}
-            GROUP BY p.id, p.nome, p.comandante, p.set_nome
+            GROUP BY deck_info.id, deck_info.deck_nome, deck_info.comandante, deck_info.set_nome
             ORDER BY vezes_usado DESC
             LIMIT 20
         `, params);
