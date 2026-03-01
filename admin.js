@@ -289,40 +289,43 @@ document.getElementById('rodadaResultado').addEventListener('change', async (e) 
 // Carregar jogadores ao selecionar mesa
 document.getElementById('mesaResultado').addEventListener('change', async (e) => {
     const mesaId = e.target.value;
-    if (!mesaId) return;
+    if (!mesaId) {
+        document.getElementById('jogadoresMesa').innerHTML = '';
+        return;
+    }
     
     const response = await authFetch(`${API_URL}/admin/mesas/${mesaId}`);
     const mesa = await response.json();
     
     const container = document.getElementById('jogadoresMesa');
     container.innerHTML = `
-        <h4>Jogadores da Mesa</h4>
-        ${mesa.jogadores.map((j, idx) => `
-            <div class="jogador-item">
-                <div>
-                    <strong>${j.nome}</strong>
-                    <span style="color: var(--gray-600); font-size: 0.875rem;"> - ${j.deck_nome}</span>
+        <div style="background: var(--gray-50); padding: 1.5rem; border-radius: 0.5rem; border: 2px solid var(--primary);">
+            <h4 style="margin-bottom: 1rem; color: var(--primary);">Selecione as posições dos jogadores</h4>
+            <p style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 1rem;">
+                Marque 1º lugar (obrigatório) e 2º lugar (opcional)
+            </p>
+            ${mesa.jogadores.map((j, idx) => `
+                <div class="jogador-item" style="background: white; padding: 1rem; margin-bottom: 0.75rem; border: 1px solid var(--gray-300); border-radius: 0.5rem;">
+                    <div style="margin-bottom: 0.5rem;">
+                        <strong style="font-size: 1rem;">${j.nome}</strong>
+                        <div style="color: var(--gray-600); font-size: 0.875rem; margin-top: 0.25rem;">
+                            ${j.deck_nome || 'Deck não definido'}
+                            ${j.comandante ? ` - ${j.comandante}` : ''}
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.5rem; background: var(--success); color: white; border-radius: 0.5rem; font-weight: 600;">
+                            <input type="radio" name="vencedor" value="${j.inscricao_id}" required style="width: 18px; height: 18px;">
+                            🏆 1º Lugar
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.5rem; background: var(--gray-400); color: white; border-radius: 0.5rem; font-weight: 600;">
+                            <input type="radio" name="segundo" value="${j.inscricao_id}" style="width: 18px; height: 18px;">
+                            🥈 2º Lugar
+                        </label>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 0.5rem;">
-                    <label>
-                        <input type="radio" name="vencedor" value="${j.inscricao_id}" required>
-                        1º
-                    </label>
-                    <label>
-                        <input type="radio" name="segundo" value="${j.inscricao_id}">
-                        2º
-                    </label>
-                    <label>
-                        <input type="radio" name="terceiro" value="${j.inscricao_id}">
-                        3º
-                    </label>
-                    <label>
-                        <input type="radio" name="quarto" value="${j.inscricao_id}">
-                        4º
-                    </label>
-                </div>
-            </div>
-        `).join('')}
+            `).join('')}
+        </div>
     `;
 });
 
