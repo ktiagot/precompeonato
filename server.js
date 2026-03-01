@@ -562,6 +562,16 @@ app.post('/api/emails-permitidos', async (req, res) => {
     }
 });
 
+app.delete('/api/emails-permitidos/:email', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { email } = req.params;
+        await db.query('UPDATE emails_permitidos SET ativo = FALSE WHERE email = ?', [email.toLowerCase()]);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // ========== INSCRIÇÕES ==========
 app.get('/api/inscricoes', async (req, res) => {
     try {

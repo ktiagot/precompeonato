@@ -86,6 +86,8 @@ document.querySelectorAll('.tab-admin-btn').forEach(btn => {
             carregarCampeonatos();
         } else if (tabName === 'inscritos') {
             carregarInscritos();
+        } else if (tabName === 'emails') {
+            carregarEmails();
         }
     });
 });
@@ -478,6 +480,54 @@ document.getElementById('preconForm').addEventListener('submit', async (e) => {
 
 // ========== EMAILS ==========
 
+// Carregar emails permitidos
+async function carregarEmails() {
+    try {
+        const response = await fetch(`${API_URL}/emails-permitidos`);
+        const emails = await response.json();
+        
+        const container = document.getElementById('emailsList');
+        
+        if (emails.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: var(--gray-600); padding: 2rem;">Nenhum email cadastrado ainda.</p>';
+            return;
+        }
+        
+        container.innerHTML = emails.map(e => `
+            <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; margin-bottom: 0.5rem;">
+                <span style="font-family: monospace; font-size: 0.95rem;">${e}</span>
+                <button onclick="removerEmail('${e}')" class="btn-secondary" style="border-color: var(--danger); color: var(--danger); padding: 0.5rem 1rem;">
+                    Remover
+                </button>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Erro ao carregar emails:', error);
+    }
+}
+
+// Remover email
+window.removerEmail = async function(email) {
+    if (!confirm(`Tem certeza que deseja remover o email ${email}?`)) {
+        return;
+    }
+    
+    try {
+        const response = await authFetch(`${API_URL}/emails-permitidos/${encodeURIComponent(email)}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            showAlert('Email removido com sucesso!', 'success');
+            carregarEmails();
+        } else {
+            showAlert('Erro ao remover email', 'error');
+        }
+    } catch (error) {
+        showAlert('Erro ao conectar com o servidor', 'error');
+    }
+};
+
 document.getElementById('emailForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -489,8 +539,11 @@ document.getElementById('emailForm').addEventListener('submit', async (e) => {
     });
     
     if (response.ok) {
-        alert('Email adicionado!');
+        showAlert('Email adicionado com sucesso!', 'success');
         e.target.reset();
+        carregarEmails();
+    } else {
+        showAlert('Erro ao adicionar email', 'error');
     }
 });
 
