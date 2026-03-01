@@ -1054,7 +1054,6 @@ app.get('/api/metagame', async (req, res) => {
                 MAX(p.set_nome) as set_nome,
                 COUNT(i.id) as uso,
                 SUM(COALESCE(i.vitorias, 0)) as vitorias,
-                ROUND((COUNT(i.id) * 100.0 / (SELECT COUNT(*) FROM inscricoes WHERE ativo = TRUE)), 1) as uso_percentual,
                 ROUND((SUM(COALESCE(i.vitorias, 0)) * 100.0 / NULLIF(COUNT(i.id), 0)), 1) as win_rate
             FROM precons p
             LEFT JOIN inscricoes i ON p.id = i.deck_id AND i.ativo = TRUE
@@ -1065,6 +1064,15 @@ app.get('/api/metagame', async (req, res) => {
         
         console.log('   Executando query de metagame...');
         const [stats] = await db.query(query);
+        
+        // Calcular uso_percentual no JavaScript
+        const totalUso = stats.reduce((sum, s) => sum + parseInt(s.uso), 0);
+        stats.forEach(stat => {
+            stat.uso_percentual = totalUso > 0 
+                ? parseFloat(((stat.uso * 100.0) / totalUso).toFixed(1))
+                : 0;
+        });
+        
         console.log('✅ GET /api/metagame - Sucesso:', stats.length, 'registros');
         res.json(stats);
     } catch (error) {
@@ -1102,8 +1110,6 @@ app.get('/api/estatisticas/geral', async (req, res) => {
         
         // Metagame - Decks mais usados
         console.log('   2/4 - Buscando metagame...');
-        const campeonatoFilterSubquery = campeonato_id ? 'WHERE campeonato_id = ?' : '';
-        const metagameParams = campeonato_id ? [campeonato_id, campeonato_id] : [];
         const [metagame] = await db.query(`
             SELECT 
                 MAX(p.nome) as deck_nome,
@@ -1111,15 +1117,23 @@ app.get('/api/estatisticas/geral', async (req, res) => {
                 MAX(p.set_nome) as set_nome,
                 COUNT(h.id) as vezes_usado,
                 SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
-                ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(h.id)), 1) as winrate,
-                ROUND((COUNT(h.id) * 100.0 / (SELECT COUNT(*) FROM historico_partidas ${campeonatoFilterSubquery})), 1) as porcentagem
+                ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(h.id), 0)), 1) as winrate
             FROM historico_partidas h
             JOIN precons p ON h.deck_id = p.id
             ${campeonatoFilter}
             GROUP BY p.id
             ORDER BY COUNT(h.id) DESC, SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) DESC
             LIMIT 20
-        `, metagameParams);
+        `, params);
+        
+        // Calcular porcentagem no JavaScript para evitar problemas com subquery
+        const totalPartidas = metagame.reduce((sum, d) => sum + parseInt(d.vezes_usado), 0);
+        metagame.forEach(deck => {
+            deck.porcentagem = totalPartidas > 0 
+                ? parseFloat(((deck.vezes_usado * 100.0) / totalPartidas).toFixed(1))
+                : 0;
+        });
+        
         console.log('   ✓ Metagame OK -', metagame.length, 'decks');
         
         // Top decks por win rate (mínimo 3 partidas)
