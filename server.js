@@ -1102,6 +1102,7 @@ app.get('/api/estatisticas/geral', async (req, res) => {
         
         // Metagame - Decks mais usados
         console.log('   2/4 - Buscando metagame...');
+        const campeonatoFilterSubquery = campeonato_id ? 'WHERE campeonato_id = ?' : '';
         const [metagame] = await db.query(`
             SELECT 
                 MAX(p.nome) as deck_nome,
@@ -1110,14 +1111,14 @@ app.get('/api/estatisticas/geral', async (req, res) => {
                 COUNT(h.id) as vezes_usado,
                 SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
                 ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(h.id)), 1) as winrate,
-                ROUND((COUNT(h.id) * 100.0 / (SELECT COUNT(*) FROM historico_partidas ${campeonatoFilter})), 1) as porcentagem
+                ROUND((COUNT(h.id) * 100.0 / (SELECT COUNT(*) FROM historico_partidas ${campeonatoFilterSubquery})), 1) as porcentagem
             FROM historico_partidas h
             JOIN precons p ON h.deck_id = p.id
             ${campeonatoFilter}
             GROUP BY p.id
             ORDER BY vezes_usado DESC
             LIMIT 20
-        `, params);
+        `, campeonato_id ? [campeonato_id, ...params] : params);
         console.log('   ✓ Metagame OK -', metagame.length, 'decks');
         
         // Top decks por win rate (mínimo 3 partidas)
