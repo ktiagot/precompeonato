@@ -115,7 +115,6 @@
                 <a href="index.html">Início</a>
                 <a href="inscricao.html">Inscrição</a>
                 <a href="rodadas.html">Rodadas</a>
-                <a href="metagame.html">Metagame</a>
                 <a href="estatisticas.html" class="active">Estatísticas</a>
                 <a href="regras.html">Regras</a>
                 <a href="perfil.html">Perfil</a>
@@ -196,15 +195,26 @@
         <!-- Tab: Minhas Estatísticas -->
         <section class="section tab-content" id="tab-minhas" style="display: none;">
             <div class="container">
-                <form id="buscarJogadorForm" style="max-width: 700px; margin: 0 auto 2rem;">
-                    <input type="email" id="emailJogador" placeholder="Digite seu email" required>
-                    <select id="filtroCampeonato">
-                        <option value="">Todos os campeonatos</option>
-                    </select>
-                    <button type="submit" class="btn-primary">Buscar Minhas Estatísticas</button>
-                </form>
+                <!-- Mensagem de não logado -->
+                <div id="naoLogado" style="display: none; text-align: center; padding: 3rem;">
+                    <h3 style="color: var(--gray-600); margin-bottom: 1rem;">🔒 Faça login para ver suas estatísticas</h3>
+                    <p style="color: var(--gray-600); margin-bottom: 2rem;">Você precisa estar logado para visualizar suas estatísticas pessoais.</p>
+                    <a href="login.html" class="btn-primary">Fazer Login</a>
+                </div>
+
+                <!-- Mensagem de sem dados -->
+                <div id="semDados" style="display: none; text-align: center; padding: 3rem;">
+                    <h3 style="color: var(--gray-600); margin-bottom: 1rem;">📊 Nenhuma estatística encontrada</h3>
+                    <p style="color: var(--gray-600); margin-bottom: 2rem;">Você ainda não participou de nenhuma partida.</p>
+                    <a href="inscricao.html" class="btn-primary">Fazer Inscrição</a>
+                </div>
 
                 <div id="statsContainer" style="display: none;">
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <h3 id="nomeJogador" style="color: var(--primary);"></h3>
+                        <p id="emailJogador" style="color: var(--gray-600);"></p>
+                    </div>
+
                     <!-- Resumo Geral -->
                     <div class="stats-resumo">
                         <h3>Resumo Geral</h3>

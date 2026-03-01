@@ -395,32 +395,6 @@ document.getElementById('mesaResultado').addEventListener('change', async (e) =>
                         </select>
                     </label>
                 </div>
-                
-                <!-- 3º Lugar -->
-                <div style="background: white; padding: 1rem; border-radius: 0.5rem; border: 2px solid #f59e0b;">
-                    <label style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
-                        <span style="background: #f59e0b; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; min-width: 100px; text-align: center;">
-                            🥉 3º Lugar
-                        </span>
-                        <select name="terceiro" style="flex: 1; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 0.5rem; font-size: 1rem;">
-                            <option value="">Selecione o jogador (opcional)</option>
-                            ${jogadoresOptions}
-                        </select>
-                    </label>
-                </div>
-                
-                <!-- 4º Lugar -->
-                <div style="background: white; padding: 1rem; border-radius: 0.5rem; border: 2px solid #6b7280;">
-                    <label style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
-                        <span style="background: #6b7280; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; min-width: 100px; text-align: center;">
-                            4º Lugar
-                        </span>
-                        <select name="quarto" style="flex: 1; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 0.5rem; font-size: 1rem;">
-                            <option value="">Selecione o jogador (opcional)</option>
-                            ${jogadoresOptions}
-                        </select>
-                    </label>
-                </div>
             </div>
         </div>
     `;

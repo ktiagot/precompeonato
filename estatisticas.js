@@ -137,36 +137,72 @@ function exibirEstatisticasGerais(stats) {
 // Listener para mudança de filtro nas estatísticas gerais
 document.getElementById('filtroCampeonatoGeral').addEventListener('change', carregarEstatisticasGerais);
 
-// Buscar estatísticas
-document.getElementById('buscarJogadorForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
+// Carregar minhas estatísticas automaticamente se estiver logado
+async function carregarMinhasEstatisticas() {
+    const token = localStorage.getItem('auth_token');
     
-    const email = document.getElementById('emailJogador').value;
-    const campeonatoId = document.getElementById('filtroCampeonato').value;
+    if (!token) {
+        document.getElementById('naoLogado').style.display = 'block';
+        document.getElementById('semDados').style.display = 'none';
+        document.getElementById('statsContainer').style.display = 'none';
+        return;
+    }
     
     try {
-        let url = `${API_URL}/estatisticas?email=${encodeURIComponent(email)}`;
-        if (campeonatoId) {
-            url += `&campeonato_id=${campeonatoId}`;
-        }
+        // Verificar autenticação e pegar email
+        const authResponse = await fetch(`${API_URL}/auth/me`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
         
-        const response = await fetch(url);
-        const stats = await response.json();
-        
-        if (stats.totalPartidas === 0) {
+        if (!authResponse.ok) {
+            localStorage.clear();
+            document.getElementById('naoLogado').style.display = 'block';
+            document.getElementById('semDados').style.display = 'none';
             document.getElementById('statsContainer').style.display = 'none';
-            document.getElementById('nenhumDado').style.display = 'block';
             return;
         }
         
-        document.getElementById('nenhumDado').style.display = 'none';
+        const user = await authResponse.json();
+        const email = user.email;
+        
+        // Buscar estatísticas
+        const statsResponse = await fetch(`${API_URL}/estatisticas?email=${encodeURIComponent(email)}`);
+        const stats = await statsResponse.json();
+        
+        if (stats.totalPartidas === 0) {
+            document.getElementById('naoLogado').style.display = 'none';
+            document.getElementById('semDados').style.display = 'block';
+            document.getElementById('statsContainer').style.display = 'none';
+            return;
+        }
+        
+        document.getElementById('naoLogado').style.display = 'none';
+        document.getElementById('semDados').style.display = 'none';
         document.getElementById('statsContainer').style.display = 'block';
+        
+        // Exibir nome e email
+        if (stats.meusDecks && stats.meusDecks.length > 0) {
+            // Pegar nome da primeira inscrição
+            const primeiraInscricao = stats.meusDecks[0];
+            document.getElementById('emailJogador').textContent = email;
+        }
         
         exibirEstatisticas(stats);
     } catch (error) {
-        console.error('Erro ao buscar estatísticas:', error);
-        alert('Erro ao buscar estatísticas');
+        console.error('Erro ao carregar minhas estatísticas:', error);
+        document.getElementById('naoLogado').style.display = 'none';
+        document.getElementById('semDados').style.display = 'block';
+        document.getElementById('statsContainer').style.display = 'none';
     }
+}
+
+// Adicionar listener para quando a tab de minhas estatísticas for clicada
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (btn.dataset.tab === 'minhas') {
+            carregarMinhasEstatisticas();
+        }
+    });
 });
 
 function exibirEstatisticas(stats) {
