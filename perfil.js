@@ -29,6 +29,8 @@ async function checkAuth() {
         if (user.is_admin) {
             document.getElementById('adminBadge').style.display = 'block';
             document.getElementById('adminArea').style.display = 'block';
+            // Esconder seção de minhas mesas para admins
+            document.getElementById('minhasMesasSection').style.display = 'none';
         }
         
         return user;
@@ -140,7 +142,7 @@ async function carregarMinhasMesas(userEmail) {
 
 // Inicializar
 checkAuth().then(user => {
-    if (user) {
+    if (user && !user.is_admin) {
         carregarMinhasMesas(user.email);
     }
 });
