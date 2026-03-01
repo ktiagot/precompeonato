@@ -179,13 +179,22 @@ async function carregarMetagame() {
         const container = document.getElementById('metagameStats');
         
         container.innerHTML = stats.map(stat => `
-            <div class="deck-stat">
-                <h3>${stat.deck}</h3>
-                <p>Uso: ${stat.uso}%</p>
-                <p>Vitórias: ${stat.vitorias}</p>
-                <p>Win Rate: ${stat.winRate}%</p>
+            <div class="deck-stat" style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--white); border: 1px solid var(--gray-300); border-radius: 0.5rem; margin-bottom: 1rem;">
+                ${ScryfallHelper.getImageHTML(stat.comandante, stat.deck)}
+                <div style="flex: 1;">
+                    <h3 style="margin: 0 0 0.5rem 0;">${stat.deck}</h3>
+                    <p style="margin: 0; color: var(--gray-600); font-size: 0.875rem;">${stat.comandante}</p>
+                    <div style="display: flex; gap: 1rem; margin-top: 0.5rem; font-size: 0.875rem;">
+                        <span><strong>Uso:</strong> ${stat.uso_percentual}%</span>
+                        <span><strong>Vitórias:</strong> ${stat.vitorias}</span>
+                        <span><strong>Win Rate:</strong> ${stat.win_rate}%</span>
+                    </div>
+                </div>
             </div>
         `).join('');
+        
+        // Carregar imagens dos comandantes
+        ScryfallHelper.loadAllImages();
     } catch (error) {
         console.error('Erro ao carregar metagame:', error);
     }
