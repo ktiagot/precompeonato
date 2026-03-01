@@ -56,12 +56,19 @@ if (deckBusca) {
                 return;
             }
             
-            deckSugestoes.innerHTML = precons.map(p => `
-                <div class="deck-sugestao" data-id="${p.id}" data-nome="${p.nome}" style="padding: 0.5rem; cursor: pointer; border-bottom: 1px solid #eee;">
-                    <strong>${p.nome}</strong><br>
-                    <small>${p.comandante_principal} - ${p.set_nome || p.set || 'Set desconhecido'}</small>
-                </div>
-            `).join('');
+            deckSugestoes.innerHTML = precons.map(p => {
+                const comandantes = p.comandante_secundario 
+                    ? `${p.comandante_principal} / ${p.comandante_secundario}`
+                    : p.comandante_principal;
+                
+                return `
+                    <div class="deck-sugestao" data-id="${p.id}" data-nome="${p.nome}" style="padding: 0.5rem; cursor: pointer; border-bottom: 1px solid #eee;">
+                        <strong>${p.nome}</strong><br>
+                        <small><strong>Comandante(s):</strong> ${comandantes}</small><br>
+                        <small style="color: var(--gray-500);">${p.set_nome || p.set || 'Set desconhecido'}</small>
+                    </div>
+                `;
+            }).join('');
             
             deckSugestoes.style.display = 'block';
             
@@ -108,27 +115,72 @@ async function selecionarDeck(id, nome, info) {
         
         let infoHtml = `
             <strong>${precon.nome}</strong><br>
-            <small>${precon.set_nome || 'Set desconhecido'}</small>
+            <small style="color: var(--gray-600);">${precon.set_nome || 'Set desconhecido'} (${precon.ano || 'Ano desconhecido'})</small>
         `;
         
         if (temSecundario) {
             infoHtml += `
-                <div style="margin-top: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Escolha o comandante:</label>
-                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; background: white; border: 2px solid var(--gray-300); border-radius: 0.5rem; cursor: pointer;">
-                            <input type="radio" name="cdComandante" value="1" checked>
-                            <span><strong>${precon.comandante_principal}</strong></span>
+                <div style="margin-top: 1rem; padding: 1rem; background: var(--white); border-radius: 0.5rem; border: 1px solid var(--gray-300);">
+                    <label style="display: block; margin-bottom: 0.75rem; font-weight: 600; color: var(--dark);">
+                        ⚔️ Este deck tem múltiplos comandantes. Escolha qual você vai usar:
+                    </label>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <label class="commander-option" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: var(--gray-50); border: 2px solid var(--gray-300); border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;">
+                            <input type="radio" name="cdComandante" value="1" checked style="width: 20px; height: 20px; cursor: pointer;">
+                            <div>
+                                <div style="font-weight: 600; color: var(--dark);">${precon.comandante_principal}</div>
+                                <div style="font-size: 0.75rem; color: var(--gray-600);">Comandante Principal</div>
+                            </div>
                         </label>
-                        <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; background: white; border: 2px solid var(--gray-300); border-radius: 0.5rem; cursor: pointer;">
-                            <input type="radio" name="cdComandante" value="2">
-                            <span><strong>${precon.comandante_secundario}</strong></span>
+                        <label class="commander-option" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: var(--gray-50); border: 2px solid var(--gray-300); border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;">
+                            <input type="radio" name="cdComandante" value="2" style="width: 20px; height: 20px; cursor: pointer;">
+                            <div>
+                                <div style="font-weight: 600; color: var(--dark);">${precon.comandante_secundario}</div>
+                                <div style="font-size: 0.75rem; color: var(--gray-600);">Comandante Alternativo</div>
+                            </div>
                         </label>
                     </div>
                 </div>
             `;
+            
+            // Adicionar estilo de hover para as opções
+            setTimeout(() => {
+                document.querySelectorAll('.commander-option').forEach(option => {
+                    option.addEventListener('mouseenter', () => {
+                        option.style.borderColor = 'var(--accent)';
+                        option.style.background = 'var(--white)';
+                    });
+                    option.addEventListener('mouseleave', () => {
+                        const radio = option.querySelector('input[type="radio"]');
+                        if (!radio.checked) {
+                            option.style.borderColor = 'var(--gray-300)';
+                            option.style.background = 'var(--gray-50)';
+                        }
+                    });
+                    option.addEventListener('click', () => {
+                        document.querySelectorAll('.commander-option').forEach(opt => {
+                            opt.style.borderColor = 'var(--gray-300)';
+                            opt.style.background = 'var(--gray-50)';
+                        });
+                        option.style.borderColor = 'var(--accent)';
+                        option.style.background = 'var(--white)';
+                    });
+                });
+                
+                // Marcar o primeiro como selecionado visualmente
+                const firstOption = document.querySelector('.commander-option');
+                if (firstOption) {
+                    firstOption.style.borderColor = 'var(--accent)';
+                    firstOption.style.background = 'var(--white)';
+                }
+            }, 0);
         } else {
-            infoHtml += `<br><small><strong>Comandante:</strong> ${precon.comandante_principal}</small>`;
+            infoHtml += `
+                <div style="margin-top: 0.75rem; padding: 0.75rem; background: var(--gray-50); border-radius: 0.5rem; border-left: 3px solid var(--accent);">
+                    <strong style="color: var(--dark);">Comandante:</strong> 
+                    <span style="color: var(--gray-700);">${precon.comandante_principal}</span>
+                </div>
+            `;
         }
         
         document.getElementById('deckInfo').innerHTML = infoHtml;
