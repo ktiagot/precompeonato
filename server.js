@@ -1356,26 +1356,56 @@ app.get('/api/estatisticas/geral', async (req, res) => {
         
         // Metagame - Decks mais usados
         console.log('   2/4 - Buscando metagame...');
-        const [metagame] = await db.query(`
-            SELECT 
-                MAX(p.nome) as deck_nome,
-                MAX(CASE 
-                    WHEN i.cd_comandante = 2 AND p.comandante_secundario IS NOT NULL 
-                    THEN p.comandante_secundario 
-                    ELSE p.comandante_principal 
-                END) as comandante,
-                MAX(p.set_nome) as set_nome,
-                COUNT(h.id) as vezes_usado,
-                SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
-                ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(h.id), 0)), 1) as winrate
-            FROM historico_partidas h
-            JOIN precons p ON h.deck_id = p.id
-            JOIN inscricoes i ON h.jogador_id = i.id
-            ${campeonatoFilter}
-            GROUP BY p.id, i.cd_comandante
-            ORDER BY COUNT(h.id) DESC, SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) DESC
-            LIMIT 20
-        `, params);
+        
+        // Verificar se tabela tem nova estrutura (comandante_1/comandante_2)
+        const [columns] = await db.query("SHOW COLUMNS FROM inscricoes LIKE 'comandante_%'");
+        const temNovaEstrutura = columns.length > 0;
+        
+        let metagame;
+        if (temNovaEstrutura) {
+            // Nova estrutura com Partner
+            [metagame] = await db.query(`
+                SELECT 
+                    MAX(p.nome) as deck_nome,
+                    CASE 
+                        WHEN i.comandante_2 IS NOT NULL THEN CONCAT(i.comandante_1, ' + ', i.comandante_2)
+                        ELSE i.comandante_1
+                    END as comandante,
+                    MAX(p.set_nome) as set_nome,
+                    COUNT(h.id) as vezes_usado,
+                    SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
+                    ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(h.id), 0)), 1) as winrate
+                FROM historico_partidas h
+                JOIN precons p ON h.deck_id = p.id
+                JOIN inscricoes i ON h.jogador_id = i.id
+                ${campeonatoFilter}
+                GROUP BY p.id, i.comandante_1, i.comandante_2
+                ORDER BY COUNT(h.id) DESC, SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) DESC
+                LIMIT 20
+            `, params);
+        } else {
+            // Estrutura antiga
+            [metagame] = await db.query(`
+                SELECT 
+                    MAX(p.nome) as deck_nome,
+                    MAX(CASE 
+                        WHEN i.cd_comandante = 2 AND p.comandante_secundario IS NOT NULL 
+                        THEN p.comandante_secundario 
+                        ELSE p.comandante_principal 
+                    END) as comandante,
+                    MAX(p.set_nome) as set_nome,
+                    COUNT(h.id) as vezes_usado,
+                    SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
+                    ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(h.id), 0)), 1) as winrate
+                FROM historico_partidas h
+                JOIN precons p ON h.deck_id = p.id
+                JOIN inscricoes i ON h.jogador_id = i.id
+                ${campeonatoFilter}
+                GROUP BY p.id, i.cd_comandante
+                ORDER BY COUNT(h.id) DESC, SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) DESC
+                LIMIT 20
+            `, params);
+        }
         
         // Calcular porcentagem no JavaScript para evitar problemas com subquery
         const totalPartidas = metagame.reduce((sum, d) => sum + parseInt(d.vezes_usado), 0);
@@ -1389,27 +1419,54 @@ app.get('/api/estatisticas/geral', async (req, res) => {
         
         // Top decks por win rate (mínimo 3 partidas)
         console.log('   3/4 - Buscando top decks...');
-        const [topDecks] = await db.query(`
-            SELECT 
-                MAX(p.nome) as deck_nome,
-                MAX(CASE 
-                    WHEN i.cd_comandante = 2 AND p.comandante_secundario IS NOT NULL 
-                    THEN p.comandante_secundario 
-                    ELSE p.comandante_principal 
-                END) as comandante,
-                COUNT(h.id) as partidas,
-                SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
-                ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(h.id)), 1) as winrate,
-                ROUND(AVG(h.pontos_ganhos), 1) as pontos_medios
-            FROM historico_partidas h
-            JOIN precons p ON h.deck_id = p.id
-            JOIN inscricoes i ON h.jogador_id = i.id
-            ${campeonatoFilter}
-            GROUP BY p.id, i.cd_comandante
-            HAVING COUNT(h.id) >= 3
-            ORDER BY ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(h.id)), 1) DESC, SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) DESC
-            LIMIT 15
-        `, params);
+        
+        let topDecks;
+        if (temNovaEstrutura) {
+            // Nova estrutura com Partner
+            [topDecks] = await db.query(`
+                SELECT 
+                    MAX(p.nome) as deck_nome,
+                    CASE 
+                        WHEN i.comandante_2 IS NOT NULL THEN CONCAT(i.comandante_1, ' + ', i.comandante_2)
+                        ELSE i.comandante_1
+                    END as comandante,
+                    COUNT(h.id) as partidas,
+                    SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
+                    ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(h.id)), 1) as winrate,
+                    ROUND(AVG(h.pontos_ganhos), 1) as pontos_medios
+                FROM historico_partidas h
+                JOIN precons p ON h.deck_id = p.id
+                JOIN inscricoes i ON h.jogador_id = i.id
+                ${campeonatoFilter}
+                GROUP BY p.id, i.comandante_1, i.comandante_2
+                HAVING COUNT(h.id) >= 3
+                ORDER BY ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(h.id)), 1) DESC, SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) DESC
+                LIMIT 15
+            `, params);
+        } else {
+            // Estrutura antiga
+            [topDecks] = await db.query(`
+                SELECT 
+                    MAX(p.nome) as deck_nome,
+                    MAX(CASE 
+                        WHEN i.cd_comandante = 2 AND p.comandante_secundario IS NOT NULL 
+                        THEN p.comandante_secundario 
+                        ELSE p.comandante_principal 
+                    END) as comandante,
+                    COUNT(h.id) as partidas,
+                    SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
+                    ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(h.id)), 1) as winrate,
+                    ROUND(AVG(h.pontos_ganhos), 1) as pontos_medios
+                FROM historico_partidas h
+                JOIN precons p ON h.deck_id = p.id
+                JOIN inscricoes i ON h.jogador_id = i.id
+                ${campeonatoFilter}
+                GROUP BY p.id, i.cd_comandante
+                HAVING COUNT(h.id) >= 3
+                ORDER BY ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(h.id)), 1) DESC, SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) DESC
+                LIMIT 15
+            `, params);
+        }
         console.log('   ✓ Top decks OK -', topDecks.length, 'decks');
         
         // Matchups mais comuns
