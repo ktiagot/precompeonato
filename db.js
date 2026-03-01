@@ -16,7 +16,9 @@ const pool = mysql.createPool({
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    socketPath: undefined // Força TCP/IP ao invés de socket Unix
+    socketPath: undefined, // Força TCP/IP ao invés de socket Unix
+    // Desabilitar ONLY_FULL_GROUP_BY para cada conexão
+    initSql: "SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))"
 });
 
 // Log de erros global
