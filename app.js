@@ -140,11 +140,10 @@ function renderizarRodadas() {
             }
         }
         
-        return `
-            <div class="rodada-card">
-                <h3>Rodada ${rodada.numero}</h3>
-                <p>Data: ${dataFormatada}</p>
-                ${rodada.mesas && rodada.mesas.length > 0 ? rodada.mesas.map((mesa, idx) => `
+        // Criar grid de mesas em 2 colunas
+        const mesasHtml = rodada.mesas && rodada.mesas.length > 0 
+            ? `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                ${rodada.mesas.map((mesa, idx) => `
                     <div class="mesa">
                         <h4>Mesa ${mesa.numero_mesa || idx + 1}</h4>
                         ${mesa.jogadores && mesa.jogadores.length > 0 ? mesa.jogadores.map(j => `
@@ -152,7 +151,15 @@ function renderizarRodadas() {
                         `).join('') : '<p>Nenhum jogador</p>'}
                         ${mesa.vencedor_nome ? `<p><strong>Vencedor: ${mesa.vencedor_nome}</strong></p>` : ''}
                     </div>
-                `).join('') : '<p>Nenhuma mesa criada</p>'}
+                `).join('')}
+            </div>`
+            : '<p>Nenhuma mesa criada</p>';
+        
+        return `
+            <div class="rodada-card">
+                <h3>Rodada ${rodada.numero}</h3>
+                <p>Data: ${dataFormatada}</p>
+                ${mesasHtml}
             </div>
         `;
     }).join('');
