@@ -305,7 +305,7 @@ app.post('/api/auth/verificar-codigo', async (req, res) => {
 app.get('/api/auth/me', authMiddleware, async (req, res) => {
     res.json({
         email: req.user.email,
-        isAdmin: req.user.isAdmin
+        is_admin: req.user.isAdmin
     });
 });
 
@@ -317,6 +317,88 @@ app.post('/api/auth/logout', authMiddleware, async (req, res) => {
         res.json({ message: 'Logout realizado com sucesso' });
     } catch (error) {
         res.status(500).json({ error: 'Erro ao fazer logout' });
+    }
+});
+
+// Minhas mesas (usuário logado)
+app.get('/api/minhas-mesas', authMiddleware, async (req, res) => {
+    try {
+        const userEmail = req.user.email;
+        
+        // Buscar campeonato ativo
+        const [campeonatos] = await db.query(`
+            SELECT id FROM campeonatos 
+            WHERE status IN ('inscricoes', 'em_andamento')
+            ORDER BY data_inicio DESC 
+            LIMIT 1
+        `);
+        
+        if (campeonatos.length === 0) {
+            return res.json([]);
+        }
+        
+        const campeonatoId = campeonatos[0].id;
+        
+        // Buscar inscrição do usuário
+        const [inscricoes] = await db.query(`
+            SELECT id FROM inscricoes 
+            WHERE email = ? AND campeonato_id = ?
+        `, [userEmail, campeonatoId]);
+        
+        if (inscricoes.length === 0) {
+            return res.json([]);
+        }
+        
+        const inscricaoId = inscricoes[0].id;
+        
+        // Buscar todas as mesas do usuário
+        const [mesas] = await db.query(`
+            SELECT 
+                m.id,
+                m.numero_mesa,
+                m.finalizada,
+                m.vencedor_id,
+                r.numero as rodada_numero,
+                r.data_rodada,
+                v.nome as vencedor_nome
+            FROM mesa_jogadores mj
+            JOIN mesas m ON mj.mesa_id = m.id
+            JOIN rodadas r ON m.rodada_id = r.id
+            LEFT JOIN inscricoes v ON m.vencedor_id = v.id
+            WHERE mj.inscricao_id = ?
+            ORDER BY r.numero DESC, m.numero_mesa
+        `, [inscricaoId]);
+        
+        // Para cada mesa, buscar os jogadores
+        for (let mesa of mesas) {
+            // Converter data para formato ISO
+            if (mesa.data_rodada) {
+                mesa.data_rodada = new Date(mesa.data_rodada).toISOString().split('T')[0];
+            }
+            
+            const [jogadores] = await db.query(`
+                SELECT 
+                    i.id as inscricao_id,
+                    i.nome,
+                    i.email,
+                    i.deck_nome,
+                    p.comandante,
+                    h.posicao_final
+                FROM mesa_jogadores mj
+                JOIN inscricoes i ON mj.inscricao_id = i.id
+                LEFT JOIN precons p ON i.deck_id = p.id
+                LEFT JOIN historico_partidas h ON h.mesa_id = mj.mesa_id AND h.jogador_id = i.id
+                WHERE mj.mesa_id = ?
+                ORDER BY mj.posicao
+            `, [mesa.id]);
+            
+            mesa.jogadores = jogadores;
+        }
+        
+        res.json(mesas);
+    } catch (error) {
+        console.error('Erro ao buscar minhas mesas:', error);
+        res.status(500).json({ error: error.message });
     }
 });
 

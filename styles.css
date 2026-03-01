@@ -169,6 +169,36 @@ nav a:hover {
     transform: translateY(0);
 }
 
+.btn-secondary {
+    display: inline-block;
+    background: transparent;
+    color: var(--primary);
+    padding: 0.875rem 2rem;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    border: 2px solid var(--primary);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background: var(--primary);
+    color: var(--white);
+    transform: translateY(-1px);
+}
+
+.btn-secondary:active {
+    transform: translateY(0);
+}
+
+nav a.active {
+    color: var(--primary);
+    font-weight: 600;
+    border-bottom: 2px solid var(--primary);
+}
+
 /* Forms */
 form {
     max-width: 600px;

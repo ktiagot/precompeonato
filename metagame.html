@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metagame - Precompeonato</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="tema.js"></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>PRECOMPEONATO</h1>
+            <nav>
+                <a href="index.html">Início</a>
+                <a href="inscricao.html">Inscrição</a>
+                <a href="rodadas.html">Rodadas</a>
+                <a href="metagame.html" class="active">Metagame</a>
+                <a href="estatisticas.html">Estatísticas</a>
+                <a href="regras.html">Regras</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="section">
+            <div class="container">
+                <h2>Metagame do Campeonato</h2>
+                <p style="margin-bottom: 2rem; color: var(--gray-600);">
+                    Veja quais decks estão sendo mais utilizados e suas taxas de vitória.
+                </p>
+                <div id="metagameStats"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Precompeonato - Todos os direitos reservados</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        // Carregar metagame ao iniciar a página
+        document.addEventListener('DOMContentLoaded', () => {
+            carregarMetagame();
+        });
+    </script>
+</body>
+</html>

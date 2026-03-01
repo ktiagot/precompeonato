@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscrição - Precompeonato</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="tema.js"></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>PRECOMPEONATO</h1>
+            <nav>
+                <a href="index.html">Início</a>
+                <a href="inscricao.html" class="active">Inscrição</a>
+                <a href="rodadas.html">Rodadas</a>
+                <a href="metagame.html">Metagame</a>
+                <a href="estatisticas.html">Estatísticas</a>
+                <a href="regras.html">Regras</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="section">
+            <div class="container">
+                <h2>Inscrição no Campeonato</h2>
+                <p style="margin-bottom: 2rem; color: var(--gray-600);">
+                    Preencha o formulário abaixo para se inscrever no campeonato. 
+                    Seu e-mail deve estar previamente autorizado pelos organizadores.
+                </p>
+                
+                <form id="inscricaoForm">
+                    <div class="form-group">
+                        <label for="nome">Nome Completo</label>
+                        <input type="text" name="nome" id="nome" placeholder="Digite seu nome completo" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">E-mail</label>
+                        <input type="email" name="email" id="email" placeholder="seu@email.com" required>
+                        <small>Use o e-mail autorizado pelos organizadores</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="deckBusca">Deck Precon</label>
+                        <div style="position: relative;">
+                            <input type="text" id="deckBusca" placeholder="Buscar deck precon..." autocomplete="off">
+                            <div id="deckSugestoes" style="display: none; position: absolute; background: white; border: 1px solid #ddd; width: 100%; max-height: 300px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
+                        </div>
+                        <small>Digite o nome do comandante ou do deck</small>
+                    </div>
+                    
+                    <input type="hidden" name="deckId" id="deckId" required>
+                    <input type="hidden" name="deckNome" id="deckNome" required>
+                    
+                    <div id="deckSelecionado" style="display: none; padding: 1rem; background: var(--gray-100); border-radius: 8px; margin: 1rem 0; border-left: 4px solid var(--primary);">
+                        <strong>Deck selecionado:</strong>
+                        <div id="deckInfo" style="margin-top: 0.5rem;"></div>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem;">
+                        Confirmar Inscrição
+                    </button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Precompeonato - Todos os direitos reservados</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

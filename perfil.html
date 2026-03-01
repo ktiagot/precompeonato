@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Perfil - Precompeonato</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="tema.js"></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>PRECOMPEONATO</h1>
+            <nav>
+                <a href="index.html">Início</a>
+                <a href="inscricao.html">Inscrição</a>
+                <a href="rodadas.html">Rodadas</a>
+                <a href="metagame.html">Metagame</a>
+                <a href="estatisticas.html">Estatísticas</a>
+                <a href="perfil.html" class="active">Meu Perfil</a>
+                <a href="#" onclick="logout()" style="color: var(--danger);">Sair</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="section">
+            <div class="container">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <div>
+                        <h2>Meu Perfil</h2>
+                        <p id="userEmail" style="color: var(--gray-600);"></p>
+                    </div>
+                    <div id="adminBadge" style="display: none;">
+                        <span style="background: var(--accent); color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600;">
+                            👑 Admin
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Área de Admin -->
+                <div id="adminArea" style="display: none;">
+                    <div class="card" style="background: var(--accent); color: white; margin-bottom: 2rem;">
+                        <h3>Painel Administrativo</h3>
+                        <p>Você tem acesso às funções administrativas do sistema.</p>
+                        <a href="admin.html" class="btn-primary" style="background: white; color: var(--accent); margin-top: 1rem; display: inline-block; width: auto;">
+                            Acessar Painel Admin
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Minhas Mesas -->
+                <h3>Minhas Mesas</h3>
+                <p style="color: var(--gray-600); margin-bottom: 1.5rem;">
+                    Veja todas as mesas em que você participou ou vai participar no campeonato atual.
+                </p>
+                
+                <div id="minhasMesas"></div>
+                
+                <div id="nenhumaMesa" style="display: none; text-align: center; padding: 3rem; color: var(--gray-600);">
+                    <p>Você ainda não está em nenhuma mesa do campeonato atual.</p>
+                    <a href="inscricao.html" class="btn-primary" style="margin-top: 1rem; display: inline-block; width: auto;">
+                        Fazer Inscrição
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Precompeonato - Todos os direitos reservados</p>
+        </div>
+    </footer>
+
+    <script src="perfil.js"></script>
+</body>
+</html>

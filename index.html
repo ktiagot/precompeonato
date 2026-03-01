@@ -12,56 +12,57 @@
         <div class="container">
             <h1>PRECOMPEONATO</h1>
             <nav>
-                <a href="index.html">Início</a>
-                <a href="index.html#inscricao">Inscrição</a>
-                <a href="index.html#rodadas">Rodadas</a>
-                <a href="index.html#metagame">Metagame</a>
+                <a href="index.html" class="active">Início</a>
+                <a href="inscricao.html">Inscrição</a>
+                <a href="rodadas.html">Rodadas</a>
+                <a href="metagame.html">Metagame</a>
                 <a href="estatisticas.html">Estatísticas</a>
                 <a href="regras.html">Regras</a>
+                <a href="perfil.html" id="perfilLink">Perfil</a>
             </nav>
         </div>
     </header>
 
     <main>
-        <section id="home" class="hero">
+        <section class="hero">
             <div class="container">
                 <h2>Torneio de Commander - Precons</h2>
                 <p>Campeonato multiplayer com decks pré-montados oficiais</p>
-                <a href="#inscricao" class="btn-primary">Inscreva-se Agora</a>
+                <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap;">
+                    <a href="inscricao.html" class="btn-primary">Inscreva-se Agora</a>
+                    <a href="rodadas.html" class="btn-secondary">Ver Rodadas</a>
+                    <a href="metagame.html" class="btn-secondary">Ver Metagame</a>
+                </div>
             </div>
         </section>
 
-        <section id="inscricao" class="section">
+        <section class="section">
             <div class="container">
-                <h2>Inscrição</h2>
-                <form id="inscricaoForm">
-                    <input type="text" name="nome" placeholder="Nome completo" required>
-                    <input type="email" name="email" placeholder="E-mail autorizado" required>
-                    <div style="position: relative;">
-                        <input type="text" id="deckBusca" placeholder="Buscar deck precon..." autocomplete="off">
-                        <div id="deckSugestoes" style="display: none; position: absolute; background: white; border: 1px solid #ddd; width: 100%; max-height: 200px; overflow-y: auto; z-index: 1000;"></div>
+                <h2>Sobre o Campeonato</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                    <div class="card">
+                        <h3>🎮 Formato</h3>
+                        <p>Commander multiplayer (4 jogadores por mesa) usando apenas decks precon oficiais da Wizards of the Coast.</p>
                     </div>
-                    <input type="hidden" name="deckId" id="deckId" required>
-                    <input type="hidden" name="deckNome" id="deckNome" required>
-                    <div id="deckSelecionado" style="display: none; padding: 1rem; background: #f0f0f0; border-radius: 5px; margin: 0.5rem 0;">
-                        <strong>Deck selecionado:</strong> <span id="deckInfo"></span>
+                    <div class="card">
+                        <h3>🏆 Pontuação</h3>
+                        <p>Sistema de pontos por colocação: 1º lugar = 3 pontos, 2º lugar = 1 ponto. Vence quem somar mais pontos ao final.</p>
                     </div>
-                    <button type="submit" class="btn-primary">Confirmar Inscrição</button>
-                </form>
+                    <div class="card">
+                        <h3>📋 Regras</h3>
+                        <p>Seguimos as regras oficiais do Commander com algumas adaptações para torneio. <a href="regras.html">Ver regras completas</a></p>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <section id="rodadas" class="section">
+        <section class="section" style="background: var(--gray-50);">
             <div class="container">
-                <h2>Rodadas</h2>
-                <div id="rodadasList"></div>
-            </div>
-        </section>
-
-        <section id="metagame" class="section">
-            <div class="container">
-                <h2>Metagame</h2>
-                <div id="metagameStats"></div>
+                <h2>Últimas Rodadas</h2>
+                <div id="rodadasResumo"></div>
+                <div style="text-align: center; margin-top: 2rem;">
+                    <a href="rodadas.html" class="btn-primary">Ver Todas as Rodadas</a>
+                </div>
             </div>
         </section>
     </main>
@@ -73,5 +74,33 @@
     </footer>
 
     <script src="app.js"></script>
+    <script>
+        // Carregar resumo das últimas rodadas na home
+        async function carregarResumoRodadas() {
+            try {
+                const response = await fetch(`${API_URL}/rodadas`);
+                const rodadas = await response.json();
+                const container = document.getElementById('rodadasResumo');
+                
+                if (rodadas.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: var(--gray-600);">Nenhuma rodada disponível ainda</p>';
+                    return;
+                }
+                
+                // Mostrar apenas as 2 últimas rodadas
+                const ultimasRodadas = rodadas.slice(0, 2);
+                container.innerHTML = ultimasRodadas.map(r => `
+                    <div class="card">
+                        <h3>Rodada ${r.numero}</h3>
+                        <p>${r.mesas ? r.mesas.length : 0} mesas jogadas</p>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Erro ao carregar resumo:', error);
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', carregarResumoRodadas);
+    </script>
 </body>
 </html>
