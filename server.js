@@ -13,6 +13,17 @@ const db = require('./db');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Função helper para logar erros SQL
+function logSQLError(endpoint, error, query = '') {
+    console.error(`\n❌ ERRO SQL no endpoint: ${endpoint}`);
+    console.error(`   Mensagem: ${error.message}`);
+    console.error(`   Código: ${error.code}`);
+    if (query) {
+        console.error(`   Query: ${query.substring(0, 200)}...`);
+    }
+    console.error(`   Stack: ${error.stack}\n`);
+}
+
 // Log de inicialização
 console.log('🔧 Iniciando servidor...');
 console.log('📊 Variáveis de ambiente:');
@@ -377,6 +388,7 @@ app.get('/api/tema', async (req, res) => {
 // ========== PRECONS ==========
 app.get('/api/precons', async (req, res) => {
     try {
+        console.log('📊 GET /api/precons - Iniciando...');
         const { busca } = req.query;
         let query = 'SELECT * FROM precons WHERE banido = FALSE';
         let params = [];
@@ -389,9 +401,12 @@ app.get('/api/precons', async (req, res) => {
         
         query += ' ORDER BY ano DESC, nome ASC';
         
+        console.log('   Query:', query);
         const [precons] = await db.query(query, params);
+        console.log('✅ GET /api/precons - Sucesso:', precons.length, 'registros');
         res.json(precons);
     } catch (error) {
+        logSQLError('GET /api/precons', error, 'SELECT * FROM precons...');
         res.status(500).json({ error: error.message });
     }
 });
@@ -991,8 +1006,9 @@ app.post('/api/admin/resultado', authMiddleware, adminMiddleware, async (req, re
 
 // ========== METAGAME ==========
 app.get('/api/metagame', async (req, res) => {
+    console.log('📊 GET /api/metagame - Iniciando...');
     try {
-        const [stats] = await db.query(`
+        const query = `
             SELECT 
                 p.nome as deck,
                 p.comandante,
@@ -1006,10 +1022,14 @@ app.get('/api/metagame', async (req, res) => {
             GROUP BY p.id, p.nome, p.comandante, p.set_nome
             HAVING uso > 0
             ORDER BY uso DESC, vitorias DESC
-        `);
+        `;
         
+        console.log('   Executando query de metagame...');
+        const [stats] = await db.query(query);
+        console.log('✅ GET /api/metagame - Sucesso:', stats.length, 'registros');
         res.json(stats);
     } catch (error) {
+        logSQLError('GET /api/metagame', error, 'SELECT p.nome, COUNT(i.id)... GROUP BY p.id, p.nome...');
         res.status(500).json({ error: error.message });
     }
 });
@@ -1018,12 +1038,16 @@ app.get('/api/metagame', async (req, res) => {
 
 // Estatísticas gerais (públicas)
 app.get('/api/estatisticas/geral', async (req, res) => {
+    console.log('📊 GET /api/estatisticas/geral - Iniciando...');
     try {
         const { campeonato_id } = req.query;
         const campeonatoFilter = campeonato_id ? 'WHERE h.campeonato_id = ?' : '';
         const params = campeonato_id ? [campeonato_id] : [];
         
+        console.log('   Campeonato ID:', campeonato_id || 'todos');
+        
         // Números gerais
+        console.log('   1/4 - Buscando estatísticas gerais...');
         const [statsGerais] = await db.query(`
             SELECT 
                 COUNT(DISTINCT h.jogador_id) as total_jogadores,
@@ -1035,8 +1059,10 @@ app.get('/api/estatisticas/geral', async (req, res) => {
             JOIN rodadas r ON m.rodada_id = r.id
             ${campeonatoFilter}
         `, params);
+        console.log('   ✓ Estatísticas gerais OK');
         
         // Metagame - Decks mais usados
+        console.log('   2/4 - Buscando metagame...');
         const [metagame] = await db.query(`
             SELECT 
                 p.nome as deck_nome,
@@ -1053,8 +1079,10 @@ app.get('/api/estatisticas/geral', async (req, res) => {
             ORDER BY vezes_usado DESC
             LIMIT 20
         `, params);
+        console.log('   ✓ Metagame OK -', metagame.length, 'decks');
         
         // Top decks por win rate (mínimo 3 partidas)
+        console.log('   3/4 - Buscando top decks...');
         const [topDecks] = await db.query(`
             SELECT 
                 p.nome as deck_nome,
@@ -1071,8 +1099,10 @@ app.get('/api/estatisticas/geral', async (req, res) => {
             ORDER BY winrate DESC, vitorias DESC
             LIMIT 15
         `, params);
+        console.log('   ✓ Top decks OK -', topDecks.length, 'decks');
         
         // Matchups mais comuns
+        console.log('   4/4 - Buscando matchups...');
         const [matchupsComuns] = await db.query(`
             SELECT 
                 p1.nome as deck1,
@@ -1093,7 +1123,9 @@ app.get('/api/estatisticas/geral', async (req, res) => {
             ORDER BY total DESC
             LIMIT 15
         `, params);
+        console.log('   ✓ Matchups OK -', matchupsComuns.length, 'matchups');
         
+        console.log('✅ GET /api/estatisticas/geral - Sucesso completo!');
         res.json({
             totalJogadores: parseInt(statsGerais[0].total_jogadores),
             totalDecks: parseInt(statsGerais[0].total_decks),
@@ -1104,6 +1136,7 @@ app.get('/api/estatisticas/geral', async (req, res) => {
             matchupsComuns
         });
     } catch (error) {
+        logSQLError('GET /api/estatisticas/geral', error);
         res.status(500).json({ error: error.message });
     }
 });
