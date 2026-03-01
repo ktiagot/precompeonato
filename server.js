@@ -8,7 +8,30 @@ const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-const db = require('./db');
+const dbOriginal = require('./db');
+
+// Wrapper para logar todas as queries SQL
+const db = {
+    query: async function(sql, params) {
+        const sqlPreview = typeof sql === 'string' ? sql.substring(0, 150).replace(/\s+/g, ' ') : 'QUERY OBJECT';
+        console.log(`\n🔍 SQL Query: ${sqlPreview}...`);
+        if (params && params.length > 0) {
+            console.log(`   Params:`, params);
+        }
+        try {
+            const result = await dbOriginal.query(sql, params);
+            console.log(`   ✅ Query OK - ${result[0]?.length || 0} rows`);
+            return result;
+        } catch (error) {
+            console.error(`   ❌ Query FAILED!`);
+            console.error(`   Error Code: ${error.code}`);
+            console.error(`   Error Message: ${error.message}`);
+            console.error(`   SQL State: ${error.sqlState}`);
+            console.error(`   Full SQL:`, typeof sql === 'string' ? sql : 'OBJECT');
+            throw error;
+        }
+    }
+};
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -35,6 +58,18 @@ console.log('  - PORT:', PORT);
 app.use(cors());
 app.use(express.json());
 app.use(express.static('.'));
+
+// Middleware global de erro para capturar erros SQL
+app.use((err, req, res, next) => {
+    if (err) {
+        console.error('\n🔥 ERRO GLOBAL CAPTURADO:');
+        console.error('   URL:', req.method, req.path);
+        console.error('   Erro:', err.message);
+        console.error('   Stack:', err.stack);
+        return res.status(500).json({ error: err.message });
+    }
+    next();
+});
 
 // Middleware de log para todas as requisições
 app.use((req, res, next) => {
