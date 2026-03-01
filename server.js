@@ -998,12 +998,12 @@ app.get('/api/metagame', async (req, res) => {
                 p.comandante,
                 p.set_nome,
                 COUNT(i.id) as uso,
-                SUM(i.vitorias) as vitorias,
+                SUM(COALESCE(i.vitorias, 0)) as vitorias,
                 ROUND((COUNT(i.id) * 100.0 / (SELECT COUNT(*) FROM inscricoes WHERE ativo = TRUE)), 1) as uso_percentual,
-                ROUND((SUM(i.vitorias) * 100.0 / NULLIF(COUNT(i.id), 0)), 1) as win_rate
+                ROUND((SUM(COALESCE(i.vitorias, 0)) * 100.0 / NULLIF(COUNT(i.id), 0)), 1) as win_rate
             FROM precons p
             LEFT JOIN inscricoes i ON p.id = i.deck_id AND i.ativo = TRUE
-            GROUP BY p.id, p.nome, p.comandante, p.set_nome
+            GROUP BY p.id
             HAVING uso > 0
             ORDER BY uso DESC, vitorias DESC
         `);
@@ -1049,7 +1049,7 @@ app.get('/api/estatisticas/geral', async (req, res) => {
             FROM historico_partidas h
             JOIN precons p ON h.deck_id = p.id
             ${campeonatoFilter}
-            GROUP BY p.id, p.nome, p.comandante, p.set_nome
+            GROUP BY p.id
             ORDER BY vezes_usado DESC
             LIMIT 20
         `, params);
@@ -1066,7 +1066,7 @@ app.get('/api/estatisticas/geral', async (req, res) => {
             FROM historico_partidas h
             JOIN precons p ON h.deck_id = p.id
             ${campeonatoFilter}
-            GROUP BY p.id, p.nome, p.comandante
+            GROUP BY p.id
             HAVING COUNT(h.id) >= 3
             ORDER BY winrate DESC, vitorias DESC
             LIMIT 15
@@ -1088,7 +1088,7 @@ app.get('/api/estatisticas/geral', async (req, res) => {
                 p2.id = h.oponente3_deck_id
             )
             ${campeonatoFilter}
-            GROUP BY p1.id, p1.nome, p2.id, p2.nome
+            GROUP BY p1.id, p2.id
             HAVING COUNT(*) >= 2
             ORDER BY total DESC
             LIMIT 15
@@ -1168,7 +1168,7 @@ app.get('/api/estatisticas', async (req, res) => {
             FROM historico_partidas h
             JOIN precons p ON h.deck_id = p.id
             WHERE h.jogador_id IN (${inscricaoIdsStr})
-            GROUP BY p.id, p.nome, p.comandante, p.set_nome
+            GROUP BY p.id
             ORDER BY vezes_usado DESC
         `);
         
@@ -1185,7 +1185,7 @@ app.get('/api/estatisticas', async (req, res) => {
             FROM historico_partidas h
             JOIN precons p ON h.deck_id = p.id
             WHERE h.jogador_id IN (${inscricaoIdsStr})
-            GROUP BY p.id, p.nome, p.comandante
+            GROUP BY p.id
             ORDER BY vitorias DESC, partidas DESC
         `);
         
@@ -1205,7 +1205,7 @@ app.get('/api/estatisticas', async (req, res) => {
                 p.id = h.oponente3_deck_id
             )
             WHERE h.jogador_id IN (${inscricaoIdsStr})
-            GROUP BY p.id, p.nome, p.comandante
+            GROUP BY p.id
             ORDER BY vezes DESC
             LIMIT 20
         `);
