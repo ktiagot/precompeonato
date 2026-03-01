@@ -599,7 +599,7 @@ app.get('/api/inscricoes', async (req, res) => {
 
 app.post('/api/inscricoes', async (req, res) => {
     try {
-        const { nome, email, deckId, deckNome, campeonatoId, cdComandante } = req.body;
+        const { nome, email, discord, whatsapp, deckId, deckNome, campeonatoId, cdComandante } = req.body;
         
         // Se não especificar campeonato, pegar o ativo
         let campId = campeonatoId;
@@ -636,15 +636,17 @@ app.post('/api/inscricoes', async (req, res) => {
         // Inserir inscrição com escolha do comandante (1=principal, 2=secundario)
         const comandanteEscolhido = cdComandante || 1;
         const [result] = await db.query(
-            'INSERT INTO inscricoes (campeonato_id, nome, email, deck_id, cd_comandante, deck_nome) VALUES (?, ?, ?, ?, ?, ?)',
-            [campId, nome, email.toLowerCase(), deckId, comandanteEscolhido, deckNome]
+            'INSERT INTO inscricoes (campeonato_id, nome, email, discord, whatsapp, deck_id, cd_comandante, deck_nome) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [campId, nome, email.toLowerCase(), discord, whatsapp, deckId, comandanteEscolhido, deckNome]
         );
         
         res.json({ 
             id: result.insertId, 
             campeonatoId: campId,
             nome, 
-            email: email.toLowerCase(), 
+            email: email.toLowerCase(),
+            discord,
+            whatsapp,
             deckId,
             cdComandante: comandanteEscolhido,
             deckNome 
