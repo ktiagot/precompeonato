@@ -1332,6 +1332,15 @@ app.get('/api/estatisticas', async (req, res) => {
 
 async function limparDadosExpirados() {
     try {
+        console.log('🧹 Iniciando limpeza automática...');
+        
+        // Verificar se as tabelas existem primeiro
+        const [tables] = await db.query("SHOW TABLES LIKE 'codigos_verificacao'");
+        if (tables.length === 0) {
+            console.log('⚠️  Tabela codigos_verificacao não existe, pulando limpeza');
+            return;
+        }
+        
         // Limpar códigos expirados ou usados
         const [resultCodigos] = await db.query(
             'DELETE FROM codigos_verificacao WHERE expira_em < NOW() OR usado = TRUE'
@@ -1347,6 +1356,7 @@ async function limparDadosExpirados() {
         }
     } catch (error) {
         console.error('❌ Erro na limpeza automática:', error.message);
+        console.error('   Stack:', error.stack);
     }
 }
 
@@ -1354,7 +1364,7 @@ async function limparDadosExpirados() {
 setInterval(limparDadosExpirados, 5 * 60 * 1000);
 
 // Executar limpeza inicial ao iniciar o servidor (com delay para não bloquear)
-setTimeout(limparDadosExpirados, 10000);
+setTimeout(limparDadosExpirados, 30000); // Aumentei para 30 segundos
 
 // Tratamento de erros não capturados
 process.on('uncaughtException', (error) => {
