@@ -21,21 +21,29 @@
             document.documentElement.style.setProperty('--accent', tema.cor_destaque);
         }
         
-        // Atualizar título
+        // Atualizar título e tornar clicável
         const titleElement = document.querySelector('header h1');
-        if (titleElement && tema.nome) {
-            titleElement.textContent = `${tema.nome}${tema.edicao ? ' - ' + tema.edicao : ''}`;
+        if (titleElement) {
+            if (tema.nome) {
+                titleElement.textContent = `${tema.nome}${tema.edicao ? ' - ' + tema.edicao : ''}`;
+            }
+            // Tornar o H1 clicável para voltar à home
+            titleElement.style.cursor = 'pointer';
+            titleElement.onclick = () => window.location.href = 'index.html';
         }
         
-        // Adicionar logo
-        if (tema.logo_url && !document.querySelector('header img[alt="Logo"]')) {
+        // Adicionar logo (prioriza logo_url da API, senão usa local)
+        const logoUrl = tema.logo_url || 'assets/logo.png';
+        if (!document.querySelector('header img[alt="Logo"]')) {
             const header = document.querySelector('header .container');
             if (header) {
                 const logo = document.createElement('img');
-                logo.src = tema.logo_url;
+                logo.src = logoUrl;
                 logo.alt = 'Logo';
                 logo.style.height = '60px';
                 logo.style.marginRight = '1rem';
+                logo.style.cursor = 'pointer';
+                logo.onclick = () => window.location.href = 'index.html';
                 header.prepend(logo);
             }
         }
