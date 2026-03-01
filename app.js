@@ -114,21 +114,36 @@ async function carregarRodadas() {
             return;
         }
         
-        container.innerHTML = rodadas.map(rodada => `
-            <div class="rodada-card">
-                <h3>Rodada ${rodada.numero}</h3>
-                <p>Data: ${rodada.data_rodada ? new Date(rodada.data_rodada + 'T00:00:00').toLocaleDateString('pt-BR') : 'Não definida'}</p>
-                ${rodada.mesas && rodada.mesas.length > 0 ? rodada.mesas.map((mesa, idx) => `
-                    <div class="mesa">
-                        <h4>Mesa ${mesa.numero_mesa || idx + 1}</h4>
-                        ${mesa.jogadores && mesa.jogadores.length > 0 ? mesa.jogadores.map(j => `
-                            <div class="jogador">${j.nome} - ${j.deck_nome || 'Deck não definido'}</div>
-                        `).join('') : '<p>Nenhum jogador</p>'}
-                        ${mesa.vencedor_nome ? `<p><strong>Vencedor: ${mesa.vencedor_nome}</strong></p>` : ''}
-                    </div>
-                `).join('') : '<p>Nenhuma mesa criada</p>'}
-            </div>
-        `).join('');
+        container.innerHTML = rodadas.map(rodada => {
+            let dataFormatada = 'Data não definida';
+            if (rodada.data_rodada) {
+                try {
+                    // Adiciona T00:00:00 para garantir que seja interpretado como data local
+                    const data = new Date(rodada.data_rodada.includes('T') ? rodada.data_rodada : rodada.data_rodada + 'T00:00:00');
+                    if (!isNaN(data.getTime())) {
+                        dataFormatada = data.toLocaleDateString('pt-BR');
+                    }
+                } catch (e) {
+                    console.error('Erro ao formatar data:', e);
+                }
+            }
+            
+            return `
+                <div class="rodada-card">
+                    <h3>Rodada ${rodada.numero}</h3>
+                    <p>Data: ${dataFormatada}</p>
+                    ${rodada.mesas && rodada.mesas.length > 0 ? rodada.mesas.map((mesa, idx) => `
+                        <div class="mesa">
+                            <h4>Mesa ${mesa.numero_mesa || idx + 1}</h4>
+                            ${mesa.jogadores && mesa.jogadores.length > 0 ? mesa.jogadores.map(j => `
+                                <div class="jogador">${j.nome} - ${j.deck_nome || 'Deck não definido'}</div>
+                            `).join('') : '<p>Nenhum jogador</p>'}
+                            ${mesa.vencedor_nome ? `<p><strong>Vencedor: ${mesa.vencedor_nome}</strong></p>` : ''}
+                        </div>
+                    `).join('') : '<p>Nenhuma mesa criada</p>'}
+                </div>
+            `;
+        }).join('');
     } catch (error) {
         console.error('Erro ao carregar rodadas:', error);
     }
