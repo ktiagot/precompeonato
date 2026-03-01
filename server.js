@@ -1103,6 +1103,7 @@ app.get('/api/estatisticas/geral', async (req, res) => {
         // Metagame - Decks mais usados
         console.log('   2/4 - Buscando metagame...');
         const campeonatoFilterSubquery = campeonato_id ? 'WHERE campeonato_id = ?' : '';
+        const metagameParams = campeonato_id ? [campeonato_id, campeonato_id] : [];
         const [metagame] = await db.query(`
             SELECT 
                 MAX(p.nome) as deck_nome,
@@ -1118,7 +1119,7 @@ app.get('/api/estatisticas/geral', async (req, res) => {
             GROUP BY p.id
             ORDER BY COUNT(h.id) DESC, SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) DESC
             LIMIT 20
-        `, campeonato_id ? [campeonato_id, ...params] : params);
+        `, metagameParams);
         console.log('   ✓ Metagame OK -', metagame.length, 'decks');
         
         // Top decks por win rate (mínimo 3 partidas)
