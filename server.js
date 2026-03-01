@@ -545,8 +545,17 @@ app.post('/api/precons', async (req, res) => {
 // ========== EMAILS PERMITIDOS ==========
 app.get('/api/emails-permitidos', async (req, res) => {
     try {
-        const [emails] = await db.query('SELECT email FROM emails_permitidos WHERE ativo = TRUE');
-        res.json(emails.map(e => e.email));
+        const [emails] = await db.query(`
+            SELECT 
+                ep.email,
+                MAX(i.nome) as nome
+            FROM emails_permitidos ep
+            LEFT JOIN inscricoes i ON ep.email = i.email AND i.ativo = TRUE
+            WHERE ep.ativo = TRUE
+            GROUP BY ep.email
+            ORDER BY ep.email
+        `);
+        res.json(emails);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

@@ -495,8 +495,11 @@ async function carregarEmails() {
         
         container.innerHTML = emails.map(e => `
             <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; margin-bottom: 0.5rem;">
-                <span style="font-family: monospace; font-size: 0.95rem;">${e}</span>
-                <button onclick="removerEmail('${e}')" class="btn-secondary" style="border-color: var(--danger); color: var(--danger); padding: 0.5rem 1rem;">
+                <div>
+                    ${e.nome ? `<div style="font-weight: 600; margin-bottom: 0.25rem;">${e.nome}</div>` : ''}
+                    <div style="font-family: monospace; font-size: 0.95rem; color: ${e.nome ? 'var(--gray-600)' : 'inherit'};">${e.email}</div>
+                </div>
+                <button onclick="removerEmail('${e.email}')" class="btn-secondary" style="border-color: var(--danger); color: var(--danger); padding: 0.5rem 1rem;">
                     Remover
                 </button>
             </div>
