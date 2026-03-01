@@ -1175,14 +1175,18 @@ app.get('/api/metagame', async (req, res) => {
         const query = `
             SELECT 
                 MAX(p.nome) as deck,
-                MAX(p.comandante) as comandante,
+                MAX(CASE 
+                    WHEN i.cd_comandante = 2 AND p.comandante_secundario IS NOT NULL 
+                    THEN p.comandante_secundario 
+                    ELSE COALESCE(p.comandante_principal, p.comandante) 
+                END) as comandante,
                 MAX(p.set_nome) as set_nome,
                 COUNT(i.id) as uso,
                 SUM(COALESCE(i.vitorias, 0)) as vitorias,
                 ROUND((SUM(COALESCE(i.vitorias, 0)) * 100.0 / NULLIF(COUNT(i.id), 0)), 1) as win_rate
             FROM precons p
             LEFT JOIN inscricoes i ON p.id = i.deck_id AND i.ativo = TRUE
-            GROUP BY p.id
+            GROUP BY p.id, i.cd_comandante
             HAVING COUNT(i.id) > 0
             ORDER BY COUNT(i.id) DESC, SUM(COALESCE(i.vitorias, 0)) DESC
         `;
@@ -1238,15 +1242,20 @@ app.get('/api/estatisticas/geral', async (req, res) => {
         const [metagame] = await db.query(`
             SELECT 
                 MAX(p.nome) as deck_nome,
-                MAX(p.comandante) as comandante,
+                MAX(CASE 
+                    WHEN i.cd_comandante = 2 AND p.comandante_secundario IS NOT NULL 
+                    THEN p.comandante_secundario 
+                    ELSE COALESCE(p.comandante_principal, p.comandante) 
+                END) as comandante,
                 MAX(p.set_nome) as set_nome,
                 COUNT(h.id) as vezes_usado,
                 SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
                 ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(h.id), 0)), 1) as winrate
             FROM historico_partidas h
             JOIN precons p ON h.deck_id = p.id
+            JOIN inscricoes i ON h.jogador_id = i.id
             ${campeonatoFilter}
-            GROUP BY p.id
+            GROUP BY p.id, i.cd_comandante
             ORDER BY COUNT(h.id) DESC, SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) DESC
             LIMIT 20
         `, params);
@@ -1266,15 +1275,20 @@ app.get('/api/estatisticas/geral', async (req, res) => {
         const [topDecks] = await db.query(`
             SELECT 
                 MAX(p.nome) as deck_nome,
-                MAX(p.comandante) as comandante,
+                MAX(CASE 
+                    WHEN i.cd_comandante = 2 AND p.comandante_secundario IS NOT NULL 
+                    THEN p.comandante_secundario 
+                    ELSE COALESCE(p.comandante_principal, p.comandante) 
+                END) as comandante,
                 COUNT(h.id) as partidas,
                 SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
                 ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(h.id)), 1) as winrate,
                 ROUND(AVG(h.pontos_ganhos), 1) as pontos_medios
             FROM historico_partidas h
             JOIN precons p ON h.deck_id = p.id
+            JOIN inscricoes i ON h.jogador_id = i.id
             ${campeonatoFilter}
-            GROUP BY p.id
+            GROUP BY p.id, i.cd_comandante
             HAVING COUNT(h.id) >= 3
             ORDER BY ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(h.id)), 1) DESC, SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) DESC
             LIMIT 15
