@@ -85,7 +85,7 @@ function exibirEstatisticasGerais(stats) {
     // Metagame - Decks mais usados (2 colunas)
     const metagameHtml = (stats.metagame || []).map(d => `
         <div class="metagame-item" style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--white); border: 1px solid var(--gray-300); border-radius: 0.5rem;">
-            ${ScryfallHelper.getImageHTML(d.comandante, d.deck_nome, '64px')}
+            ${ScryfallHelper.getImageHTML(d.comandante, d.deck_nome, '200px', '150px')}
             <div style="flex: 1;">
                 <h4 style="margin: 0 0 0.25rem 0;">${d.deck_nome}</h4>
                 <p style="margin: 0 0 0.5rem 0; color: var(--gray-600); font-size: 0.875rem;"><strong>${d.comandante}</strong> - ${d.set_nome}</p>
@@ -102,7 +102,7 @@ function exibirEstatisticasGerais(stats) {
     // Top decks por win rate (2 colunas)
     const topDecksHtml = (stats.topDecks || []).map(d => `
         <div class="metagame-item" style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--white); border: 1px solid var(--gray-300); border-radius: 0.5rem;">
-            ${ScryfallHelper.getImageHTML(d.comandante, d.deck_nome, '64px')}
+            ${ScryfallHelper.getImageHTML(d.comandante, d.deck_nome, '200px', '150px')}
             <div style="flex: 1;">
                 <h4 style="margin: 0 0 0.25rem 0;">${d.deck_nome}</h4>
                 <p style="margin: 0 0 0.5rem 0; color: var(--gray-600); font-size: 0.875rem;"><strong>${d.comandante}</strong></p>

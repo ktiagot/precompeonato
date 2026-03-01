@@ -180,7 +180,7 @@ async function carregarMetagame() {
         
         container.innerHTML = stats.map(stat => `
             <div class="deck-stat" style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--white); border: 1px solid var(--gray-300); border-radius: 0.5rem; margin-bottom: 1rem;">
-                ${ScryfallHelper.getImageHTML(stat.comandante, stat.deck)}
+                ${ScryfallHelper.getImageHTML(stat.comandante, stat.deck, '200px', '150px')}
                 <div style="flex: 1;">
                     <h3 style="margin: 0 0 0.5rem 0;">${stat.deck}</h3>
                     <p style="margin: 0; color: var(--gray-600); font-size: 0.875rem;">${stat.comandante}</p>

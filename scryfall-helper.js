@@ -52,8 +52,8 @@ const ScryfallHelper = {
     createImageElement(comandante, deckNome) {
         const img = document.createElement('img');
         img.alt = comandante || deckNome;
-        img.style.width = '48px';
-        img.style.height = '48px';
+        img.style.width = '200px';
+        img.style.height = '150px';
         img.style.borderRadius = '8px';
         img.style.objectFit = 'cover';
         img.style.border = '2px solid var(--gray-300)';
@@ -76,16 +76,17 @@ const ScryfallHelper = {
      * Cria HTML string para imagem (para uso em innerHTML)
      * @param {string} comandante - Nome do comandante
      * @param {string} deckNome - Nome do deck
-     * @param {string} size - Tamanho da imagem (padrão: 48px)
+     * @param {string} width - Largura da imagem (padrão: 200px)
+     * @param {string} height - Altura da imagem (padrão: 150px)
      * @returns {string} HTML string
      */
-    getImageHTML(comandante, deckNome, size = '48px') {
+    getImageHTML(comandante, deckNome, width = '200px', height = '150px') {
         return `<img 
             src="${this.getPlaceholder()}" 
             alt="${comandante || deckNome}"
             data-comandante="${comandante || ''}"
             class="commander-art"
-            style="width: ${size}; height: ${size}; border-radius: 8px; object-fit: cover; border: 2px solid var(--gray-300); flex-shrink: 0;"
+            style="width: ${width}; height: ${height}; border-radius: 8px; object-fit: cover; border: 2px solid var(--gray-300); flex-shrink: 0;"
             loading="lazy"
         >`;
     },
