@@ -366,6 +366,25 @@ textarea {
     gap: 1rem;
 }
 
+@media (max-width: 768px) {
+    #metagameStats {
+        grid-template-columns: 1fr;
+    }
+    
+    #metagameStats .deck-stat {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    #metagameStats .commander-art {
+        width: 100% !important;
+        max-width: 300px !important;
+        height: auto !important;
+        aspect-ratio: 4/3;
+        margin: 0 auto;
+    }
+}
+
 .deck-stat {
     background: var(--white);
     padding: 1.5rem;

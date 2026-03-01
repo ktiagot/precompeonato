@@ -84,6 +84,27 @@
             grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
             gap: 1rem;
         }
+        
+        @media (max-width: 768px) {
+            #metagameGeral, #topDecks {
+                grid-template-columns: 1fr;
+            }
+            
+            #metagameGeral .metagame-item,
+            #topDecks .metagame-item {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+            }
+            
+            #metagameGeral .commander-art,
+            #topDecks .commander-art {
+                width: 100% !important;
+                max-width: 300px !important;
+                height: auto !important;
+                aspect-ratio: 4/3;
+                margin: 0 auto;
+            }
+        }
     </style>
 </head>
 <body>
