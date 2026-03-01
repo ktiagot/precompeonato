@@ -1059,8 +1059,8 @@ app.get('/api/metagame', async (req, res) => {
             FROM precons p
             LEFT JOIN inscricoes i ON p.id = i.deck_id AND i.ativo = TRUE
             GROUP BY p.id
-            HAVING uso > 0
-            ORDER BY uso DESC, vitorias DESC
+            HAVING COUNT(i.id) > 0
+            ORDER BY COUNT(i.id) DESC, SUM(COALESCE(i.vitorias, 0)) DESC
         `;
         
         console.log('   Executando query de metagame...');
@@ -1116,7 +1116,7 @@ app.get('/api/estatisticas/geral', async (req, res) => {
             JOIN precons p ON h.deck_id = p.id
             ${campeonatoFilter}
             GROUP BY p.id
-            ORDER BY vezes_usado DESC
+            ORDER BY COUNT(h.id) DESC, SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) DESC
             LIMIT 20
         `, campeonato_id ? [campeonato_id, ...params] : params);
         console.log('   ✓ Metagame OK -', metagame.length, 'decks');
@@ -1136,7 +1136,7 @@ app.get('/api/estatisticas/geral', async (req, res) => {
             ${campeonatoFilter}
             GROUP BY p.id
             HAVING COUNT(h.id) >= 3
-            ORDER BY winrate DESC, vitorias DESC
+            ORDER BY ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(h.id)), 1) DESC, SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) DESC
             LIMIT 15
         `, params);
         console.log('   ✓ Top decks OK -', topDecks.length, 'decks');
@@ -1160,7 +1160,7 @@ app.get('/api/estatisticas/geral', async (req, res) => {
             ${campeonatoFilter}
             GROUP BY p1.id, p2.id
             HAVING COUNT(*) >= 2
-            ORDER BY total DESC
+            ORDER BY COUNT(*) DESC
             LIMIT 15
         `, params);
         console.log('   ✓ Matchups OK -', matchupsComuns.length, 'matchups');
@@ -1245,7 +1245,7 @@ app.get('/api/estatisticas', async (req, res) => {
             JOIN precons p ON h.deck_id = p.id
             WHERE h.jogador_id IN (${inscricaoIdsStr})
             GROUP BY p.id
-            ORDER BY vezes_usado DESC
+            ORDER BY COUNT(h.id) DESC
         `);
         
         // Performance por deck
@@ -1262,7 +1262,7 @@ app.get('/api/estatisticas', async (req, res) => {
             JOIN precons p ON h.deck_id = p.id
             WHERE h.jogador_id IN (${inscricaoIdsStr})
             GROUP BY p.id
-            ORDER BY vitorias DESC, partidas DESC
+            ORDER BY SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) DESC, COUNT(h.id) DESC
         `);
         
         // Matchups contra outros decks
@@ -1282,7 +1282,7 @@ app.get('/api/estatisticas', async (req, res) => {
             )
             WHERE h.jogador_id IN (${inscricaoIdsStr})
             GROUP BY p.id
-            ORDER BY vezes DESC
+            ORDER BY COUNT(*) DESC
             LIMIT 20
         `);
         

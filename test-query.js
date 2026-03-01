@@ -23,8 +23,8 @@ async function testQuery() {
             FROM precons p
             LEFT JOIN inscricoes i ON p.id = i.deck_id AND i.ativo = TRUE
             GROUP BY p.id
-            HAVING uso > 0
-            ORDER BY uso DESC
+            HAVING COUNT(i.id) > 0
+            ORDER BY COUNT(i.id) DESC
             LIMIT 5
         `);
         
