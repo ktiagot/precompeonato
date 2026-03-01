@@ -159,7 +159,6 @@ nav a:hover {
     font-size: 1rem;
     font-weight: 600;
     transition: all 0.2s ease;
-    width: 50%;
 }
 
 .btn-primary:hover {

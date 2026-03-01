@@ -102,6 +102,7 @@ document.querySelectorAll('.tab-admin-btn').forEach(btn => {
         // Carregar dados da tab
         if (tabName === 'pareamento') {
             carregarRodadas();
+            carregarCampeonatoAtivo();
         } else if (tabName === 'resultados') {
             carregarRodadasParaResultado();
         } else if (tabName === 'campeonatos') {
@@ -135,6 +136,9 @@ async function carregarCampeonatoAtivo() {
                 <strong>Campeonato:</strong> ${tema.nome}${tema.edicao ? ' - ' + tema.edicao : ''} 
                 <span class="badge ${getStatusBadgeClass(campeonatoAtivo.status)}">${formatarStatus(campeonatoAtivo.status)}</span>
             `;
+            
+            // Verificar se há mesas pendentes
+            await verificarMesasPendentes();
         } else {
             document.getElementById('campeonatoAtivo').innerHTML = `
                 <span style="color: var(--danger);">⚠️ Nenhum campeonato ativo encontrado</span>
@@ -144,6 +148,36 @@ async function carregarCampeonatoAtivo() {
     } catch (error) {
         console.error('Erro ao carregar campeonato ativo:', error);
         document.getElementById('campeonatoAtivo').textContent = 'Erro ao carregar campeonato';
+    }
+}
+
+// Verificar se há mesas pendentes
+async function verificarMesasPendentes() {
+    try {
+        const response = await authFetch(`${API_URL}/admin/mesas-pendentes`);
+        const mesasPendentes = await response.json();
+        
+        const submitButton = document.getElementById('parearForm').querySelector('button[type="submit"]');
+        const avisoDiv = document.getElementById('avisoMesasPendentes');
+        
+        if (mesasPendentes.length > 0) {
+            submitButton.disabled = true;
+            if (avisoDiv) {
+                avisoDiv.style.display = 'block';
+                avisoDiv.innerHTML = `
+                    <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid #d97706; color: #d97706; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                        ⚠️ Existem ${mesasPendentes.length} mesa(s) pendente(s). Finalize todos os resultados antes de gerar uma nova rodada.
+                    </div>
+                `;
+            }
+        } else {
+            submitButton.disabled = false;
+            if (avisoDiv) {
+                avisoDiv.style.display = 'none';
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao verificar mesas pendentes:', error);
     }
 }
 
@@ -322,33 +356,72 @@ document.getElementById('mesaResultado').addEventListener('change', async (e) =>
     const mesa = await response.json();
     
     const container = document.getElementById('jogadoresMesa');
+    
+    // Criar opções de jogadores para os selects
+    const jogadoresOptions = mesa.jogadores.map(j => 
+        `<option value="${j.inscricao_id}">${j.nome} - ${j.deck_nome || 'Deck não definido'}</option>`
+    ).join('');
+    
     container.innerHTML = `
         <div style="background: var(--gray-50); padding: 1.5rem; border-radius: 0.5rem; border: 2px solid var(--primary);">
-            <h4 style="margin-bottom: 1rem; color: var(--primary);">Selecione as posições dos jogadores</h4>
-            <p style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 1rem;">
-                Marque 1º lugar (obrigatório) e 2º lugar (opcional)
+            <h4 style="margin-bottom: 1rem; color: var(--primary);">Selecione as posições finais</h4>
+            <p style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 1.5rem;">
+                Escolha o jogador para cada posição (1º lugar é obrigatório)
             </p>
-            ${mesa.jogadores.map((j, idx) => `
-                <div class="jogador-item" style="background: white; padding: 1rem; margin-bottom: 0.75rem; border: 1px solid var(--gray-300); border-radius: 0.5rem;">
-                    <div style="margin-bottom: 0.5rem;">
-                        <strong style="font-size: 1rem;">${j.nome}</strong>
-                        <div style="color: var(--gray-600); font-size: 0.875rem; margin-top: 0.25rem;">
-                            ${j.deck_nome || 'Deck não definido'}
-                            ${j.comandante ? ` - ${j.comandante}` : ''}
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.5rem; background: var(--success); color: white; border-radius: 0.5rem; font-weight: 600;">
-                            <input type="radio" name="vencedor" value="${j.inscricao_id}" required style="width: 18px; height: 18px;">
+            
+            <div style="display: grid; gap: 1rem;">
+                <!-- 1º Lugar -->
+                <div style="background: white; padding: 1rem; border-radius: 0.5rem; border: 2px solid #16a34a;">
+                    <label style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                        <span style="background: #16a34a; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; min-width: 100px; text-align: center;">
                             🏆 1º Lugar
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.5rem; background: var(--gray-400); color: white; border-radius: 0.5rem; font-weight: 600;">
-                            <input type="radio" name="segundo" value="${j.inscricao_id}" style="width: 18px; height: 18px;">
-                            🥈 2º Lugar
-                        </label>
-                    </div>
+                        </span>
+                        <select name="primeiro" required style="flex: 1; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 0.5rem; font-size: 1rem;">
+                            <option value="">Selecione o jogador</option>
+                            ${jogadoresOptions}
+                        </select>
+                    </label>
                 </div>
-            `).join('')}
+                
+                <!-- 2º Lugar -->
+                <div style="background: white; padding: 1rem; border-radius: 0.5rem; border: 2px solid #3b82f6;">
+                    <label style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                        <span style="background: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; min-width: 100px; text-align: center;">
+                            🥈 2º Lugar
+                        </span>
+                        <select name="segundo" style="flex: 1; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 0.5rem; font-size: 1rem;">
+                            <option value="">Selecione o jogador (opcional)</option>
+                            ${jogadoresOptions}
+                        </select>
+                    </label>
+                </div>
+                
+                <!-- 3º Lugar -->
+                <div style="background: white; padding: 1rem; border-radius: 0.5rem; border: 2px solid #f59e0b;">
+                    <label style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                        <span style="background: #f59e0b; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; min-width: 100px; text-align: center;">
+                            🥉 3º Lugar
+                        </span>
+                        <select name="terceiro" style="flex: 1; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 0.5rem; font-size: 1rem;">
+                            <option value="">Selecione o jogador (opcional)</option>
+                            ${jogadoresOptions}
+                        </select>
+                    </label>
+                </div>
+                
+                <!-- 4º Lugar -->
+                <div style="background: white; padding: 1rem; border-radius: 0.5rem; border: 2px solid #6b7280;">
+                    <label style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                        <span style="background: #6b7280; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; min-width: 100px; text-align: center;">
+                            4º Lugar
+                        </span>
+                        <select name="quarto" style="flex: 1; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 0.5rem; font-size: 1rem;">
+                            <option value="">Selecione o jogador (opcional)</option>
+                            ${jogadoresOptions}
+                        </select>
+                    </label>
+                </div>
+            </div>
         </div>
     `;
 });
@@ -358,18 +431,22 @@ document.getElementById('resultadoForm').addEventListener('submit', async (e) =>
     e.preventDefault();
     
     const mesaId = document.getElementById('mesaResultado').value;
-    const vencedorId = document.querySelector('input[name="vencedor"]:checked')?.value;
-    const segundoId = document.querySelector('input[name="segundo"]:checked')?.value;
+    const primeiroId = document.querySelector('select[name="primeiro"]')?.value;
+    const segundoId = document.querySelector('select[name="segundo"]')?.value;
     
-    if (!vencedorId) {
-        showAlert('Selecione o vencedor', 'error');
+    if (!primeiroId) {
+        showAlert('Selecione o 1º lugar', 'error');
         return;
     }
     
     try {
         const response = await authFetch(`${API_URL}/admin/resultado`, {
             method: 'POST',
-            body: JSON.stringify({ mesaId, vencedorId, segundoId })
+            body: JSON.stringify({ 
+                mesaId, 
+                vencedorId: primeiroId, 
+                segundoId: segundoId || null 
+            })
         });
         
         if (response.ok) {
