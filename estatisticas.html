@@ -149,25 +149,7 @@
                     </select>
                 </div>
 
-                <!-- Metagame Geral -->
-                <div class="stats-section">
-                    <h3>Metagame - Decks Mais Usados</h3>
-                    <div id="metagameGeral"></div>
-                </div>
-
-                <!-- Decks com Melhor Performance -->
-                <div class="stats-section">
-                    <h3>Decks com Melhor Win Rate</h3>
-                    <div id="topDecks"></div>
-                </div>
-
-                <!-- Matchups Mais Comuns -->
-                <div class="stats-section">
-                    <h3>Matchups Mais Comuns</h3>
-                    <div id="matchupsComuns"></div>
-                </div>
-
-                <!-- Estatísticas Gerais -->
+                <!-- Estatísticas Gerais (movido para o topo) -->
                 <div class="stats-resumo">
                     <h3>Números Gerais</h3>
                     <div class="stats-grid">
@@ -188,6 +170,33 @@
                             <div class="stat-label">Rodadas</div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Metagame Geral -->
+                <div class="stats-section">
+                    <h3>Metagame - Decks Mais Usados</h3>
+                    <div id="metagameGeral"></div>
+                    <button id="btnMostrarMaisMetagame" class="btn-secondary" style="display: none; width: 100%; margin-top: 1rem;">
+                        Mostrar Mais
+                    </button>
+                </div>
+
+                <!-- Decks com Melhor Performance -->
+                <div class="stats-section">
+                    <h3>Decks com Melhor Win Rate</h3>
+                    <div id="topDecks"></div>
+                    <button id="btnMostrarMaisTopDecks" class="btn-secondary" style="display: none; width: 100%; margin-top: 1rem;">
+                        Mostrar Mais
+                    </button>
+                </div>
+
+                <!-- Matchups Mais Comuns -->
+                <div class="stats-section">
+                    <h3>Matchups Mais Comuns</h3>
+                    <div id="matchupsComuns"></div>
+                    <button id="btnMostrarMaisMatchups" class="btn-secondary" style="display: none; width: 100%; margin-top: 1rem;">
+                        Mostrar Mais
+                    </button>
                 </div>
             </div>
         </section>

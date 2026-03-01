@@ -57,6 +57,13 @@ async function carregarCampeonatos() {
 }
 
 // Carregar estatísticas gerais
+let metagameCompleto = [];
+let topDecksCompleto = [];
+let matchupsCompleto = [];
+let mostrandoTodosMetagame = false;
+let mostrandoTodosTopDecks = false;
+let mostrandoTodosMatchups = false;
+
 async function carregarEstatisticasGerais() {
     const campeonatoId = document.getElementById('filtroCampeonatoGeral').value;
     
@@ -68,6 +75,16 @@ async function carregarEstatisticasGerais() {
         
         const response = await fetch(url);
         const stats = await response.json();
+        
+        // Armazenar dados completos
+        metagameCompleto = stats.metagame || [];
+        topDecksCompleto = stats.topDecks || [];
+        matchupsCompleto = stats.matchupsComuns || [];
+        
+        // Resetar estados
+        mostrandoTodosMetagame = false;
+        mostrandoTodosTopDecks = false;
+        mostrandoTodosMatchups = false;
         
         exibirEstatisticasGerais(stats);
     } catch (error) {
@@ -82,8 +99,9 @@ function exibirEstatisticasGerais(stats) {
     document.getElementById('totalDecksGeral').textContent = stats.totalDecks || 0;
     document.getElementById('totalRodadasGeral').textContent = stats.totalRodadas || 0;
     
-    // Metagame - Decks mais usados (2 colunas)
-    const metagameHtml = (stats.metagame || []).map(d => `
+    // Metagame - Decks mais usados (mostrar 6 ou todos)
+    const metagameParaMostrar = mostrandoTodosMetagame ? metagameCompleto : metagameCompleto.slice(0, 6);
+    const metagameHtml = metagameParaMostrar.map(d => `
         <div class="metagame-item" style="display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: var(--white); border: 1px solid var(--gray-300); border-radius: 0.5rem;">
             ${ScryfallHelper.getImageHTML(d.comandante, d.deck_nome, '200px', '150px')}
             <div style="flex: 1; min-width: 0; overflow: hidden;">
@@ -99,8 +117,18 @@ function exibirEstatisticasGerais(stats) {
     `).join('');
     document.getElementById('metagameGeral').innerHTML = metagameHtml || '<p>Nenhum dado disponível</p>';
     
-    // Top decks por win rate (2 colunas)
-    const topDecksHtml = (stats.topDecks || []).map(d => `
+    // Botão mostrar mais metagame
+    const btnMetagame = document.getElementById('btnMostrarMaisMetagame');
+    if (metagameCompleto.length > 6) {
+        btnMetagame.style.display = 'block';
+        btnMetagame.textContent = mostrandoTodosMetagame ? 'Mostrar Menos' : `Mostrar Mais (${metagameCompleto.length - 6} decks)`;
+    } else {
+        btnMetagame.style.display = 'none';
+    }
+    
+    // Top decks por win rate (mostrar 6 ou todos)
+    const topDecksParaMostrar = mostrandoTodosTopDecks ? topDecksCompleto : topDecksCompleto.slice(0, 6);
+    const topDecksHtml = topDecksParaMostrar.map(d => `
         <div class="metagame-item" style="display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: var(--white); border: 1px solid var(--gray-300); border-radius: 0.5rem;">
             ${ScryfallHelper.getImageHTML(d.comandante, d.deck_nome, '200px', '150px')}
             <div style="flex: 1; min-width: 0; overflow: hidden;">
@@ -117,8 +145,18 @@ function exibirEstatisticasGerais(stats) {
     `).join('');
     document.getElementById('topDecks').innerHTML = topDecksHtml || '<p>Nenhum dado disponível</p>';
     
-    // Matchups mais comuns
-    const matchupsHtml = (stats.matchupsComuns || []).map(m => `
+    // Botão mostrar mais top decks
+    const btnTopDecks = document.getElementById('btnMostrarMaisTopDecks');
+    if (topDecksCompleto.length > 6) {
+        btnTopDecks.style.display = 'block';
+        btnTopDecks.textContent = mostrandoTodosTopDecks ? 'Mostrar Menos' : `Mostrar Mais (${topDecksCompleto.length - 6} decks)`;
+    } else {
+        btnTopDecks.style.display = 'none';
+    }
+    
+    // Matchups mais comuns (mostrar 6 ou todos)
+    const matchupsParaMostrar = mostrandoTodosMatchups ? matchupsCompleto : matchupsCompleto.slice(0, 6);
+    const matchupsHtml = matchupsParaMostrar.map(m => `
         <div class="matchup-item">
             <h4>${m.deck1} vs ${m.deck2}</h4>
             <div class="matchup-stats">
@@ -130,9 +168,58 @@ function exibirEstatisticasGerais(stats) {
     `).join('');
     document.getElementById('matchupsComuns').innerHTML = matchupsHtml || '<p>Nenhum matchup registrado</p>';
     
+    // Botão mostrar mais matchups
+    const btnMatchups = document.getElementById('btnMostrarMaisMatchups');
+    if (matchupsCompleto.length > 6) {
+        btnMatchups.style.display = 'block';
+        btnMatchups.textContent = mostrandoTodosMatchups ? 'Mostrar Menos' : `Mostrar Mais (${matchupsCompleto.length - 6} matchups)`;
+    } else {
+        btnMatchups.style.display = 'none';
+    }
+    
     // Carregar imagens dos comandantes
     ScryfallHelper.loadAllImages();
 }
+
+// Event listeners para os botões "Mostrar Mais"
+document.getElementById('btnMostrarMaisMetagame').addEventListener('click', () => {
+    mostrandoTodosMetagame = !mostrandoTodosMetagame;
+    exibirEstatisticasGerais({
+        totalPartidas: document.getElementById('totalPartidasGeral').textContent,
+        totalJogadores: document.getElementById('totalJogadoresGeral').textContent,
+        totalDecks: document.getElementById('totalDecksGeral').textContent,
+        totalRodadas: document.getElementById('totalRodadasGeral').textContent,
+        metagame: metagameCompleto,
+        topDecks: topDecksCompleto,
+        matchupsComuns: matchupsCompleto
+    });
+});
+
+document.getElementById('btnMostrarMaisTopDecks').addEventListener('click', () => {
+    mostrandoTodosTopDecks = !mostrandoTodosTopDecks;
+    exibirEstatisticasGerais({
+        totalPartidas: document.getElementById('totalPartidasGeral').textContent,
+        totalJogadores: document.getElementById('totalJogadoresGeral').textContent,
+        totalDecks: document.getElementById('totalDecksGeral').textContent,
+        totalRodadas: document.getElementById('totalRodadasGeral').textContent,
+        metagame: metagameCompleto,
+        topDecks: topDecksCompleto,
+        matchupsComuns: matchupsCompleto
+    });
+});
+
+document.getElementById('btnMostrarMaisMatchups').addEventListener('click', () => {
+    mostrandoTodosMatchups = !mostrandoTodosMatchups;
+    exibirEstatisticasGerais({
+        totalPartidas: document.getElementById('totalPartidasGeral').textContent,
+        totalJogadores: document.getElementById('totalJogadoresGeral').textContent,
+        totalDecks: document.getElementById('totalDecksGeral').textContent,
+        totalRodadas: document.getElementById('totalRodadasGeral').textContent,
+        metagame: metagameCompleto,
+        topDecks: topDecksCompleto,
+        matchupsComuns: matchupsCompleto
+    });
+});
 
 // Listener para mudança de filtro nas estatísticas gerais
 document.getElementById('filtroCampeonatoGeral').addEventListener('change', carregarEstatisticasGerais);
