@@ -1045,16 +1045,16 @@ app.get('/api/metagame', async (req, res) => {
     try {
         const query = `
             SELECT 
-                p.nome as deck,
-                p.comandante,
-                p.set_nome,
+                MAX(p.nome) as deck,
+                MAX(p.comandante) as comandante,
+                MAX(p.set_nome) as set_nome,
                 COUNT(i.id) as uso,
                 SUM(COALESCE(i.vitorias, 0)) as vitorias,
                 ROUND((COUNT(i.id) * 100.0 / (SELECT COUNT(*) FROM inscricoes WHERE ativo = TRUE)), 1) as uso_percentual,
                 ROUND((SUM(COALESCE(i.vitorias, 0)) * 100.0 / NULLIF(COUNT(i.id), 0)), 1) as win_rate
             FROM precons p
             LEFT JOIN inscricoes i ON p.id = i.deck_id AND i.ativo = TRUE
-            GROUP BY p.id, p.nome, p.comandante, p.set_nome
+            GROUP BY p.id
             HAVING uso > 0
             ORDER BY uso DESC, vitorias DESC
         `;
@@ -1064,7 +1064,7 @@ app.get('/api/metagame', async (req, res) => {
         console.log('✅ GET /api/metagame - Sucesso:', stats.length, 'registros');
         res.json(stats);
     } catch (error) {
-        logSQLError('GET /api/metagame', error, 'SELECT p.nome, COUNT(i.id)... GROUP BY p.id, p.nome...');
+        logSQLError('GET /api/metagame', error, 'SELECT MAX(p.nome)... GROUP BY p.id...');
         res.status(500).json({ error: error.message });
     }
 });
@@ -1100,20 +1100,17 @@ app.get('/api/estatisticas/geral', async (req, res) => {
         console.log('   2/4 - Buscando metagame...');
         const [metagame] = await db.query(`
             SELECT 
-                deck_info.deck_nome,
-                deck_info.comandante,
-                deck_info.set_nome,
+                MAX(p.nome) as deck_nome,
+                MAX(p.comandante) as comandante,
+                MAX(p.set_nome) as set_nome,
                 COUNT(h.id) as vezes_usado,
                 SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
                 ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(h.id)), 1) as winrate,
                 ROUND((COUNT(h.id) * 100.0 / (SELECT COUNT(*) FROM historico_partidas ${campeonatoFilter})), 1) as porcentagem
             FROM historico_partidas h
-            JOIN (
-                SELECT id, nome as deck_nome, comandante, set_nome 
-                FROM precons
-            ) deck_info ON h.deck_id = deck_info.id
+            JOIN precons p ON h.deck_id = p.id
             ${campeonatoFilter}
-            GROUP BY deck_info.id, deck_info.deck_nome, deck_info.comandante, deck_info.set_nome
+            GROUP BY p.id
             ORDER BY vezes_usado DESC
             LIMIT 20
         `, params);
@@ -1123,8 +1120,8 @@ app.get('/api/estatisticas/geral', async (req, res) => {
         console.log('   3/4 - Buscando top decks...');
         const [topDecks] = await db.query(`
             SELECT 
-                p.nome as deck_nome,
-                p.comandante,
+                MAX(p.nome) as deck_nome,
+                MAX(p.comandante) as comandante,
                 COUNT(h.id) as partidas,
                 SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
                 ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(h.id)), 1) as winrate,
@@ -1132,7 +1129,7 @@ app.get('/api/estatisticas/geral', async (req, res) => {
             FROM historico_partidas h
             JOIN precons p ON h.deck_id = p.id
             ${campeonatoFilter}
-            GROUP BY p.id, p.nome, p.comandante
+            GROUP BY p.id
             HAVING COUNT(h.id) >= 3
             ORDER BY winrate DESC, vitorias DESC
             LIMIT 15
@@ -1143,8 +1140,8 @@ app.get('/api/estatisticas/geral', async (req, res) => {
         console.log('   4/4 - Buscando matchups...');
         const [matchupsComuns] = await db.query(`
             SELECT 
-                p1.nome as deck1,
-                p2.nome as deck2,
+                MAX(p1.nome) as deck1,
+                MAX(p2.nome) as deck2,
                 COUNT(*) as total,
                 SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as deck1_vitorias,
                 SUM(CASE WHEN h.posicao_final != 1 THEN 1 ELSE 0 END) as deck2_vitorias
@@ -1156,7 +1153,7 @@ app.get('/api/estatisticas/geral', async (req, res) => {
                 p2.id = h.oponente3_deck_id
             )
             ${campeonatoFilter}
-            GROUP BY p1.id, p1.nome, p2.id, p2.nome
+            GROUP BY p1.id, p2.id
             HAVING COUNT(*) >= 2
             ORDER BY total DESC
             LIMIT 15
@@ -1235,22 +1232,22 @@ app.get('/api/estatisticas', async (req, res) => {
         const [meusDecks] = await db.query(`
             SELECT DISTINCT 
                 p.id, 
-                p.nome as deck_nome, 
-                p.comandante, 
-                p.set_nome,
+                MAX(p.nome) as deck_nome, 
+                MAX(p.comandante) as comandante, 
+                MAX(p.set_nome) as set_nome,
                 COUNT(h.id) as vezes_usado
             FROM historico_partidas h
             JOIN precons p ON h.deck_id = p.id
             WHERE h.jogador_id IN (${inscricaoIdsStr})
-            GROUP BY p.id, p.nome, p.comandante, p.set_nome
+            GROUP BY p.id
             ORDER BY vezes_usado DESC
         `);
         
         // Performance por deck
         const [performancePorDeck] = await db.query(`
             SELECT 
-                p.nome as deck_nome,
-                p.comandante,
+                MAX(p.nome) as deck_nome,
+                MAX(p.comandante) as comandante,
                 COUNT(h.id) as partidas,
                 SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
                 SUM(CASE WHEN h.posicao_final = 2 THEN 1 ELSE 0 END) as segundos,
@@ -1259,15 +1256,15 @@ app.get('/api/estatisticas', async (req, res) => {
             FROM historico_partidas h
             JOIN precons p ON h.deck_id = p.id
             WHERE h.jogador_id IN (${inscricaoIdsStr})
-            GROUP BY p.id, p.nome, p.comandante
+            GROUP BY p.id
             ORDER BY vitorias DESC, partidas DESC
         `);
         
         // Matchups contra outros decks
         const [matchupsContra] = await db.query(`
             SELECT 
-                p.nome as deck_oponente,
-                p.comandante,
+                MAX(p.nome) as deck_oponente,
+                MAX(p.comandante) as comandante,
                 COUNT(*) as vezes,
                 SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
                 COUNT(*) - SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as derrotas,
@@ -1279,7 +1276,7 @@ app.get('/api/estatisticas', async (req, res) => {
                 p.id = h.oponente3_deck_id
             )
             WHERE h.jogador_id IN (${inscricaoIdsStr})
-            GROUP BY p.id, p.nome, p.comandante
+            GROUP BY p.id
             ORDER BY vezes DESC
             LIMIT 20
         `);
