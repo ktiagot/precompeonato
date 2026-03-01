@@ -956,7 +956,7 @@ app.get('/api/admin/mesas/:id', authMiddleware, adminMiddleware, async (req, res
                 mj.inscricao_id,
                 i.nome,
                 i.deck_nome,
-                p.comandante
+                p.comandante_principal as comandante
             FROM mesa_jogadores mj
             JOIN inscricoes i ON mj.inscricao_id = i.id
             LEFT JOIN precons p ON i.deck_id = p.id
