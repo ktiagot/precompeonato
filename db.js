@@ -16,9 +16,18 @@ const pool = mysql.createPool({
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    socketPath: undefined, // Força TCP/IP ao invés de socket Unix
-    // Desabilitar ONLY_FULL_GROUP_BY para cada conexão
-    initSql: "SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))"
+    socketPath: undefined // Força TCP/IP ao invés de socket Unix
+});
+
+// Configurar sql_mode para cada nova conexão
+pool.on('connection', function (connection) {
+    connection.query("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))", function(error) {
+        if (error) {
+            console.error('⚠️  Erro ao configurar sql_mode:', error.message);
+        } else {
+            console.log('✅ sql_mode configurado (ONLY_FULL_GROUP_BY desabilitado)');
+        }
+    });
 });
 
 // Log de erros global
