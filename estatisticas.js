@@ -133,32 +133,6 @@ function exibirEstatisticasGerais(stats) {
     // Carregar imagens dos comandantes
     ScryfallHelper.loadAllImages();
 }
-        <div class="metagame-item">
-            <h4>${d.deck_nome}</h4>
-            <p style="margin: 0.25rem 0; color: var(--gray-600);"><strong>${d.comandante}</strong></p>
-            <div class="metagame-stats">
-                <span><strong>Partidas:</strong> ${d.partidas}</span>
-                <span><strong>Vitórias:</strong> ${d.vitorias}</span>
-                <span><strong>Win Rate:</strong> ${d.winrate}%</span>
-                <span><strong>Pontos Médios:</strong> ${d.pontos_medios}</span>
-            </div>
-        </div>
-    `).join('');
-    document.getElementById('topDecks').innerHTML = topDecksHtml || '<p>Nenhum dado disponível</p>';
-    
-    // Matchups mais comuns
-    const matchupsHtml = (stats.matchupsComuns || []).map(m => `
-        <div class="matchup-item">
-            <h4>${m.deck1} vs ${m.deck2}</h4>
-            <div class="matchup-stats">
-                <span><strong>Enfrentamentos:</strong> ${m.total}</span>
-                <span><strong>${m.deck1} venceu:</strong> ${m.deck1_vitorias} vezes</span>
-                <span><strong>${m.deck2} venceu:</strong> ${m.deck2_vitorias} vezes</span>
-            </div>
-        </div>
-    `).join('');
-    document.getElementById('matchupsComuns').innerHTML = matchupsHtml || '<p>Nenhum matchup registrado</p>';
-}
 
 // Listener para mudança de filtro nas estatísticas gerais
 document.getElementById('filtroCampeonatoGeral').addEventListener('change', carregarEstatisticasGerais);
