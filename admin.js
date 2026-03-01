@@ -2,6 +2,28 @@ const API_URL = window.location.hostname === 'localhost'
     ? 'http://localhost:3000/api' 
     : '/api';
 
+// Formatar status para exibição
+function formatarStatus(status) {
+    const statusMap = {
+        'inscricoes': 'Inscrições Abertas',
+        'em_andamento': 'Em Andamento',
+        'finalizado': 'Finalizado',
+        'cancelado': 'Cancelado'
+    };
+    return statusMap[status] || status;
+}
+
+// Obter classe CSS do badge baseado no status
+function getStatusBadgeClass(status) {
+    const classMap = {
+        'inscricoes': 'badge-info',
+        'em_andamento': 'badge-success',
+        'finalizado': 'badge-warning',
+        'cancelado': 'badge-error'
+    };
+    return classMap[status] || 'badge-info';
+}
+
 // Verificar autenticação
 async function checkAuth() {
     const token = localStorage.getItem('auth_token');
@@ -111,7 +133,7 @@ async function carregarCampeonatoAtivo() {
             campeonatoAtivoId = campeonatoAtivo.id;
             document.getElementById('campeonatoAtivo').innerHTML = `
                 <strong>Campeonato:</strong> ${tema.nome}${tema.edicao ? ' - ' + tema.edicao : ''} 
-                <span class="badge badge-success">${campeonatoAtivo.status}</span>
+                <span class="badge ${getStatusBadgeClass(campeonatoAtivo.status)}">${formatarStatus(campeonatoAtivo.status)}</span>
             `;
         } else {
             document.getElementById('campeonatoAtivo').innerHTML = `
@@ -421,9 +443,9 @@ async function carregarCampeonatos() {
         <div class="card">
             <p><strong>${c.nome}</strong> - ${c.edicao}</p>
             <p>Início: ${new Date(c.data_inicio).toLocaleDateString('pt-BR')}</p>
-            <p>Status: <span class="badge badge-info">${c.status}</span></p>
+            <p>Status: <span class="badge ${getStatusBadgeClass(c.status)}">${formatarStatus(c.status)}</span></p>
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
-                <button onclick="mudarStatus(${c.id}, 'inscricoes')" class="btn-primary" style="flex: 1;">Inscrições</button>
+                <button onclick="mudarStatus(${c.id}, 'inscricoes')" class="btn-primary" style="flex: 1;">Abrir Inscrições</button>
                 <button onclick="mudarStatus(${c.id}, 'em_andamento')" class="btn-primary" style="flex: 1;">Iniciar</button>
                 <button onclick="mudarStatus(${c.id}, 'finalizado')" class="btn-primary" style="flex: 1;">Finalizar</button>
             </div>
