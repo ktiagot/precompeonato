@@ -17,8 +17,8 @@
                 <a href="rodadas.html">Rodadas</a>
                 <a href="metagame.html">Metagame</a>
                 <a href="estatisticas.html">Estatísticas</a>
-                <a href="perfil.html" class="active">Meu Perfil</a>
-                <a href="#" onclick="logout()" style="color: var(--danger);">Sair</a>
+                <a href="regras.html">Regras</a>
+                <a href="perfil.html" class="active">Perfil</a>
             </nav>
         </div>
     </header>
@@ -26,15 +26,20 @@
     <main>
         <section class="section">
             <div class="container">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
                     <div>
                         <h2>Meu Perfil</h2>
                         <p id="userEmail" style="color: var(--gray-600);"></p>
                     </div>
-                    <div id="adminBadge" style="display: none;">
-                        <span style="background: var(--accent); color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600;">
-                            👑 Admin
-                        </span>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <div id="adminBadge" style="display: none;">
+                            <span style="background: var(--accent); color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600;">
+                                👑 Admin
+                            </span>
+                        </div>
+                        <button onclick="logout()" class="btn-secondary" style="border-color: var(--danger); color: var(--danger);">
+                            Sair
+                        </button>
                     </div>
                 </div>
 
