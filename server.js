@@ -512,9 +512,9 @@ app.get('/api/precons', async (req, res) => {
         let params = [];
         
         if (busca) {
-            query += ' AND (nome LIKE ? OR comandante LIKE ? OR set_nome LIKE ?)';
+            query += ' AND (nome LIKE ? OR comandante_principal LIKE ? OR comandante_secundario LIKE ? OR set_nome LIKE ?)';
             const searchTerm = `%${busca}%`;
-            params = [searchTerm, searchTerm, searchTerm];
+            params = [searchTerm, searchTerm, searchTerm, searchTerm];
         }
         
         query += ' ORDER BY ano DESC, nome ASC';
