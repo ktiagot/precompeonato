@@ -30,7 +30,7 @@ if (deckBusca) {
             deckSugestoes.innerHTML = precons.map(p => `
                 <div class="deck-sugestao" data-id="${p.id}" data-nome="${p.nome}" style="padding: 0.5rem; cursor: pointer; border-bottom: 1px solid #eee;">
                     <strong>${p.nome}</strong><br>
-                    <small>${p.comandante} - ${p.set}</small>
+                    <small>${p.comandante} - ${p.set_nome || p.set || 'Set desconhecido'}</small>
                 </div>
             `).join('');
             
