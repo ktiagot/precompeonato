@@ -82,22 +82,57 @@ function exibirEstatisticasGerais(stats) {
     document.getElementById('totalDecksGeral').textContent = stats.totalDecks || 0;
     document.getElementById('totalRodadasGeral').textContent = stats.totalRodadas || 0;
     
-    // Metagame - Decks mais usados
+    // Metagame - Decks mais usados (2 colunas)
     const metagameHtml = (stats.metagame || []).map(d => `
-        <div class="metagame-item">
-            <h4>${d.deck_nome}</h4>
-            <p style="margin: 0.25rem 0; color: var(--gray-600);"><strong>${d.comandante}</strong> - ${d.set_nome}</p>
-            <div class="metagame-stats">
-                <span><strong>Usado:</strong> ${d.vezes_usado} vezes (${d.porcentagem}%)</span>
-                <span><strong>Vitórias:</strong> ${d.vitorias}</span>
-                <span><strong>Win Rate:</strong> ${d.winrate}%</span>
+        <div class="metagame-item" style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--white); border: 1px solid var(--gray-300); border-radius: 0.5rem;">
+            ${ScryfallHelper.getImageHTML(d.comandante, d.deck_nome, '64px')}
+            <div style="flex: 1;">
+                <h4 style="margin: 0 0 0.25rem 0;">${d.deck_nome}</h4>
+                <p style="margin: 0 0 0.5rem 0; color: var(--gray-600); font-size: 0.875rem;"><strong>${d.comandante}</strong> - ${d.set_nome}</p>
+                <div class="metagame-stats" style="display: flex; gap: 1rem; font-size: 0.875rem;">
+                    <span><strong>Usado:</strong> ${d.vezes_usado}x (${d.porcentagem}%)</span>
+                    <span><strong>Vitórias:</strong> ${d.vitorias}</span>
+                    <span><strong>Win Rate:</strong> ${d.winrate}%</span>
+                </div>
             </div>
         </div>
     `).join('');
     document.getElementById('metagameGeral').innerHTML = metagameHtml || '<p>Nenhum dado disponível</p>';
     
-    // Top decks por win rate
+    // Top decks por win rate (2 colunas)
     const topDecksHtml = (stats.topDecks || []).map(d => `
+        <div class="metagame-item" style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--white); border: 1px solid var(--gray-300); border-radius: 0.5rem;">
+            ${ScryfallHelper.getImageHTML(d.comandante, d.deck_nome, '64px')}
+            <div style="flex: 1;">
+                <h4 style="margin: 0 0 0.25rem 0;">${d.deck_nome}</h4>
+                <p style="margin: 0 0 0.5rem 0; color: var(--gray-600); font-size: 0.875rem;"><strong>${d.comandante}</strong></p>
+                <div class="metagame-stats" style="display: flex; gap: 1rem; font-size: 0.875rem;">
+                    <span><strong>Partidas:</strong> ${d.partidas}</span>
+                    <span><strong>Vitórias:</strong> ${d.vitorias}</span>
+                    <span><strong>Win Rate:</strong> ${d.winrate}%</span>
+                    <span><strong>Pontos Médios:</strong> ${d.pontos_medios}</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    document.getElementById('topDecks').innerHTML = topDecksHtml || '<p>Nenhum dado disponível</p>';
+    
+    // Matchups mais comuns
+    const matchupsHtml = (stats.matchupsComuns || []).map(m => `
+        <div class="matchup-item">
+            <h4>${m.deck1} vs ${m.deck2}</h4>
+            <div class="matchup-stats">
+                <span><strong>Enfrentamentos:</strong> ${m.total}</span>
+                <span><strong>${m.deck1} venceu:</strong> ${m.deck1_vitorias} vezes</span>
+                <span><strong>${m.deck2} venceu:</strong> ${m.deck2_vitorias} vezes</span>
+            </div>
+        </div>
+    `).join('');
+    document.getElementById('matchupsComuns').innerHTML = matchupsHtml || '<p>Nenhum matchup registrado</p>';
+    
+    // Carregar imagens dos comandantes
+    ScryfallHelper.loadAllImages();
+}
         <div class="metagame-item">
             <h4>${d.deck_nome}</h4>
             <p style="margin: 0.25rem 0; color: var(--gray-600);"><strong>${d.comandante}</strong></p>

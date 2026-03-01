@@ -76,15 +76,16 @@ const ScryfallHelper = {
      * Cria HTML string para imagem (para uso em innerHTML)
      * @param {string} comandante - Nome do comandante
      * @param {string} deckNome - Nome do deck
+     * @param {string} size - Tamanho da imagem (padrão: 48px)
      * @returns {string} HTML string
      */
-    getImageHTML(comandante, deckNome) {
+    getImageHTML(comandante, deckNome, size = '48px') {
         return `<img 
             src="${this.getPlaceholder()}" 
             alt="${comandante || deckNome}"
             data-comandante="${comandante || ''}"
             class="commander-art"
-            style="width: 48px; height: 48px; border-radius: 8px; object-fit: cover; border: 2px solid var(--gray-300);"
+            style="width: ${size}; height: ${size}; border-radius: 8px; object-fit: cover; border: 2px solid var(--gray-300); flex-shrink: 0;"
             loading="lazy"
         >`;
     },

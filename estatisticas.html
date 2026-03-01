@@ -77,6 +77,19 @@
         .metagame-stats span, .matchup-stats span {
             display: inline-block;
         }
+        
+        /* Grid de 2 colunas para metagame e top decks */
+        #metagameGeral, #topDecks {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            #metagameGeral, #topDecks {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -238,6 +251,7 @@
         </div>
     </footer>
 
+    <script src="scryfall-helper.js"></script>
     <script src="estatisticas.js"></script>
 </body>
 </html>
