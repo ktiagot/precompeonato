@@ -103,50 +103,72 @@ document.getElementById('inscricaoForm')?.addEventListener('submit', async (e) =
 });
 
 // Carregar rodadas
+let todasRodadas = [];
+let mostrandoTodas = false;
+
 async function carregarRodadas() {
     try {
         const response = await fetch(`${API_URL}/rodadas`);
-        const rodadas = await response.json();
+        todasRodadas = await response.json();
         const container = document.getElementById('rodadasList');
         
-        if (rodadas.length === 0) {
+        if (todasRodadas.length === 0) {
             container.innerHTML = '<p style="text-align: center; color: #666;">Nenhuma rodada disponível ainda</p>';
             return;
         }
         
-        container.innerHTML = rodadas.map(rodada => {
-            let dataFormatada = 'Data não definida';
-            if (rodada.data_rodada) {
-                try {
-                    // Adiciona T00:00:00 para garantir que seja interpretado como data local
-                    const data = new Date(rodada.data_rodada.includes('T') ? rodada.data_rodada : rodada.data_rodada + 'T00:00:00');
-                    if (!isNaN(data.getTime())) {
-                        dataFormatada = data.toLocaleDateString('pt-BR');
-                    }
-                } catch (e) {
-                    console.error('Erro ao formatar data:', e);
-                }
-            }
-            
-            return `
-                <div class="rodada-card">
-                    <h3>Rodada ${rodada.numero}</h3>
-                    <p>Data: ${dataFormatada}</p>
-                    ${rodada.mesas && rodada.mesas.length > 0 ? rodada.mesas.map((mesa, idx) => `
-                        <div class="mesa">
-                            <h4>Mesa ${mesa.numero_mesa || idx + 1}</h4>
-                            ${mesa.jogadores && mesa.jogadores.length > 0 ? mesa.jogadores.map(j => `
-                                <div class="jogador">${j.nome} - ${j.deck_nome || 'Deck não definido'}</div>
-                            `).join('') : '<p>Nenhum jogador</p>'}
-                            ${mesa.vencedor_nome ? `<p><strong>Vencedor: ${mesa.vencedor_nome}</strong></p>` : ''}
-                        </div>
-                    `).join('') : '<p>Nenhuma mesa criada</p>'}
-                </div>
-            `;
-        }).join('');
+        renderizarRodadas();
     } catch (error) {
         console.error('Erro ao carregar rodadas:', error);
     }
+}
+
+function renderizarRodadas() {
+    const container = document.getElementById('rodadasList');
+    const rodadasParaMostrar = mostrandoTodas ? todasRodadas : [todasRodadas[0]];
+    
+    const rodadasHtml = rodadasParaMostrar.map(rodada => {
+        let dataFormatada = 'Data não definida';
+        if (rodada.data_rodada) {
+            try {
+                const data = new Date(rodada.data_rodada.includes('T') ? rodada.data_rodada : rodada.data_rodada + 'T00:00:00');
+                if (!isNaN(data.getTime())) {
+                    dataFormatada = data.toLocaleDateString('pt-BR');
+                }
+            } catch (e) {
+                console.error('Erro ao formatar data:', e);
+            }
+        }
+        
+        return `
+            <div class="rodada-card">
+                <h3>Rodada ${rodada.numero}</h3>
+                <p>Data: ${dataFormatada}</p>
+                ${rodada.mesas && rodada.mesas.length > 0 ? rodada.mesas.map((mesa, idx) => `
+                    <div class="mesa">
+                        <h4>Mesa ${mesa.numero_mesa || idx + 1}</h4>
+                        ${mesa.jogadores && mesa.jogadores.length > 0 ? mesa.jogadores.map(j => `
+                            <div class="jogador">${j.nome} - ${j.deck_nome || 'Deck não definido'}</div>
+                        `).join('') : '<p>Nenhum jogador</p>'}
+                        ${mesa.vencedor_nome ? `<p><strong>Vencedor: ${mesa.vencedor_nome}</strong></p>` : ''}
+                    </div>
+                `).join('') : '<p>Nenhuma mesa criada</p>'}
+            </div>
+        `;
+    }).join('');
+    
+    const botaoHtml = todasRodadas.length > 1 ? `
+        <button onclick="toggleRodadas()" class="btn-primary" style="margin-top: 1rem; width: 100%;">
+            ${mostrandoTodas ? 'Mostrar menos' : `Mostrar mais (${todasRodadas.length - 1} rodadas anteriores)`}
+        </button>
+    ` : '';
+    
+    container.innerHTML = rodadasHtml + botaoHtml;
+}
+
+function toggleRodadas() {
+    mostrandoTodas = !mostrandoTodas;
+    renderizarRodadas();
 }
 
 // Carregar metagame
