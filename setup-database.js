@@ -88,7 +88,6 @@ async function setupDatabase() {
                 campeonato_id INT NOT NULL,
                 numero INT NOT NULL,
                 data_rodada DATE NOT NULL,
-                status ENUM('agendada', 'em_andamento', 'finalizada') DEFAULT 'agendada',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (campeonato_id) REFERENCES campeonatos(id) ON DELETE CASCADE
             )

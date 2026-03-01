@@ -702,6 +702,293 @@ app.post('/api/resultado', async (req, res) => {
     }
 });
 
+// ========== ADMIN ENDPOINTS ==========
+
+// Listar rodadas com estatísticas (admin)
+app.get('/api/admin/rodadas', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const [rodadas] = await db.query(`
+            SELECT 
+                r.*,
+                c.nome as campeonato_nome,
+                COUNT(DISTINCT m.id) as total_mesas,
+                SUM(CASE WHEN m.finalizada = TRUE THEN 1 ELSE 0 END) as mesas_finalizadas
+            FROM rodadas r
+            JOIN campeonatos c ON r.campeonato_id = c.id
+            LEFT JOIN mesas m ON r.id = m.rodada_id
+            GROUP BY r.id, c.nome
+            ORDER BY r.numero DESC
+        `);
+        
+        res.json(rodadas);
+    } catch (error) {
+        console.error('❌ Erro ao buscar rodadas:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Listar mesas de uma rodada (admin)
+app.get('/api/admin/rodadas/:id/mesas', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const [mesas] = await db.query(`
+            SELECT m.*, 
+                   v.nome as vencedor_nome,
+                   s.nome as segundo_nome
+            FROM mesas m
+            LEFT JOIN inscricoes v ON m.vencedor_id = v.id
+            LEFT JOIN inscricoes s ON m.segundo_id = s.id
+            WHERE m.rodada_id = ?
+            ORDER BY m.numero_mesa
+        `, [id]);
+        
+        for (let mesa of mesas) {
+            const [jogadores] = await db.query(`
+                SELECT 
+                    i.id,
+                    i.nome,
+                    i.deck_nome,
+                    p.comandante,
+                    mj.posicao_final
+                FROM mesa_jogadores mj
+                JOIN inscricoes i ON mj.inscricao_id = i.id
+                LEFT JOIN precons p ON i.deck_id = p.id
+                WHERE mj.mesa_id = ?
+                ORDER BY mj.posicao
+            `, [mesa.id]);
+            
+            mesa.jogadores = jogadores;
+        }
+        
+        res.json(mesas);
+    } catch (error) {
+        console.error('❌ Erro ao buscar mesas:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Buscar detalhes de uma mesa (admin)
+app.get('/api/admin/mesas/:id', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const [mesas] = await db.query('SELECT * FROM mesas WHERE id = ?', [id]);
+        
+        if (mesas.length === 0) {
+            return res.status(404).json({ error: 'Mesa não encontrada' });
+        }
+        
+        const mesa = mesas[0];
+        
+        const [jogadores] = await db.query(`
+            SELECT 
+                mj.inscricao_id,
+                i.nome,
+                i.deck_nome,
+                p.comandante
+            FROM mesa_jogadores mj
+            JOIN inscricoes i ON mj.inscricao_id = i.id
+            LEFT JOIN precons p ON i.deck_id = p.id
+            WHERE mj.mesa_id = ?
+            ORDER BY mj.posicao
+        `, [id]);
+        
+        mesa.jogadores = jogadores;
+        
+        res.json(mesa);
+    } catch (error) {
+        console.error('❌ Erro ao buscar mesa:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Listar mesas pendentes (admin)
+app.get('/api/admin/mesas-pendentes', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const [mesas] = await db.query(`
+            SELECT 
+                m.*,
+                r.numero as rodada_numero,
+                c.nome as campeonato_nome
+            FROM mesas m
+            JOIN rodadas r ON m.rodada_id = r.id
+            JOIN campeonatos c ON r.campeonato_id = c.id
+            WHERE m.finalizada = FALSE
+            ORDER BY r.numero, m.numero_mesa
+        `);
+        
+        for (let mesa of mesas) {
+            const [jogadores] = await db.query(`
+                SELECT 
+                    i.nome,
+                    i.deck_nome
+                FROM mesa_jogadores mj
+                JOIN inscricoes i ON mj.inscricao_id = i.id
+                WHERE mj.mesa_id = ?
+                ORDER BY mj.posicao
+            `, [mesa.id]);
+            
+            mesa.jogadores = jogadores;
+        }
+        
+        res.json(mesas);
+    } catch (error) {
+        console.error('❌ Erro ao buscar mesas pendentes:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Gerar pareamento (admin)
+app.post('/api/admin/parear', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { campeonatoId, numero, dataRodada } = req.body;
+        
+        // Criar rodada
+        const [rodadaResult] = await db.query(
+            'INSERT INTO rodadas (campeonato_id, numero, data_rodada) VALUES (?, ?, ?)',
+            [campeonatoId, numero, dataRodada || new Date()]
+        );
+        const rodadaId = rodadaResult.insertId;
+        
+        // Buscar jogadores ativos do campeonato ordenados por pontos
+        const [jogadores] = await db.query(`
+            SELECT * FROM inscricoes 
+            WHERE campeonato_id = ? AND ativo = TRUE 
+            ORDER BY pontos DESC, vitorias DESC, RAND()
+        `, [campeonatoId]);
+        
+        if (jogadores.length < 4) {
+            return res.status(400).json({ error: 'Mínimo de 4 jogadores necessários' });
+        }
+        
+        // Criar mesas de 4 jogadores
+        const mesas = [];
+        for (let i = 0; i < jogadores.length; i += 4) {
+            const jogadoresMesa = jogadores.slice(i, i + 4);
+            
+            if (jogadoresMesa.length >= 2) {
+                const numeroMesa = Math.floor(i / 4) + 1;
+                
+                // Criar mesa
+                const [mesaResult] = await db.query(
+                    'INSERT INTO mesas (rodada_id, numero_mesa) VALUES (?, ?)',
+                    [rodadaId, numeroMesa]
+                );
+                const mesaId = mesaResult.insertId;
+                
+                // Adicionar jogadores à mesa
+                for (let j = 0; j < jogadoresMesa.length; j++) {
+                    await db.query(
+                        'INSERT INTO mesa_jogadores (mesa_id, inscricao_id, posicao) VALUES (?, ?, ?)',
+                        [mesaId, jogadoresMesa[j].id, j + 1]
+                    );
+                }
+                
+                mesas.push({ numero: numeroMesa, jogadores: jogadoresMesa.length });
+            }
+        }
+        
+        res.json({ 
+            rodadaId, 
+            numero, 
+            mesasCriadas: mesas.length,
+            totalJogadores: jogadores.length 
+        });
+    } catch (error) {
+        console.error('❌ Erro ao gerar pareamento:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Salvar resultado (admin)
+app.post('/api/admin/resultado', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { mesaId, vencedorId, segundoId } = req.body;
+        
+        // Buscar informações da mesa
+        const [mesa] = await db.query(`
+            SELECT m.*, r.campeonato_id, r.numero as rodada_numero, r.data_rodada
+            FROM mesas m
+            JOIN rodadas r ON m.rodada_id = r.id
+            WHERE m.id = ?
+        `, [mesaId]);
+        
+        if (mesa.length === 0) {
+            return res.status(404).json({ error: 'Mesa não encontrada' });
+        }
+        
+        const mesaInfo = mesa[0];
+        
+        // Buscar jogadores da mesa
+        const [jogadores] = await db.query(`
+            SELECT mj.*, i.deck_id, i.email
+            FROM mesa_jogadores mj
+            JOIN inscricoes i ON mj.inscricao_id = i.id
+            WHERE mj.mesa_id = ?
+            ORDER BY mj.posicao
+        `, [mesaId]);
+        
+        // Atualizar mesa
+        await db.query(
+            'UPDATE mesas SET vencedor_id = ?, segundo_id = ?, finalizada = TRUE WHERE id = ?',
+            [vencedorId, segundoId, mesaId]
+        );
+        
+        // Atualizar pontos do vencedor
+        await db.query(
+            'UPDATE inscricoes SET pontos = pontos + 3, vitorias = vitorias + 1 WHERE id = ?',
+            [vencedorId]
+        );
+        
+        // Atualizar pontos do segundo
+        if (segundoId) {
+            await db.query(
+                'UPDATE inscricoes SET pontos = pontos + 1, segundos_lugares = segundos_lugares + 1 WHERE id = ?',
+                [segundoId]
+            );
+        }
+        
+        // Registrar histórico para cada jogador
+        for (const jogador of jogadores) {
+            const posicaoFinal = jogador.inscricao_id === vencedorId ? 1 : 
+                                 jogador.inscricao_id === segundoId ? 2 : 
+                                 jogadores.length;
+            const pontosGanhos = posicaoFinal === 1 ? 3 : posicaoFinal === 2 ? 1 : 0;
+            
+            // Pegar oponentes
+            const oponentes = jogadores.filter(j => j.inscricao_id !== jogador.inscricao_id);
+            
+            await db.query(`
+                INSERT INTO historico_partidas 
+                (mesa_id, campeonato_id, jogador_id, deck_id, posicao_final, pontos_ganhos,
+                 oponente1_id, oponente1_deck_id, oponente2_id, oponente2_deck_id, 
+                 oponente3_id, oponente3_deck_id, data_partida)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `, [
+                mesaId,
+                mesaInfo.campeonato_id,
+                jogador.inscricao_id,
+                jogador.deck_id,
+                posicaoFinal,
+                pontosGanhos,
+                oponentes[0]?.inscricao_id || null,
+                oponentes[0]?.deck_id || null,
+                oponentes[1]?.inscricao_id || null,
+                oponentes[1]?.deck_id || null,
+                oponentes[2]?.inscricao_id || null,
+                oponentes[2]?.deck_id || null,
+                mesaInfo.data_rodada
+            ]);
+        }
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('❌ Erro ao salvar resultado:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // ========== METAGAME ==========
 app.get('/api/metagame', async (req, res) => {
     try {

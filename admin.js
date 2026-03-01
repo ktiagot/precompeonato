@@ -151,14 +151,13 @@ async function carregarRodadas() {
                     <div>
                         <h4>Rodada ${r.numero} - ${r.campeonato_nome}</h4>
                         <p style="margin: 0.25rem 0; color: var(--gray-600); font-size: 0.875rem;">
-                            ${new Date(r.data_rodada).toLocaleDateString('pt-BR')}
+                            Data: ${r.data_rodada ? new Date(r.data_rodada + 'T00:00:00').toLocaleDateString('pt-BR') : 'Não definida'}
                         </p>
                     </div>
-                    <span class="badge ${r.status === 'finalizada' ? 'badge-success' : 'badge-warning'}">
-                        ${r.status}
+                    <span class="badge badge-info">
+                        ${r.mesas_finalizadas}/${r.total_mesas} finalizadas
                     </span>
                 </div>
-                <p><strong>Mesas:</strong> ${r.total_mesas} | <strong>Finalizadas:</strong> ${r.mesas_finalizadas}</p>
                 <button onclick="verMesasRodada(${r.id})" class="btn-primary" style="margin-top: 0.5rem;">
                     Ver Mesas
                 </button>
@@ -192,9 +191,9 @@ window.verMesasRodada = async function(rodadaId) {
                         <div class="jogador-item">
                             <div>
                                 <strong>${j.nome}</strong>
-                                <span style="color: var(--gray-600); font-size: 0.875rem;"> - ${j.deck_nome}</span>
+                                <span style="color: var(--gray-600); font-size: 0.875rem;"> - ${j.deck_nome || 'Deck não definido'}</span>
                             </div>
-                            ${m.finalizada ? `<span class="badge badge-info">${j.posicao_final}º lugar</span>` : ''}
+                            ${m.finalizada ? `<span class="badge badge-info">${j.posicao_final || '?'}º lugar</span>` : ''}
                         </div>
                     `).join('')}
                     ${m.finalizada ? `
