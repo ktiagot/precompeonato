@@ -95,9 +95,18 @@ if (deckBusca) {
 
 async function selecionarDeck(id, nome, info) {
     try {
-        // Buscar detalhes completos do precon
-        const response = await fetch(`${API_URL}/precons`);
-        const precons = await response.json();
+        // Buscar comandantes disponíveis para este precon
+        const response = await fetch(`${API_URL}/precons/${id}/comandantes`);
+        const data = await response.json();
+        
+        if (!data.comandantes || data.comandantes.length === 0) {
+            alert('Erro: Nenhum comandante encontrado para este deck');
+            return;
+        }
+        
+        // Buscar detalhes do precon
+        const preconResponse = await fetch(`${API_URL}/precons`);
+        const precons = await preconResponse.json();
         const precon = precons.find(p => p.id == id);
         
         if (!precon) {
@@ -110,40 +119,80 @@ async function selecionarDeck(id, nome, info) {
         deckBusca.value = nome;
         deckSugestoes.style.display = 'none';
         
-        // Verificar se tem comandante secundário
-        const temSecundario = precon.comandante_secundario && precon.comandante_secundario.trim() !== '';
-        
         let infoHtml = `
             <strong>${precon.nome}</strong><br>
             <small style="color: var(--gray-600);">${precon.set_nome || 'Set desconhecido'} (${precon.ano || 'Ano desconhecido'})</small>
         `;
         
-        if (temSecundario) {
+        if (data.tem_partner && data.comandantes.length > 2) {
+            // Deck com Partner - usuário escolhe 2 comandantes
+            infoHtml += `
+                <div style="margin-top: 1rem; padding: 1rem; background: var(--white); border-radius: 0.5rem; border: 1px solid var(--gray-300);">
+                    <label style="display: block; margin-bottom: 0.75rem; font-weight: 600; color: var(--dark);">
+                        🤝 Este deck tem Partner! Escolha 2 comandantes:
+                    </label>
+                    <div id="partnerSelection" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        ${data.comandantes.map((cmd, idx) => `
+                            <label class="partner-option" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--gray-50); border: 2px solid var(--gray-300); border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;">
+                                <input type="checkbox" name="partnerComandante" value="${cmd.comandante}" data-ordem="${cmd.ordem}" style="width: 18px; height: 18px; cursor: pointer;">
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; color: var(--dark);">${cmd.comandante}</div>
+                                </div>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <small style="display: block; margin-top: 0.5rem; color: var(--gray-600);">
+                        ⚠️ Você deve selecionar exatamente 2 comandantes
+                    </small>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                const checkboxes = document.querySelectorAll('input[name="partnerComandante"]');
+                checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', () => {
+                        const checked = document.querySelectorAll('input[name="partnerComandante"]:checked');
+                        if (checked.length > 2) {
+                            checkbox.checked = false;
+                            alert('Você pode selecionar no máximo 2 comandantes');
+                        }
+                        
+                        // Atualizar visual
+                        checkboxes.forEach(cb => {
+                            const label = cb.closest('.partner-option');
+                            if (cb.checked) {
+                                label.style.borderColor = 'var(--accent)';
+                                label.style.background = 'var(--white)';
+                            } else {
+                                label.style.borderColor = 'var(--gray-300)';
+                                label.style.background = 'var(--gray-50)';
+                            }
+                        });
+                    });
+                });
+            }, 0);
+            
+        } else if (data.comandantes.length > 1) {
+            // Deck com múltiplos comandantes mas sem partner (escolhe 1)
             infoHtml += `
                 <div style="margin-top: 1rem; padding: 1rem; background: var(--white); border-radius: 0.5rem; border: 1px solid var(--gray-300);">
                     <label style="display: block; margin-bottom: 0.75rem; font-weight: 600; color: var(--dark);">
                         ⚔️ Este deck tem múltiplos comandantes. Escolha qual você vai usar:
                     </label>
                     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                        <label class="commander-option" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: var(--gray-50); border: 2px solid var(--gray-300); border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;">
-                            <input type="radio" name="cdComandante" value="1" checked style="width: 20px; height: 20px; cursor: pointer;">
-                            <div>
-                                <div style="font-weight: 600; color: var(--dark);">${precon.comandante_principal}</div>
-                                <div style="font-size: 0.75rem; color: var(--gray-600);">Comandante Principal</div>
-                            </div>
-                        </label>
-                        <label class="commander-option" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: var(--gray-50); border: 2px solid var(--gray-300); border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;">
-                            <input type="radio" name="cdComandante" value="2" style="width: 20px; height: 20px; cursor: pointer;">
-                            <div>
-                                <div style="font-weight: 600; color: var(--dark);">${precon.comandante_secundario}</div>
-                                <div style="font-size: 0.75rem; color: var(--gray-600);">Comandante Alternativo</div>
-                            </div>
-                        </label>
+                        ${data.comandantes.map((cmd, idx) => `
+                            <label class="commander-option" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: var(--gray-50); border: 2px solid var(--gray-300); border-radius: 0.5rem; cursor: pointer; transition: all 0.2s;">
+                                <input type="radio" name="cdComandante" value="${cmd.comandante}" ${idx === 0 ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;">
+                                <div>
+                                    <div style="font-weight: 600; color: var(--dark);">${cmd.comandante}</div>
+                                    <div style="font-size: 0.75rem; color: var(--gray-600);">${idx === 0 ? 'Comandante Principal' : 'Comandante Alternativo'}</div>
+                                </div>
+                            </label>
+                        `).join('')}
                     </div>
                 </div>
             `;
             
-            // Adicionar estilo de hover para as opções
             setTimeout(() => {
                 document.querySelectorAll('.commander-option').forEach(option => {
                     option.addEventListener('mouseenter', () => {
@@ -167,7 +216,6 @@ async function selecionarDeck(id, nome, info) {
                     });
                 });
                 
-                // Marcar o primeiro como selecionado visualmente
                 const firstOption = document.querySelector('.commander-option');
                 if (firstOption) {
                     firstOption.style.borderColor = 'var(--accent)';
@@ -175,10 +223,12 @@ async function selecionarDeck(id, nome, info) {
                 }
             }, 0);
         } else {
+            // Deck com apenas 1 comandante
             infoHtml += `
                 <div style="margin-top: 0.75rem; padding: 0.75rem; background: var(--gray-50); border-radius: 0.5rem; border-left: 3px solid var(--accent);">
                     <strong style="color: var(--dark);">Comandante:</strong> 
-                    <span style="color: var(--gray-700);">${precon.comandante_principal}</span>
+                    <span style="color: var(--gray-700);">${data.comandantes[0].comandante}</span>
+                    <input type="hidden" name="cdComandante" value="${data.comandantes[0].comandante}">
                 </div>
             `;
         }
@@ -186,9 +236,15 @@ async function selecionarDeck(id, nome, info) {
         document.getElementById('deckInfo').innerHTML = infoHtml;
         document.getElementById('deckSelecionado').style.display = 'block';
         
-        deckSelecionadoAtual = { id, nome, temSecundario };
+        deckSelecionadoAtual = { 
+            id, 
+            nome, 
+            temPartner: data.tem_partner,
+            comandantes: data.comandantes
+        };
     } catch (error) {
         console.error('Erro ao selecionar deck:', error);
+        alert('Erro ao carregar informações do deck');
     }
 }
 
@@ -204,9 +260,28 @@ document.getElementById('inscricaoForm')?.addEventListener('submit', async (e) =
         return;
     }
     
-    // Adicionar escolha do comandante (1 ou 2)
-    const cdComandante = document.querySelector('input[name="cdComandante"]:checked')?.value || '1';
-    data.cdComandante = parseInt(cdComandante);
+    // Verificar se é partner e validar seleção
+    if (deckSelecionadoAtual?.temPartner) {
+        const checked = document.querySelectorAll('input[name="partnerComandante"]:checked');
+        if (checked.length !== 2) {
+            alert('Você deve selecionar exatamente 2 comandantes para este deck Partner');
+            return;
+        }
+        data.comandante_1 = checked[0].value;
+        data.comandante_2 = checked[1].value;
+    } else {
+        // Deck normal ou com escolha única
+        const comandanteSelecionado = document.querySelector('input[name="cdComandante"]:checked')?.value 
+            || document.querySelector('input[name="cdComandante"]')?.value;
+        
+        if (!comandanteSelecionado) {
+            alert('Por favor, selecione um comandante');
+            return;
+        }
+        
+        data.comandante_1 = comandanteSelecionado;
+        data.comandante_2 = null;
+    }
     
     try {
         const response = await fetch(`${API_URL}/inscricoes`, {

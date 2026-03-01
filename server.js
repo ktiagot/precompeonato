@@ -542,6 +542,70 @@ app.post('/api/precons', async (req, res) => {
     }
 });
 
+// Buscar comandantes disponíveis de um precon (para partner)
+app.get('/api/precons/:id/comandantes', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // Verificar se a tabela precon_comandantes existe
+        const [tables] = await db.query("SHOW TABLES LIKE 'precon_comandantes'");
+        
+        if (tables.length === 0) {
+            // Tabela não existe, usar estrutura antiga (comandante_principal e secundario)
+            const [precons] = await db.query(
+                'SELECT comandante_principal, comandante_secundario FROM precons WHERE id = ?',
+                [id]
+            );
+            
+            if (precons.length === 0) {
+                return res.status(404).json({ error: 'Precon não encontrado' });
+            }
+            
+            const comandantes = [];
+            if (precons[0].comandante_principal) {
+                comandantes.push({
+                    comandante: precons[0].comandante_principal,
+                    ordem: 1,
+                    tem_partner: false
+                });
+            }
+            if (precons[0].comandante_secundario) {
+                comandantes.push({
+                    comandante: precons[0].comandante_secundario,
+                    ordem: 2,
+                    tem_partner: false
+                });
+            }
+            
+            return res.json({
+                tem_partner: false,
+                comandantes
+            });
+        }
+        
+        // Tabela existe, usar nova estrutura
+        const [comandantes] = await db.query(
+            'SELECT comandante, ordem, tem_partner FROM precon_comandantes WHERE precon_id = ? ORDER BY ordem',
+            [id]
+        );
+        
+        if (comandantes.length === 0) {
+            return res.status(404).json({ error: 'Nenhum comandante encontrado para este precon' });
+        }
+        
+        // Verificar se algum tem partner
+        const temPartner = comandantes.some(c => c.tem_partner);
+        
+        res.json({
+            tem_partner: temPartner,
+            comandantes
+        });
+    } catch (error) {
+        console.error('Erro ao buscar comandantes:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // ========== EMAILS PERMITIDOS ==========
 app.get('/api/emails-permitidos', async (req, res) => {
     try {
@@ -599,7 +663,7 @@ app.get('/api/inscricoes', async (req, res) => {
 
 app.post('/api/inscricoes', async (req, res) => {
     try {
-        const { nome, email, discord, whatsapp, deckId, deckNome, campeonatoId, cdComandante } = req.body;
+        const { nome, email, discord, whatsapp, deckId, deckNome, campeonatoId, comandante_1, comandante_2 } = req.body;
         
         // Se não especificar campeonato, pegar o ativo
         let campId = campeonatoId;
@@ -633,25 +697,50 @@ app.post('/api/inscricoes', async (req, res) => {
             return res.status(400).json({ error: 'Email já cadastrado neste campeonato' });
         }
         
-        // Inserir inscrição com escolha do comandante (1=principal, 2=secundario)
-        const comandanteEscolhido = cdComandante || 1;
-        const [result] = await db.query(
-            'INSERT INTO inscricoes (campeonato_id, nome, email, discord, whatsapp, deck_id, cd_comandante, deck_nome) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [campId, nome, email.toLowerCase(), discord, whatsapp, deckId, comandanteEscolhido, deckNome]
-        );
+        // Verificar se a tabela tem as novas colunas comandante_1 e comandante_2
+        const [columns] = await db.query("SHOW COLUMNS FROM inscricoes LIKE 'comandante_%'");
         
-        res.json({ 
-            id: result.insertId, 
-            campeonatoId: campId,
-            nome, 
-            email: email.toLowerCase(),
-            discord,
-            whatsapp,
-            deckId,
-            cdComandante: comandanteEscolhido,
-            deckNome 
-        });
+        if (columns.length > 0) {
+            // Nova estrutura com comandante_1 e comandante_2
+            const [result] = await db.query(
+                'INSERT INTO inscricoes (campeonato_id, nome, email, discord, whatsapp, deck_id, deck_nome, comandante_1, comandante_2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [campId, nome, email.toLowerCase(), discord, whatsapp, deckId, deckNome, comandante_1, comandante_2]
+            );
+            
+            res.json({ 
+                id: result.insertId, 
+                campeonatoId: campId,
+                nome, 
+                email: email.toLowerCase(),
+                discord,
+                whatsapp,
+                deckId,
+                deckNome,
+                comandante_1,
+                comandante_2
+            });
+        } else {
+            // Estrutura antiga com cd_comandante
+            const cdComandante = req.body.cdComandante || 1;
+            const [result] = await db.query(
+                'INSERT INTO inscricoes (campeonato_id, nome, email, discord, whatsapp, deck_id, cd_comandante, deck_nome) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                [campId, nome, email.toLowerCase(), discord, whatsapp, deckId, cdComandante, deckNome]
+            );
+            
+            res.json({ 
+                id: result.insertId, 
+                campeonatoId: campId,
+                nome, 
+                email: email.toLowerCase(),
+                discord,
+                whatsapp,
+                deckId,
+                cdComandante,
+                deckNome 
+            });
+        }
     } catch (error) {
+        console.error('Erro ao criar inscrição:', error);
         res.status(500).json({ error: error.message });
     }
 });
