@@ -20,6 +20,13 @@
         if (tema.cor_destaque) {
             document.documentElement.style.setProperty('--accent', tema.cor_destaque);
         }
+        if (tema.cor_header) {
+            document.documentElement.style.setProperty('--header-bg', tema.cor_header);
+            // Ajustar cor do texto do header baseado no brilho da cor de fundo
+            const brightness = getBrightness(tema.cor_header);
+            const textColor = brightness > 128 ? '#1e293b' : '#ffffff';
+            document.documentElement.style.setProperty('--header-text', textColor);
+        }
         
         // Atualizar título e tornar clicável
         const titleElement = document.querySelector('header h1');
@@ -60,6 +67,15 @@
             (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
             (B < 255 ? B < 1 ? 0 : B : 255))
             .toString(16).slice(1);
+    }
+    
+    // Função para calcular brilho de uma cor (0-255)
+    function getBrightness(hex) {
+        const rgb = parseInt(hex.replace('#', ''), 16);
+        const r = (rgb >> 16) & 0xff;
+        const g = (rgb >> 8) & 0xff;
+        const b = (rgb >> 0) & 0xff;
+        return (r * 299 + g * 587 + b * 114) / 1000;
     }
     
     // Tentar aplicar tema do cache imediatamente

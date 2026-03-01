@@ -463,7 +463,7 @@ app.get('/api/tema', async (req, res) => {
     try {
         console.log('  - Tentando conectar no banco...');
         const [campeonatos] = await db.query(`
-            SELECT cor_primaria, cor_secundaria, cor_destaque, logo_url, nome, edicao
+            SELECT cor_primaria, cor_secundaria, cor_destaque, cor_header, logo_url, nome, edicao
             FROM campeonatos 
             WHERE status IN ('inscricoes', 'em_andamento')
             ORDER BY data_inicio DESC 
@@ -480,6 +480,7 @@ app.get('/api/tema', async (req, res) => {
                 cor_primaria: '#2563eb',
                 cor_secundaria: '#16a34a',
                 cor_destaque: '#dc2626',
+                cor_header: '#ffffff',
                 logo_url: null,
                 nome: 'Precompeonato',
                 edicao: ''

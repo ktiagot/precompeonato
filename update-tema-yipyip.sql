@@ -3,10 +3,11 @@ UPDATE campeonatos
 SET 
     cor_primaria = '#FF6B35',      -- Laranja vibrante do YipYip
     cor_secundaria = '#1B2845',    -- Azul escuro do PRECOM PRONATO
-    cor_destaque = '#D4A574'       -- Bege/dourado da borda
+    cor_destaque = '#D4A574',      -- Bege/dourado da borda
+    cor_header = '#FF6B35'         -- Laranja vibrante para o header
 WHERE nome = 'Precom Pronato' AND edicao = 'YipYip';
 
 -- Verificar a atualização
-SELECT id, nome, edicao, status, cor_primaria, cor_secundaria, cor_destaque 
+SELECT id, nome, edicao, status, cor_primaria, cor_secundaria, cor_destaque, cor_header 
 FROM campeonatos 
 WHERE nome = 'Precom Pronato' AND edicao = 'YipYip';
