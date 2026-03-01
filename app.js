@@ -4,6 +4,35 @@ const API_URL = window.location.hostname === 'localhost'
 
 let deckSelecionadoAtual = null;
 
+// Verificar se inscrições estão abertas
+async function verificarInscricoesAbertas() {
+    try {
+        const response = await fetch(`${API_URL}/campeonatos`);
+        const campeonatos = await response.json();
+        
+        // Buscar campeonato com status 'inscricoes'
+        const campeonatoAberto = campeonatos.find(c => c.status === 'inscricoes');
+        
+        if (!campeonatoAberto) {
+            // Verificar se tem campeonato em andamento
+            const campeonatoEmAndamento = campeonatos.find(c => c.status === 'em_andamento');
+            
+            if (campeonatoEmAndamento) {
+                document.getElementById('inscricoesFechadas').style.display = 'block';
+            } else {
+                document.getElementById('semCampeonato').style.display = 'block';
+            }
+            document.getElementById('formContainer').style.display = 'none';
+            return false;
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('Erro ao verificar inscrições:', error);
+        return false;
+    }
+}
+
 // Busca de precons
 const deckBusca = document.getElementById('deckBusca');
 const deckSugestoes = document.getElementById('deckSugestoes');
@@ -228,5 +257,10 @@ function toggleRodadas() {
 
 // Inicializar
 document.addEventListener('DOMContentLoaded', () => {
+    // Verificar se estamos na página de inscrição
+    if (document.getElementById('inscricaoForm')) {
+        verificarInscricoesAbertas();
+    }
+    
     carregarRodadas();
 });

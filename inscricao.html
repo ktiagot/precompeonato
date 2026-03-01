@@ -26,12 +26,27 @@
         <section class="section">
             <div class="container">
                 <h2>Inscrição no Campeonato</h2>
-                <p style="margin-bottom: 2rem; color: var(--gray-600);">
-                    Preencha o formulário abaixo para se inscrever no campeonato. 
-                    Seu e-mail deve estar previamente autorizado pelos organizadores.
-                </p>
                 
-                <form id="inscricaoForm">
+                <!-- Mensagem quando inscrições estão fechadas -->
+                <div id="inscricoesFechadas" style="display: none; text-align: center; padding: 3rem;">
+                    <h3 style="color: var(--gray-600); margin-bottom: 1rem;">🔒 Inscrições Encerradas</h3>
+                    <p style="color: var(--gray-600); margin-bottom: 2rem;">As inscrições para o campeonato atual já foram encerradas.</p>
+                    <a href="rodadas.html" class="btn-primary">Ver Rodadas</a>
+                </div>
+                
+                <!-- Mensagem quando não há campeonato ativo -->
+                <div id="semCampeonato" style="display: none; text-align: center; padding: 3rem;">
+                    <h3 style="color: var(--gray-600); margin-bottom: 1rem;">📅 Nenhum Campeonato Ativo</h3>
+                    <p style="color: var(--gray-600);">Não há campeonatos com inscrições abertas no momento.</p>
+                </div>
+                
+                <div id="formContainer">
+                    <p style="margin-bottom: 2rem; color: var(--gray-600);">
+                        Preencha o formulário abaixo para se inscrever no campeonato. 
+                        Seu e-mail deve estar previamente autorizado pelos organizadores.
+                    </p>
+                    
+                    <form id="inscricaoForm">
                     <div class="form-group">
                         <label for="nome">Nome Completo</label>
                         <input type="text" name="nome" id="nome" placeholder="Digite seu nome completo" required>
@@ -76,6 +91,7 @@
                         Confirmar Inscrição
                     </button>
                 </form>
+                </div>
             </div>
         </section>
     </main>
