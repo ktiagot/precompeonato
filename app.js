@@ -179,12 +179,12 @@ async function carregarMetagame() {
         const container = document.getElementById('metagameStats');
         
         container.innerHTML = stats.map(stat => `
-            <div class="deck-stat" style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--white); border: 1px solid var(--gray-300); border-radius: 0.5rem; margin-bottom: 1rem;">
+            <div class="deck-stat" style="display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: var(--white); border: 1px solid var(--gray-300); border-radius: 0.5rem; margin-bottom: 1rem;">
                 ${ScryfallHelper.getImageHTML(stat.comandante, stat.deck, '200px', '150px')}
-                <div style="flex: 1;">
-                    <h3 style="margin: 0 0 0.5rem 0;">${stat.deck}</h3>
-                    <p style="margin: 0; color: var(--gray-600); font-size: 0.875rem;">${stat.comandante}</p>
-                    <div style="display: flex; gap: 1rem; margin-top: 0.5rem; font-size: 0.875rem;">
+                <div style="flex: 1; min-width: 0; overflow: hidden;">
+                    <h3 style="margin: 0 0 0.5rem 0; word-wrap: break-word;">${stat.deck}</h3>
+                    <p style="margin: 0 0 0.75rem 0; color: var(--gray-600); font-size: 0.875rem; word-wrap: break-word;">${stat.comandante}</p>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.875rem;">
                         <span><strong>Uso:</strong> ${stat.uso_percentual}%</span>
                         <span><strong>Vitórias:</strong> ${stat.vitorias}</span>
                         <span><strong>Win Rate:</strong> ${stat.win_rate}%</span>

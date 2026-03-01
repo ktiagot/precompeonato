@@ -84,12 +84,12 @@ function exibirEstatisticasGerais(stats) {
     
     // Metagame - Decks mais usados (2 colunas)
     const metagameHtml = (stats.metagame || []).map(d => `
-        <div class="metagame-item" style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--white); border: 1px solid var(--gray-300); border-radius: 0.5rem;">
+        <div class="metagame-item" style="display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: var(--white); border: 1px solid var(--gray-300); border-radius: 0.5rem;">
             ${ScryfallHelper.getImageHTML(d.comandante, d.deck_nome, '200px', '150px')}
-            <div style="flex: 1;">
-                <h4 style="margin: 0 0 0.25rem 0;">${d.deck_nome}</h4>
-                <p style="margin: 0 0 0.5rem 0; color: var(--gray-600); font-size: 0.875rem;"><strong>${d.comandante}</strong> - ${d.set_nome}</p>
-                <div class="metagame-stats" style="display: flex; gap: 1rem; font-size: 0.875rem;">
+            <div style="flex: 1; min-width: 0; overflow: hidden;">
+                <h4 style="margin: 0 0 0.25rem 0; word-wrap: break-word;">${d.deck_nome}</h4>
+                <p style="margin: 0 0 0.5rem 0; color: var(--gray-600); font-size: 0.875rem; word-wrap: break-word;"><strong>${d.comandante}</strong> - ${d.set_nome}</p>
+                <div class="metagame-stats" style="display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.875rem;">
                     <span><strong>Usado:</strong> ${d.vezes_usado}x (${d.porcentagem}%)</span>
                     <span><strong>Vitórias:</strong> ${d.vitorias}</span>
                     <span><strong>Win Rate:</strong> ${d.winrate}%</span>
@@ -101,12 +101,12 @@ function exibirEstatisticasGerais(stats) {
     
     // Top decks por win rate (2 colunas)
     const topDecksHtml = (stats.topDecks || []).map(d => `
-        <div class="metagame-item" style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--white); border: 1px solid var(--gray-300); border-radius: 0.5rem;">
+        <div class="metagame-item" style="display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: var(--white); border: 1px solid var(--gray-300); border-radius: 0.5rem;">
             ${ScryfallHelper.getImageHTML(d.comandante, d.deck_nome, '200px', '150px')}
-            <div style="flex: 1;">
-                <h4 style="margin: 0 0 0.25rem 0;">${d.deck_nome}</h4>
-                <p style="margin: 0 0 0.5rem 0; color: var(--gray-600); font-size: 0.875rem;"><strong>${d.comandante}</strong></p>
-                <div class="metagame-stats" style="display: flex; gap: 1rem; font-size: 0.875rem;">
+            <div style="flex: 1; min-width: 0; overflow: hidden;">
+                <h4 style="margin: 0 0 0.25rem 0; word-wrap: break-word;">${d.deck_nome}</h4>
+                <p style="margin: 0 0 0.5rem 0; color: var(--gray-600); font-size: 0.875rem; word-wrap: break-word;"><strong>${d.comandante}</strong></p>
+                <div class="metagame-stats" style="display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.875rem;">
                     <span><strong>Partidas:</strong> ${d.partidas}</span>
                     <span><strong>Vitórias:</strong> ${d.vitorias}</span>
                     <span><strong>Win Rate:</strong> ${d.winrate}%</span>

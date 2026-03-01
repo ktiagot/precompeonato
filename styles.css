@@ -362,7 +362,7 @@ textarea {
 /* Metagame Stats */
 #metagameStats {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: 1fr;
     gap: 1rem;
 }
 
@@ -617,10 +617,6 @@ footer p {
     
     .stat-value {
         font-size: 2rem;
-    }
-    
-    #metagameStats {
-        grid-template-columns: 1fr;
     }
     
     .performance-stats, .matchup-stats {
