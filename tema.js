@@ -52,13 +52,17 @@
             titleElement.onclick = () => window.location.href = 'index.html';
         }
         
-        // Adicionar logo (prioriza logo_url da API, senão usa local)
+        // Adicionar/atualizar logo (prioriza logo_url da API, senão usa local)
         const logoUrl = tema.logo_url || 'assets/logo.png';
-        if (!document.querySelector('header img[alt="Logo"]')) {
-            const header = document.querySelector('header .container');
-            if (header) {
-                const logo = document.createElement('img');
-                logo.src = logoUrl;
+        const header = document.querySelector('header .container');
+        
+        if (header) {
+            // Buscar logo existente
+            let logo = document.querySelector('header img[alt="Logo"]');
+            
+            if (!logo) {
+                // Criar logo se não existir
+                logo = document.createElement('img');
                 logo.alt = 'Logo';
                 logo.style.height = '60px';
                 logo.style.marginRight = '1rem';
@@ -66,6 +70,9 @@
                 logo.onclick = () => window.location.href = 'index.html';
                 header.prepend(logo);
             }
+            
+            // Atualizar src do logo (sempre)
+            logo.src = logoUrl;
         }
     }
     
