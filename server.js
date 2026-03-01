@@ -985,56 +985,84 @@ app.post('/api/admin/parear', authMiddleware, adminMiddleware, async (req, res) 
     try {
         const { campeonatoId, numero, dataRodada } = req.body;
         
+        console.log(`📊 Gerando pareamento - Rodada ${numero} - Campeonato ${campeonatoId}`);
+        
         // Criar rodada
         const [rodadaResult] = await db.query(
             'INSERT INTO rodadas (campeonato_id, numero, data_rodada) VALUES (?, ?, ?)',
             [campeonatoId, numero, dataRodada || new Date()]
         );
         const rodadaId = rodadaResult.insertId;
+        console.log(`   ✓ Rodada ${numero} criada (ID: ${rodadaId})`);
         
-        // Buscar jogadores ativos do campeonato ordenados por pontos
+        // Buscar jogadores ativos do campeonato
         const [jogadores] = await db.query(`
-            SELECT * FROM inscricoes 
+            SELECT 
+                id, 
+                nome, 
+                email, 
+                deck_id, 
+                deck_nome,
+                pontos,
+                COALESCE(pontos_cumulativos, 0) as pontos_cumulativos,
+                vitorias
+            FROM inscricoes 
             WHERE campeonato_id = ? AND ativo = TRUE 
-            ORDER BY pontos DESC, vitorias DESC, RAND()
+            ORDER BY pontos DESC, pontos_cumulativos DESC, vitorias DESC
         `, [campeonatoId]);
         
         if (jogadores.length < 4) {
             return res.status(400).json({ error: 'Mínimo de 4 jogadores necessários' });
         }
         
-        // Criar mesas de 4 jogadores
-        const mesas = [];
-        for (let i = 0; i < jogadores.length; i += 4) {
-            const jogadoresMesa = jogadores.slice(i, i + 4);
+        console.log(`   ✓ ${jogadores.length} jogadores ativos encontrados`);
+        
+        // Gerar pareamento usando o algoritmo suíço
+        const { gerarPareamento, atualizarHistoricoOponentes } = require('./pareamento');
+        const mesas = await gerarPareamento(jogadores, numero, db, campeonatoId);
+        
+        console.log(`   ✓ ${mesas.length} mesas geradas`);
+        
+        // Criar mesas no banco
+        const mesasCriadas = [];
+        for (let i = 0; i < mesas.length; i++) {
+            const jogadoresMesa = mesas[i];
+            const numeroMesa = i + 1;
             
-            if (jogadoresMesa.length >= 2) {
-                const numeroMesa = Math.floor(i / 4) + 1;
-                
-                // Criar mesa
-                const [mesaResult] = await db.query(
-                    'INSERT INTO mesas (rodada_id, numero_mesa) VALUES (?, ?)',
-                    [rodadaId, numeroMesa]
+            // Criar mesa
+            const [mesaResult] = await db.query(
+                'INSERT INTO mesas (rodada_id, numero_mesa) VALUES (?, ?)',
+                [rodadaId, numeroMesa]
+            );
+            const mesaId = mesaResult.insertId;
+            
+            // Adicionar jogadores à mesa
+            for (let j = 0; j < jogadoresMesa.length; j++) {
+                await db.query(
+                    'INSERT INTO mesa_jogadores (mesa_id, inscricao_id, posicao) VALUES (?, ?, ?)',
+                    [mesaId, jogadoresMesa[j].id, j + 1]
                 );
-                const mesaId = mesaResult.insertId;
-                
-                // Adicionar jogadores à mesa
-                for (let j = 0; j < jogadoresMesa.length; j++) {
-                    await db.query(
-                        'INSERT INTO mesa_jogadores (mesa_id, inscricao_id, posicao) VALUES (?, ?, ?)',
-                        [mesaId, jogadoresMesa[j].id, j + 1]
-                    );
-                }
-                
-                mesas.push({ numero: numeroMesa, jogadores: jogadoresMesa.length });
             }
+            
+            // Atualizar histórico de oponentes
+            await atualizarHistoricoOponentes(db, campeonatoId, mesaId, jogadoresMesa, numero);
+            
+            mesasCriadas.push({ 
+                numero: numeroMesa, 
+                jogadores: jogadoresMesa.map(j => j.nome)
+            });
+            
+            console.log(`   ✓ Mesa ${numeroMesa}: ${jogadoresMesa.map(j => j.nome).join(', ')}`);
         }
+        
+        console.log(`✅ Pareamento concluído!`);
         
         res.json({ 
             rodadaId, 
             numero, 
             mesasCriadas: mesas.length,
-            totalJogadores: jogadores.length 
+            totalJogadores: jogadores.length,
+            mesas: mesasCriadas
         });
     } catch (error) {
         console.error('❌ Erro ao gerar pareamento:', error);
@@ -1046,6 +1074,8 @@ app.post('/api/admin/parear', authMiddleware, adminMiddleware, async (req, res) 
 app.post('/api/admin/resultado', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         const { mesaId, vencedorId, segundoId } = req.body;
+        
+        console.log(`📊 Salvando resultado - Mesa ${mesaId}`);
         
         // Buscar informações da mesa
         const [mesa] = await db.query(`
@@ -1076,25 +1106,27 @@ app.post('/api/admin/resultado', authMiddleware, adminMiddleware, async (req, re
             [vencedorId, segundoId, mesaId]
         );
         
-        // Atualizar pontos do vencedor
+        // Atualizar pontos e pontos cumulativos do vencedor (3 pontos)
         await db.query(
-            'UPDATE inscricoes SET pontos = pontos + 3, vitorias = vitorias + 1 WHERE id = ?',
+            'UPDATE inscricoes SET pontos = pontos + 3, pontos_cumulativos = pontos_cumulativos + 3, vitorias = vitorias + 1 WHERE id = ?',
             [vencedorId]
         );
+        console.log(`   ✓ Vencedor atualizado: +3 pontos`);
         
-        // Atualizar pontos do segundo
+        // Atualizar pontos e pontos cumulativos do segundo (1 ponto)
         if (segundoId) {
             await db.query(
-                'UPDATE inscricoes SET pontos = pontos + 1, segundos_lugares = segundos_lugares + 1 WHERE id = ?',
+                'UPDATE inscricoes SET pontos = pontos + 1, pontos_cumulativos = pontos_cumulativos + 1, segundos_lugares = segundos_lugares + 1 WHERE id = ?',
                 [segundoId]
             );
+            console.log(`   ✓ Segundo lugar atualizado: +1 ponto`);
         }
         
         // Registrar histórico para cada jogador
         for (const jogador of jogadores) {
             const posicaoFinal = jogador.inscricao_id === vencedorId ? 1 : 
                                  jogador.inscricao_id === segundoId ? 2 : 
-                                 jogadores.length;
+                                 jogadores.length === 4 ? (jogador.inscricao_id === jogadores[2].inscricao_id ? 3 : 4) : 3;
             const pontosGanhos = posicaoFinal === 1 ? 3 : posicaoFinal === 2 ? 1 : 0;
             
             // Pegar oponentes
@@ -1121,8 +1153,11 @@ app.post('/api/admin/resultado', authMiddleware, adminMiddleware, async (req, re
                 oponentes[2]?.deck_id || null,
                 mesaInfo.data_rodada
             ]);
+            
+            console.log(`   ✓ Histórico registrado: ${jogador.inscricao_id} - ${posicaoFinal}º lugar (+${pontosGanhos} pontos)`);
         }
         
+        console.log(`✅ Resultado salvo com sucesso!`);
         res.json({ success: true });
     } catch (error) {
         console.error('❌ Erro ao salvar resultado:', error);
