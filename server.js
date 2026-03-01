@@ -558,6 +558,11 @@ app.get('/api/rodadas', async (req, res) => {
         `);
         
         for (let rodada of rodadas) {
+            // Converter data_rodada para formato ISO string se existir
+            if (rodada.data_rodada) {
+                rodada.data_rodada = new Date(rodada.data_rodada).toISOString().split('T')[0];
+            }
+            
             const [mesas] = await db.query(`
                 SELECT m.*, 
                        v.nome as vencedor_nome,
