@@ -168,24 +168,46 @@ async function carregarRodadas() {
             return;
         }
         
-        container.innerHTML = rodadas.map(r => `
-            <div class="card">
-                <div class="mesa-header">
-                    <div>
-                        <h4>Rodada ${r.numero} - ${r.campeonato_nome}</h4>
-                        <p style="margin: 0.25rem 0; color: var(--gray-600); font-size: 0.875rem;">
-                            Data: ${r.data_rodada ? new Date(r.data_rodada + 'T00:00:00').toLocaleDateString('pt-BR') : 'Não definida'}
-                        </p>
+        container.innerHTML = rodadas.map(r => {
+            let dataFormatada = 'Não definida';
+            if (r.data_rodada) {
+                try {
+                    // Tentar diferentes formatos de data
+                    let data;
+                    if (typeof r.data_rodada === 'string') {
+                        // Se já tem 'T', usar direto, senão adicionar
+                        data = new Date(r.data_rodada.includes('T') ? r.data_rodada : r.data_rodada + 'T00:00:00');
+                    } else {
+                        data = new Date(r.data_rodada);
+                    }
+                    
+                    if (!isNaN(data.getTime())) {
+                        dataFormatada = data.toLocaleDateString('pt-BR');
+                    }
+                } catch (e) {
+                    console.error('Erro ao formatar data:', e, r.data_rodada);
+                }
+            }
+            
+            return `
+                <div class="card">
+                    <div class="mesa-header">
+                        <div>
+                            <h4>Rodada ${r.numero} - ${r.campeonato_nome}</h4>
+                            <p style="margin: 0.25rem 0; color: var(--gray-600); font-size: 0.875rem;">
+                                Data: ${dataFormatada}
+                            </p>
+                        </div>
+                        <span class="badge badge-info">
+                            ${r.mesas_finalizadas}/${r.total_mesas} finalizadas
+                        </span>
                     </div>
-                    <span class="badge badge-info">
-                        ${r.mesas_finalizadas}/${r.total_mesas} finalizadas
-                    </span>
+                    <button onclick="verMesasRodada(${r.id})" class="btn-primary" style="margin-top: 0.5rem;">
+                        Ver Mesas
+                    </button>
                 </div>
-                <button onclick="verMesasRodada(${r.id})" class="btn-primary" style="margin-top: 0.5rem;">
-                    Ver Mesas
-                </button>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     } catch (error) {
         console.error('Erro ao carregar rodadas:', error);
     }

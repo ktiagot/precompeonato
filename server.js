@@ -864,6 +864,13 @@ app.get('/api/admin/rodadas', authMiddleware, adminMiddleware, async (req, res) 
             ORDER BY r.numero DESC
         `);
         
+        // Converter data_rodada para formato ISO string
+        rodadas.forEach(r => {
+            if (r.data_rodada) {
+                r.data_rodada = new Date(r.data_rodada).toISOString().split('T')[0];
+            }
+        });
+        
         res.json(rodadas);
     } catch (error) {
         console.error('❌ Erro ao buscar rodadas:', error);
