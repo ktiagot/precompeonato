@@ -117,16 +117,16 @@ async function carregarRodadas() {
         container.innerHTML = rodadas.map(rodada => `
             <div class="rodada-card">
                 <h3>Rodada ${rodada.numero}</h3>
-                <p>Data: ${new Date(rodada.data).toLocaleDateString('pt-BR')}</p>
-                ${rodada.mesas.map((mesa, idx) => `
+                <p>Data: ${rodada.data_rodada ? new Date(rodada.data_rodada + 'T00:00:00').toLocaleDateString('pt-BR') : 'Não definida'}</p>
+                ${rodada.mesas && rodada.mesas.length > 0 ? rodada.mesas.map((mesa, idx) => `
                     <div class="mesa">
-                        <h4>Mesa ${idx + 1}</h4>
-                        ${mesa.jogadores.map(j => `
-                            <div class="jogador">${j.nome} - ${j.deckNome || j.deck}</div>
-                        `).join('')}
-                        ${mesa.vencedor ? `<p><strong>Vencedor: ${mesa.vencedor}</strong></p>` : ''}
+                        <h4>Mesa ${mesa.numero_mesa || idx + 1}</h4>
+                        ${mesa.jogadores && mesa.jogadores.length > 0 ? mesa.jogadores.map(j => `
+                            <div class="jogador">${j.nome} - ${j.deck_nome || 'Deck não definido'}</div>
+                        `).join('') : '<p>Nenhum jogador</p>'}
+                        ${mesa.vencedor_nome ? `<p><strong>Vencedor: ${mesa.vencedor_nome}</strong></p>` : ''}
                     </div>
-                `).join('')}
+                `).join('') : '<p>Nenhuma mesa criada</p>'}
             </div>
         `).join('');
     } catch (error) {
