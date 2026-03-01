@@ -759,14 +759,18 @@ app.get('/api/admin/rodadas', authMiddleware, adminMiddleware, async (req, res) 
     try {
         const [rodadas] = await db.query(`
             SELECT 
-                r.*,
-                c.nome as campeonato_nome,
+                r.id,
+                r.campeonato_id,
+                r.numero,
+                r.data_rodada,
+                r.created_at,
+                MAX(c.nome) as campeonato_nome,
                 COUNT(DISTINCT m.id) as total_mesas,
                 SUM(CASE WHEN m.finalizada = TRUE THEN 1 ELSE 0 END) as mesas_finalizadas
             FROM rodadas r
             JOIN campeonatos c ON r.campeonato_id = c.id
             LEFT JOIN mesas m ON r.id = m.rodada_id
-            GROUP BY r.id, c.nome
+            GROUP BY r.id, r.campeonato_id, r.numero, r.data_rodada, r.created_at
             ORDER BY r.numero DESC
         `);
         
