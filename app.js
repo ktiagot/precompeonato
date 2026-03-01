@@ -30,7 +30,7 @@ if (deckBusca) {
             deckSugestoes.innerHTML = precons.map(p => `
                 <div class="deck-sugestao" data-id="${p.id}" data-nome="${p.nome}" style="padding: 0.5rem; cursor: pointer; border-bottom: 1px solid #eee;">
                     <strong>${p.nome}</strong><br>
-                    <small>${p.comandante} - ${p.set_nome || p.set || 'Set desconhecido'}</small>
+                    <small>${p.comandante_principal} - ${p.set_nome || p.set || 'Set desconhecido'}</small>
                 </div>
             `).join('');
             
@@ -89,7 +89,7 @@ async function selecionarDeck(id, nome, info) {
                     <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                         <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; background: white; border: 2px solid var(--gray-300); border-radius: 0.5rem; cursor: pointer;">
                             <input type="radio" name="cdComandante" value="1" checked>
-                            <span><strong>${precon.comandante}</strong></span>
+                            <span><strong>${precon.comandante_principal}</strong></span>
                         </label>
                         <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; background: white; border: 2px solid var(--gray-300); border-radius: 0.5rem; cursor: pointer;">
                             <input type="radio" name="cdComandante" value="2">
@@ -99,7 +99,7 @@ async function selecionarDeck(id, nome, info) {
                 </div>
             `;
         } else {
-            infoHtml += `<br><small><strong>Comandante:</strong> ${precon.comandante}</small>`;
+            infoHtml += `<br><small><strong>Comandante:</strong> ${precon.comandante_principal}</small>`;
         }
         
         document.getElementById('deckInfo').innerHTML = infoHtml;

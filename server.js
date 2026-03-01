@@ -382,7 +382,7 @@ app.get('/api/minhas-mesas', authMiddleware, async (req, res) => {
                     i.nome,
                     i.email,
                     i.deck_nome,
-                    p.comandante,
+                    p.comandante_principal as comandante,
                     h.posicao_final
                 FROM mesa_jogadores mj
                 JOIN inscricoes i ON mj.inscricao_id = i.id
@@ -566,7 +566,7 @@ app.post('/api/emails-permitidos', async (req, res) => {
 app.get('/api/inscricoes', async (req, res) => {
     try {
         const [inscricoes] = await db.query(`
-            SELECT i.*, p.nome as deck_nome_completo, p.comandante, p.set_nome
+            SELECT i.*, p.nome as deck_nome_completo, p.comandante_principal as comandante, p.set_nome
             FROM inscricoes i
             LEFT JOIN precons p ON i.deck_id = p.id
             WHERE i.ativo = TRUE
@@ -661,7 +661,7 @@ app.get('/api/rodadas', async (req, res) => {
             
             for (let mesa of mesas) {
                 const [jogadores] = await db.query(`
-                    SELECT i.id, i.nome, i.deck_nome, p.comandante
+                    SELECT i.id, i.nome, i.deck_nome, p.comandante_principal as comandante
                     FROM mesa_jogadores mj
                     JOIN inscricoes i ON mj.inscricao_id = i.id
                     LEFT JOIN precons p ON i.deck_id = p.id
@@ -893,7 +893,7 @@ app.get('/api/admin/rodadas/:id/mesas', authMiddleware, adminMiddleware, async (
                     i.id,
                     i.nome,
                     i.deck_nome,
-                    p.comandante,
+                    p.comandante_principal as comandante,
                     mj.posicao_final
                 FROM mesa_jogadores mj
                 JOIN inscricoes i ON mj.inscricao_id = i.id
@@ -1178,7 +1178,7 @@ app.get('/api/metagame', async (req, res) => {
                 MAX(CASE 
                     WHEN i.cd_comandante = 2 AND p.comandante_secundario IS NOT NULL 
                     THEN p.comandante_secundario 
-                    ELSE p.comandante 
+                    ELSE p.comandante_principal 
                 END) as comandante,
                 MAX(p.set_nome) as set_nome,
                 COUNT(i.id) as uso,
@@ -1245,7 +1245,7 @@ app.get('/api/estatisticas/geral', async (req, res) => {
                 MAX(CASE 
                     WHEN i.cd_comandante = 2 AND p.comandante_secundario IS NOT NULL 
                     THEN p.comandante_secundario 
-                    ELSE p.comandante 
+                    ELSE p.comandante_principal 
                 END) as comandante,
                 MAX(p.set_nome) as set_nome,
                 COUNT(h.id) as vezes_usado,
@@ -1278,7 +1278,7 @@ app.get('/api/estatisticas/geral', async (req, res) => {
                 MAX(CASE 
                     WHEN i.cd_comandante = 2 AND p.comandante_secundario IS NOT NULL 
                     THEN p.comandante_secundario 
-                    ELSE p.comandante 
+                    ELSE p.comandante_principal 
                 END) as comandante,
                 COUNT(h.id) as partidas,
                 SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
@@ -1392,7 +1392,7 @@ app.get('/api/estatisticas', async (req, res) => {
             SELECT DISTINCT 
                 p.id, 
                 MAX(p.nome) as deck_nome, 
-                MAX(p.comandante) as comandante, 
+                MAX(p.comandante_principal) as comandante, 
                 MAX(p.set_nome) as set_nome,
                 COUNT(h.id) as vezes_usado
             FROM historico_partidas h
@@ -1406,7 +1406,7 @@ app.get('/api/estatisticas', async (req, res) => {
         const [performancePorDeck] = await db.query(`
             SELECT 
                 MAX(p.nome) as deck_nome,
-                MAX(p.comandante) as comandante,
+                MAX(p.comandante_principal) as comandante,
                 COUNT(h.id) as partidas,
                 SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
                 SUM(CASE WHEN h.posicao_final = 2 THEN 1 ELSE 0 END) as segundos,
@@ -1423,7 +1423,7 @@ app.get('/api/estatisticas', async (req, res) => {
         const [matchupsContra] = await db.query(`
             SELECT 
                 MAX(p.nome) as deck_oponente,
-                MAX(p.comandante) as comandante,
+                MAX(p.comandante_principal) as comandante,
                 COUNT(*) as vezes,
                 SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
                 COUNT(*) - SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as derrotas,
@@ -1448,7 +1448,7 @@ app.get('/api/estatisticas', async (req, res) => {
                 c.edicao,
                 r.numero as rodada_numero,
                 p.nome as deck_nome,
-                p.comandante,
+                p.comandante_principal as comandante,
                 i1.nome as oponente1_nome,
                 p1.nome as oponente1_deck,
                 i2.nome as oponente2_nome,
