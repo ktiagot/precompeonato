@@ -1178,7 +1178,7 @@ app.get('/api/metagame', async (req, res) => {
                 MAX(CASE 
                     WHEN i.cd_comandante = 2 AND p.comandante_secundario IS NOT NULL 
                     THEN p.comandante_secundario 
-                    ELSE COALESCE(p.comandante_principal, p.comandante) 
+                    ELSE p.comandante 
                 END) as comandante,
                 MAX(p.set_nome) as set_nome,
                 COUNT(i.id) as uso,
@@ -1245,7 +1245,7 @@ app.get('/api/estatisticas/geral', async (req, res) => {
                 MAX(CASE 
                     WHEN i.cd_comandante = 2 AND p.comandante_secundario IS NOT NULL 
                     THEN p.comandante_secundario 
-                    ELSE COALESCE(p.comandante_principal, p.comandante) 
+                    ELSE p.comandante 
                 END) as comandante,
                 MAX(p.set_nome) as set_nome,
                 COUNT(h.id) as vezes_usado,
@@ -1278,7 +1278,7 @@ app.get('/api/estatisticas/geral', async (req, res) => {
                 MAX(CASE 
                     WHEN i.cd_comandante = 2 AND p.comandante_secundario IS NOT NULL 
                     THEN p.comandante_secundario 
-                    ELSE COALESCE(p.comandante_principal, p.comandante) 
+                    ELSE p.comandante 
                 END) as comandante,
                 COUNT(h.id) as partidas,
                 SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,

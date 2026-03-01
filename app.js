@@ -89,7 +89,7 @@ async function selecionarDeck(id, nome, info) {
                     <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                         <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; background: white; border: 2px solid var(--gray-300); border-radius: 0.5rem; cursor: pointer;">
                             <input type="radio" name="cdComandante" value="1" checked>
-                            <span><strong>${precon.comandante_principal || precon.comandante}</strong></span>
+                            <span><strong>${precon.comandante}</strong></span>
                         </label>
                         <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; background: white; border: 2px solid var(--gray-300); border-radius: 0.5rem; cursor: pointer;">
                             <input type="radio" name="cdComandante" value="2">
@@ -99,7 +99,7 @@ async function selecionarDeck(id, nome, info) {
                 </div>
             `;
         } else {
-            infoHtml += `<br><small><strong>Comandante:</strong> ${precon.comandante_principal || precon.comandante}</small>`;
+            infoHtml += `<br><small><strong>Comandante:</strong> ${precon.comandante}</small>`;
         }
         
         document.getElementById('deckInfo').innerHTML = infoHtml;
