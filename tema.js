@@ -8,6 +8,19 @@
     const CACHE_KEY = 'precompeonato_tema';
     const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
+    // Função para esconder link de inscrição se usuário estiver logado
+    function gerenciarLinkInscricao() {
+        const token = localStorage.getItem('auth_token');
+        const inscricaoLinks = document.querySelectorAll('a[href="inscricao.html"]');
+        
+        if (token) {
+            // Esconder todos os links de inscrição
+            inscricaoLinks.forEach(link => {
+                link.style.display = 'none';
+            });
+        }
+    }
+
     // Função para aplicar tema
     function aplicarTema(tema) {
         if (tema.cor_primaria) {
@@ -77,6 +90,11 @@
         const b = (rgb >> 0) & 0xff;
         return (r * 299 + g * 587 + b * 114) / 1000;
     }
+    
+    // Executar ao carregar a página
+    document.addEventListener('DOMContentLoaded', () => {
+        gerenciarLinkInscricao();
+    });
     
     // Tentar aplicar tema do cache imediatamente
     try {
