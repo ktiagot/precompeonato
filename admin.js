@@ -92,30 +92,53 @@ document.querySelectorAll('.tab-admin-btn').forEach(btn => {
 
 // ========== PAREAMENTO ==========
 
-// Carregar campeonatos para select
-async function carregarCampeonatosSelect() {
-    const response = await fetch(`${API_URL}/campeonatos`);
-    const campeonatos = await response.json();
-    const select = document.getElementById('campeonatoParear');
-    
-    select.innerHTML = '<option value="">Selecione um campeonato</option>' +
-        campeonatos.filter(c => c.status !== 'finalizado').map(c => 
-            `<option value="${c.id}">${c.nome} - ${c.edicao}</option>`
-        ).join('');
+let campeonatoAtivoId = null;
+
+// Carregar campeonato ativo
+async function carregarCampeonatoAtivo() {
+    try {
+        const response = await fetch(`${API_URL}/tema`);
+        const tema = await response.json();
+        
+        // Buscar o campeonato ativo completo
+        const campResponse = await fetch(`${API_URL}/campeonatos`);
+        const campeonatos = await campResponse.json();
+        const campeonatoAtivo = campeonatos.find(c => c.status === 'inscricoes' || c.status === 'em_andamento');
+        
+        if (campeonatoAtivo) {
+            campeonatoAtivoId = campeonatoAtivo.id;
+            document.getElementById('campeonatoAtivo').innerHTML = `
+                <strong>Campeonato:</strong> ${tema.nome}${tema.edicao ? ' - ' + tema.edicao : ''} 
+                <span class="badge badge-success">${campeonatoAtivo.status}</span>
+            `;
+        } else {
+            document.getElementById('campeonatoAtivo').innerHTML = `
+                <span style="color: var(--danger);">⚠️ Nenhum campeonato ativo encontrado</span>
+            `;
+            document.getElementById('parearForm').querySelector('button[type="submit"]').disabled = true;
+        }
+    } catch (error) {
+        console.error('Erro ao carregar campeonato ativo:', error);
+        document.getElementById('campeonatoAtivo').textContent = 'Erro ao carregar campeonato';
+    }
 }
 
 // Gerar pareamento
 document.getElementById('parearForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const campeonatoId = document.getElementById('campeonatoParear').value;
+    if (!campeonatoAtivoId) {
+        showAlert('Nenhum campeonato ativo encontrado', 'error');
+        return;
+    }
+    
     const numero = document.getElementById('rodadaNumero').value;
     const dataRodada = document.getElementById('dataRodada').value;
     
     try {
         const response = await authFetch(`${API_URL}/admin/parear`, {
             method: 'POST',
-            body: JSON.stringify({ campeonatoId, numero, dataRodada })
+            body: JSON.stringify({ campeonatoId: campeonatoAtivoId, numero, dataRodada })
         });
         
         const result = await response.json();
@@ -449,7 +472,7 @@ document.getElementById('emailForm').addEventListener('submit', async (e) => {
 // Inicializar
 checkAuth().then(authenticated => {
     if (authenticated) {
-        carregarCampeonatosSelect();
+        carregarCampeonatoAtivo();
         carregarRodadas();
     }
 });
