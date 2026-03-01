@@ -97,7 +97,7 @@
         <section class="hero">
             <div class="container">
                 <h2>Regras e Instruções</h2>
-                <p>Precompeonato Cowabunga - Etapa #1 2026 - Citadel Edition</p>
+                <p id="campeonatoTitulo">Carregando...</p>
             </div>
         </section>
 
@@ -260,5 +260,27 @@
             <p>&copy; 2026 Precompeonato. Todos os direitos reservados.</p>
         </div>
     </footer>
+
+    <script>
+        // Carregar título do campeonato ativo
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000/api' 
+            : '/api';
+
+        async function carregarTituloCampeonato() {
+            try {
+                const response = await fetch(`${API_URL}/tema`);
+                const tema = await response.json();
+                
+                const titulo = `${tema.nome}${tema.edicao ? ' - ' + tema.edicao : ''}`;
+                document.getElementById('campeonatoTitulo').textContent = titulo;
+            } catch (error) {
+                console.error('Erro ao carregar título do campeonato:', error);
+                document.getElementById('campeonatoTitulo').textContent = 'Precompeonato';
+            }
+        }
+
+        carregarTituloCampeonato();
+    </script>
 </body>
 </html>
