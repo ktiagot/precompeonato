@@ -994,9 +994,9 @@ app.get('/api/metagame', async (req, res) => {
     try {
         const [stats] = await db.query(`
             SELECT 
-                p.nome as deck,
-                p.comandante,
-                p.set_nome,
+                ANY_VALUE(p.nome) as deck,
+                ANY_VALUE(p.comandante) as comandante,
+                ANY_VALUE(p.set_nome) as set_nome,
                 COUNT(i.id) as uso,
                 SUM(COALESCE(i.vitorias, 0)) as vitorias,
                 ROUND((COUNT(i.id) * 100.0 / (SELECT COUNT(*) FROM inscricoes WHERE ativo = TRUE)), 1) as uso_percentual,
@@ -1039,9 +1039,9 @@ app.get('/api/estatisticas/geral', async (req, res) => {
         // Metagame - Decks mais usados
         const [metagame] = await db.query(`
             SELECT 
-                p.nome as deck_nome,
-                p.comandante,
-                p.set_nome,
+                ANY_VALUE(p.nome) as deck_nome,
+                ANY_VALUE(p.comandante) as comandante,
+                ANY_VALUE(p.set_nome) as set_nome,
                 COUNT(h.id) as vezes_usado,
                 SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
                 ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(h.id)), 1) as winrate,
@@ -1057,8 +1057,8 @@ app.get('/api/estatisticas/geral', async (req, res) => {
         // Top decks por win rate (mínimo 3 partidas)
         const [topDecks] = await db.query(`
             SELECT 
-                p.nome as deck_nome,
-                p.comandante,
+                ANY_VALUE(p.nome) as deck_nome,
+                ANY_VALUE(p.comandante) as comandante,
                 COUNT(h.id) as partidas,
                 SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
                 ROUND((SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(h.id)), 1) as winrate,
@@ -1075,8 +1075,8 @@ app.get('/api/estatisticas/geral', async (req, res) => {
         // Matchups mais comuns
         const [matchupsComuns] = await db.query(`
             SELECT 
-                p1.nome as deck1,
-                p2.nome as deck2,
+                ANY_VALUE(p1.nome) as deck1,
+                ANY_VALUE(p2.nome) as deck2,
                 COUNT(*) as total,
                 SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as deck1_vitorias,
                 SUM(CASE WHEN h.posicao_final != 1 THEN 1 ELSE 0 END) as deck2_vitorias
@@ -1163,7 +1163,10 @@ app.get('/api/estatisticas', async (req, res) => {
         // Decks utilizados
         const [meusDecks] = await db.query(`
             SELECT DISTINCT 
-                p.id, p.nome as deck_nome, p.comandante, p.set_nome,
+                p.id, 
+                ANY_VALUE(p.nome) as deck_nome, 
+                ANY_VALUE(p.comandante) as comandante, 
+                ANY_VALUE(p.set_nome) as set_nome,
                 COUNT(h.id) as vezes_usado
             FROM historico_partidas h
             JOIN precons p ON h.deck_id = p.id
@@ -1175,8 +1178,8 @@ app.get('/api/estatisticas', async (req, res) => {
         // Performance por deck
         const [performancePorDeck] = await db.query(`
             SELECT 
-                p.nome as deck_nome,
-                p.comandante,
+                ANY_VALUE(p.nome) as deck_nome,
+                ANY_VALUE(p.comandante) as comandante,
                 COUNT(h.id) as partidas,
                 SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
                 SUM(CASE WHEN h.posicao_final = 2 THEN 1 ELSE 0 END) as segundos,
@@ -1192,8 +1195,8 @@ app.get('/api/estatisticas', async (req, res) => {
         // Matchups contra outros decks
         const [matchupsContra] = await db.query(`
             SELECT 
-                p.nome as deck_oponente,
-                p.comandante,
+                ANY_VALUE(p.nome) as deck_oponente,
+                ANY_VALUE(p.comandante) as comandante,
                 COUNT(*) as vezes,
                 SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as vitorias,
                 COUNT(*) - SUM(CASE WHEN h.posicao_final = 1 THEN 1 ELSE 0 END) as derrotas,
