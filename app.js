@@ -57,14 +57,58 @@ if (deckBusca) {
     });
 }
 
-function selecionarDeck(id, nome, info) {
-    document.getElementById('deckId').value = id;
-    document.getElementById('deckNome').value = nome;
-    document.getElementById('deckInfo').innerHTML = info;
-    document.getElementById('deckSelecionado').style.display = 'block';
-    deckBusca.value = nome;
-    deckSugestoes.style.display = 'none';
-    deckSelecionadoAtual = { id, nome };
+async function selecionarDeck(id, nome, info) {
+    try {
+        // Buscar detalhes completos do precon
+        const response = await fetch(`${API_URL}/precons`);
+        const precons = await response.json();
+        const precon = precons.find(p => p.id == id);
+        
+        if (!precon) {
+            console.error('Precon não encontrado');
+            return;
+        }
+        
+        document.getElementById('deckId').value = id;
+        document.getElementById('deckNome').value = nome;
+        deckBusca.value = nome;
+        deckSugestoes.style.display = 'none';
+        
+        // Verificar se tem comandante secundário
+        const temSecundario = precon.comandante_secundario && precon.comandante_secundario.trim() !== '';
+        
+        let infoHtml = `
+            <strong>${precon.nome}</strong><br>
+            <small>${precon.set_nome || 'Set desconhecido'}</small>
+        `;
+        
+        if (temSecundario) {
+            infoHtml += `
+                <div style="margin-top: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Escolha o comandante:</label>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; background: white; border: 2px solid var(--gray-300); border-radius: 0.5rem; cursor: pointer;">
+                            <input type="radio" name="cdComandante" value="1" checked>
+                            <span><strong>${precon.comandante_principal || precon.comandante}</strong></span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; background: white; border: 2px solid var(--gray-300); border-radius: 0.5rem; cursor: pointer;">
+                            <input type="radio" name="cdComandante" value="2">
+                            <span><strong>${precon.comandante_secundario}</strong></span>
+                        </label>
+                    </div>
+                </div>
+            `;
+        } else {
+            infoHtml += `<br><small><strong>Comandante:</strong> ${precon.comandante_principal || precon.comandante}</small>`;
+        }
+        
+        document.getElementById('deckInfo').innerHTML = infoHtml;
+        document.getElementById('deckSelecionado').style.display = 'block';
+        
+        deckSelecionadoAtual = { id, nome, temSecundario };
+    } catch (error) {
+        console.error('Erro ao selecionar deck:', error);
+    }
 }
 
 // Formulário de inscrição
@@ -78,6 +122,10 @@ document.getElementById('inscricaoForm')?.addEventListener('submit', async (e) =
         alert('Por favor, selecione um deck precon da lista');
         return;
     }
+    
+    // Adicionar escolha do comandante (1 ou 2)
+    const cdComandante = document.querySelector('input[name="cdComandante"]:checked')?.value || '1';
+    data.cdComandante = parseInt(cdComandante);
     
     try {
         const response = await fetch(`${API_URL}/inscricoes`, {

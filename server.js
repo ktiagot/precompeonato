@@ -580,7 +580,7 @@ app.get('/api/inscricoes', async (req, res) => {
 
 app.post('/api/inscricoes', async (req, res) => {
     try {
-        const { nome, email, deckId, deckNome, campeonatoId } = req.body;
+        const { nome, email, deckId, deckNome, campeonatoId, cdComandante } = req.body;
         
         // Se não especificar campeonato, pegar o ativo
         let campId = campeonatoId;
@@ -614,10 +614,11 @@ app.post('/api/inscricoes', async (req, res) => {
             return res.status(400).json({ error: 'Email já cadastrado neste campeonato' });
         }
         
-        // Inserir inscrição
+        // Inserir inscrição com escolha do comandante (1=principal, 2=secundario)
+        const comandanteEscolhido = cdComandante || 1;
         const [result] = await db.query(
-            'INSERT INTO inscricoes (campeonato_id, nome, email, deck_id, deck_nome) VALUES (?, ?, ?, ?, ?)',
-            [campId, nome, email.toLowerCase(), deckId, deckNome]
+            'INSERT INTO inscricoes (campeonato_id, nome, email, deck_id, cd_comandante, deck_nome) VALUES (?, ?, ?, ?, ?, ?)',
+            [campId, nome, email.toLowerCase(), deckId, comandanteEscolhido, deckNome]
         );
         
         res.json({ 
@@ -625,7 +626,8 @@ app.post('/api/inscricoes', async (req, res) => {
             campeonatoId: campId,
             nome, 
             email: email.toLowerCase(), 
-            deckId, 
+            deckId,
+            cdComandante: comandanteEscolhido,
             deckNome 
         });
     } catch (error) {
