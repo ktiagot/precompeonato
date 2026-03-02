@@ -130,11 +130,17 @@
         <section class="section">
             <div class="container">
                 <!-- Filtros -->
-                <div style="max-width: 400px; margin: 0 auto 2rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Filtrar por Campeonato</label>
-                    <select id="filtroCampeonato" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 0.5rem; font-size: 1rem;">
-                        <option value="">Todos os Campeonatos</option>
-                    </select>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Buscar Jogador</label>
+                        <input type="text" id="buscaJogador" placeholder="Nome, email ou discord..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 0.5rem; font-size: 1rem;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Filtrar por Campeonato</label>
+                        <select id="filtroCampeonato" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 0.5rem; font-size: 1rem;">
+                            <option value="">Todos os Campeonatos</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- Pódio (Top 3) -->

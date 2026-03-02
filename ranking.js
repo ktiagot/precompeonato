@@ -3,6 +3,7 @@ const API_URL = window.location.hostname === 'localhost'
     : '/api';
 
 let rankingCompleto = [];
+let rankingFiltrado = [];
 
 // Carregar campeonatos para filtro
 async function carregarCampeonatos() {
@@ -35,7 +36,7 @@ async function carregarRanking() {
         const response = await fetch(url);
         rankingCompleto = await response.json();
         
-        exibirRanking();
+        aplicarFiltros();
     } catch (error) {
         console.error('Erro ao carregar ranking:', error);
         document.getElementById('rankingBody').innerHTML = `
@@ -48,58 +49,95 @@ async function carregarRanking() {
     }
 }
 
+// Aplicar filtros (busca + campeonato)
+function aplicarFiltros() {
+    const busca = document.getElementById('buscaJogador').value.toLowerCase().trim();
+    
+    if (!busca) {
+        rankingFiltrado = [...rankingCompleto];
+    } else {
+        rankingFiltrado = rankingCompleto.filter(jogador => {
+            const nome = (jogador.nome || '').toLowerCase();
+            const email = (jogador.email || '').toLowerCase();
+            
+            return nome.includes(busca) || email.includes(busca);
+        });
+    }
+    
+    exibirRanking();
+}
+
 // Exibir ranking
 function exibirRanking() {
     const tbody = document.getElementById('rankingBody');
     const podio = document.getElementById('podio');
     const emptyState = document.getElementById('emptyState');
+    const busca = document.getElementById('buscaJogador').value.trim();
     
-    if (rankingCompleto.length === 0) {
+    if (rankingFiltrado.length === 0) {
         tbody.innerHTML = '';
         podio.innerHTML = '';
         emptyState.style.display = 'block';
+        
+        if (busca) {
+            emptyState.innerHTML = `
+                <h3>Nenhum jogador encontrado</h3>
+                <p>Nenhum resultado para "${busca}"</p>
+            `;
+        } else {
+            emptyState.innerHTML = `
+                <h3>Nenhum jogador encontrado</h3>
+                <p>Seja o primeiro a participar de um campeonato!</p>
+            `;
+        }
         return;
     }
     
     emptyState.style.display = 'none';
     
-    // Exibir pódio (top 3)
-    const top3 = rankingCompleto.slice(0, 3);
-    podio.innerHTML = top3.map((jogador, index) => {
-        const posicao = index + 1;
-        const medalha = posicao === 1 ? '🥇' : posicao === 2 ? '🥈' : '🥉';
-        const corBorda = posicao === 1 ? '#FFD700' : posicao === 2 ? '#C0C0C0' : '#CD7F32';
-        
-        return `
-            <div style="background: var(--white); border: 3px solid ${corBorda}; border-radius: 1rem; padding: 2rem; text-align: center; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-                <div style="font-size: 3rem; margin-bottom: 0.5rem;">${medalha}</div>
-                <div style="font-size: 1.5rem; font-weight: 700; color: ${corBorda}; margin-bottom: 0.5rem;">#${posicao}</div>
-                <a href="perfil.html?email=${encodeURIComponent(jogador.email)}" style="font-size: 1.125rem; font-weight: 600; color: var(--dark); text-decoration: none; display: block; margin-bottom: 1rem;">
-                    ${jogador.nome || jogador.email}
-                </a>
-                <div style="display: grid; gap: 0.5rem; font-size: 0.875rem; color: var(--gray-600);">
-                    <div><strong style="color: var(--primary);">${jogador.pontos_totais || 0}</strong> pontos</div>
-                    <div><strong>${jogador.vitorias_totais || 0}</strong> vitórias</div>
-                    <div><strong>${jogador.winrate || 0}%</strong> win rate</div>
-                    <div>${jogador.campeonatos_participados || 0} campeonatos</div>
+    // Exibir pódio (top 3) apenas se não houver busca
+    if (!busca) {
+        const top3 = rankingFiltrado.slice(0, 3);
+        podio.innerHTML = top3.map((jogador, index) => {
+            const posicao = index + 1;
+            const medalha = posicao === 1 ? '🥇' : posicao === 2 ? '🥈' : '🥉';
+            const corBorda = posicao === 1 ? '#FFD700' : posicao === 2 ? '#C0C0C0' : '#CD7F32';
+            
+            return `
+                <div style="background: var(--white); border: 3px solid ${corBorda}; border-radius: 1rem; padding: 2rem; text-align: center; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <div style="font-size: 3rem; margin-bottom: 0.5rem;">${medalha}</div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: ${corBorda}; margin-bottom: 0.5rem;">#${posicao}</div>
+                    <a href="perfil.html?email=${encodeURIComponent(jogador.email)}" style="font-size: 1.125rem; font-weight: 600; color: var(--dark); text-decoration: none; display: block; margin-bottom: 1rem;">
+                        ${jogador.nome || jogador.email}
+                    </a>
+                    <div style="display: grid; gap: 0.5rem; font-size: 0.875rem; color: var(--gray-600);">
+                        <div><strong style="color: var(--primary);">${jogador.pontos_totais || 0}</strong> pontos</div>
+                        <div><strong>${jogador.vitorias_totais || 0}</strong> vitórias</div>
+                        <div><strong>${jogador.winrate || 0}%</strong> win rate</div>
+                        <div>${jogador.campeonatos_participados || 0} campeonatos</div>
+                    </div>
                 </div>
-            </div>
-        `;
-    }).join('');
+            `;
+        }).join('');
+        podio.style.display = 'grid';
+    } else {
+        podio.innerHTML = '';
+        podio.style.display = 'none';
+    }
     
     // Exibir tabela completa
-    tbody.innerHTML = rankingCompleto.map((jogador, index) => {
+    tbody.innerHTML = rankingFiltrado.map((jogador, index) => {
         const posicao = index + 1;
         let posicaoClass = '';
         let posicaoIcon = '';
         
-        if (posicao === 1) {
+        if (posicao === 1 && !busca) {
             posicaoClass = 'top1';
             posicaoIcon = '🥇 ';
-        } else if (posicao === 2) {
+        } else if (posicao === 2 && !busca) {
             posicaoClass = 'top2';
             posicaoIcon = '🥈 ';
-        } else if (posicao === 3) {
+        } else if (posicao === 3 && !busca) {
             posicaoClass = 'top3';
             posicaoIcon = '🥉 ';
         }
@@ -131,8 +169,17 @@ function exibirRanking() {
     }).join('');
 }
 
-// Event listener para filtro
+// Event listeners
 document.getElementById('filtroCampeonato').addEventListener('change', carregarRanking);
+
+// Busca com debounce para não fazer muitas requisições
+let buscaTimeout;
+document.getElementById('buscaJogador').addEventListener('input', () => {
+    clearTimeout(buscaTimeout);
+    buscaTimeout = setTimeout(() => {
+        aplicarFiltros();
+    }, 300);
+});
 
 // Inicializar
 document.addEventListener('DOMContentLoaded', () => {
