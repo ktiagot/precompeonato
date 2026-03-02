@@ -7,11 +7,12 @@ let userEmail = null;
 let todasMesas = [];
 let filtroAtual = 'todas';
 
-// Verificar autenticação
-async function verificarAuth() {
+// Verificar autenticação (não redireciona, apenas verifica)
+async function verificarAuth(mostrarAlerta = true) {
     if (!token) {
-        alert('Você precisa fazer login para acessar as mesas casuais');
-        window.location.href = 'login.html';
+        if (mostrarAlerta) {
+            alert('Você precisa fazer login para realizar esta ação');
+        }
         return false;
     }
     
@@ -22,8 +23,10 @@ async function verificarAuth() {
         
         if (!response.ok) {
             localStorage.removeItem('token');
-            alert('Sessão expirada. Faça login novamente.');
-            window.location.href = 'login.html';
+            token = null;
+            if (mostrarAlerta) {
+                alert('Sessão expirada. Faça login novamente.');
+            }
             return false;
         }
         
@@ -204,8 +207,14 @@ function exibirMesas(mesas) {
 
 // Abrir modal criar mesa
 document.getElementById('btnCriarMesa').addEventListener('click', async () => {
-    const autenticado = await verificarAuth();
-    if (!autenticado) return;
+    const autenticado = await verificarAuth(true);
+    if (!autenticado) {
+        // Redirecionar para login
+        if (confirm('Você precisa fazer login para criar uma mesa. Ir para a página de login?')) {
+            window.location.href = 'login.html';
+        }
+        return;
+    }
     
     document.getElementById('modalCriarMesa').style.display = 'flex';
     
@@ -314,8 +323,13 @@ document.getElementById('formCriarMesa').addEventListener('submit', async (e) =>
 
 // Entrar na mesa
 async function entrarNaMesa(mesaId) {
-    const autenticado = await verificarAuth();
-    if (!autenticado) return;
+    const autenticado = await verificarAuth(true);
+    if (!autenticado) {
+        if (confirm('Você precisa fazer login para entrar em uma mesa. Ir para a página de login?')) {
+            window.location.href = 'login.html';
+        }
+        return;
+    }
     
     // Por enquanto, entrar sem deck
     try {
@@ -425,11 +439,17 @@ async function cancelarMesa(mesaId) {
 
 // Inicializar
 document.addEventListener('DOMContentLoaded', async () => {
-    const autenticado = await verificarAuth();
-    if (autenticado) {
-        carregarMesas();
-        
-        // Atualizar a cada 30 segundos
-        setInterval(carregarMesas, 30000);
+    // Verificar auth silenciosamente (sem alertas)
+    await verificarAuth(false);
+    
+    // Carregar mesas independente de estar logado ou não
+    carregarMesas();
+    
+    // Atualizar a cada 30 segundos
+    setInterval(carregarMesas, 30000);
+    
+    // Atualizar botão de criar mesa baseado no login
+    if (!token) {
+        document.getElementById('btnCriarMesa').innerHTML = '🔒 Fazer Login para Criar Mesa';
     }
 });
