@@ -2,13 +2,17 @@ const API_URL = window.location.hostname === 'localhost'
     ? 'http://localhost:3000/api' 
     : '/api';
 
-let token = localStorage.getItem('token');
-let userEmail = null;
+let token = localStorage.getItem('auth_token');
+let userEmail = localStorage.getItem('user_email');
 let todasMesas = [];
 let filtroAtual = 'todas';
 
 // Verificar autenticação (não redireciona, apenas verifica)
 async function verificarAuth(mostrarAlerta = true) {
+    // Recarregar token do localStorage (pode ter mudado)
+    token = localStorage.getItem('auth_token');
+    userEmail = localStorage.getItem('user_email');
+    
     if (!token) {
         if (mostrarAlerta) {
             alert('Você precisa fazer login para realizar esta ação');
@@ -22,8 +26,10 @@ async function verificarAuth(mostrarAlerta = true) {
         });
         
         if (!response.ok) {
-            localStorage.removeItem('token');
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user_email');
             token = null;
+            userEmail = null;
             if (mostrarAlerta) {
                 alert('Sessão expirada. Faça login novamente.');
             }
@@ -32,6 +38,7 @@ async function verificarAuth(mostrarAlerta = true) {
         
         const data = await response.json();
         userEmail = data.email;
+        localStorage.setItem('user_email', data.email);
         return true;
     } catch (error) {
         console.error('Erro ao verificar autenticação:', error);
@@ -440,7 +447,7 @@ async function cancelarMesa(mesaId) {
 // Inicializar
 document.addEventListener('DOMContentLoaded', async () => {
     // Verificar auth silenciosamente (sem alertas)
-    await verificarAuth(false);
+    const autenticado = await verificarAuth(false);
     
     // Carregar mesas independente de estar logado ou não
     carregarMesas();
@@ -449,7 +456,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     setInterval(carregarMesas, 30000);
     
     // Atualizar botão de criar mesa baseado no login
-    if (!token) {
-        document.getElementById('btnCriarMesa').innerHTML = '🔒 Fazer Login para Criar Mesa';
+    const btnCriar = document.getElementById('btnCriarMesa');
+    if (autenticado && token) {
+        btnCriar.innerHTML = 'Criar Nova Mesa';
+        btnCriar.style.cursor = 'pointer';
+    } else {
+        btnCriar.innerHTML = '🔒 Fazer Login para Criar Mesa';
+        btnCriar.style.cursor = 'pointer';
     }
 });
