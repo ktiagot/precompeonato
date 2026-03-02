@@ -6,6 +6,47 @@
     <title>Mesas Casuais - Precompeonato</title>
     <link rel="stylesheet" href="styles.css">
     <script src="tema.js"></script>
+    <style>
+        #deckSugestoesCasual {
+            position: absolute;
+            background: white;
+            border: 1px solid var(--gray-300);
+            border-radius: 0.5rem;
+            margin-top: 0.25rem;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: calc(100% - 2rem);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+        }
+    </style>
 </head>
 <body>
     <header>
