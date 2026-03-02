@@ -195,9 +195,10 @@ nav a:hover {
 }
 
 nav a.active {
-    color: var(--primary);
+    background: var(--primary);
+    color: var(--white);
     font-weight: 600;
-    border-bottom: 2px solid var(--primary);
+    opacity: 1;
 }
 
 /* Forms */
