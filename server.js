@@ -179,7 +179,7 @@ app.get('/api/health', async (req, res) => {
 
 // ========== AUTENTICAÇÃO ==========
 
-// Solicitar código de verificação
+// Solicitar código de verificação (ABERTO PARA QUALQUER EMAIL)
 app.post('/api/auth/solicitar-codigo', async (req, res) => {
     try {
         if (!transporter) {
@@ -192,20 +192,13 @@ app.post('/api/auth/solicitar-codigo', async (req, res) => {
             return res.status(400).json({ error: 'Email é obrigatório' });
         }
         
-        // Verificar se o email está autorizado (emails_permitidos ou admins)
-        const [emailPermitido] = await db.query(
-            'SELECT * FROM emails_permitidos WHERE email = ? AND ativo = TRUE',
-            [email]
-        );
-        
+        // Verificar se é admin
         const [admin] = await db.query(
             'SELECT * FROM admins WHERE email = ? AND ativo = TRUE',
             [email]
         );
         
-        if (emailPermitido.length === 0 && admin.length === 0) {
-            return res.status(403).json({ error: 'Email não autorizado' });
-        }
+        const isAdmin = admin.length > 0;
         
         // Gerar código de 6 dígitos
         const codigo = Math.floor(100000 + Math.random() * 900000).toString();
@@ -218,7 +211,6 @@ app.post('/api/auth/solicitar-codigo', async (req, res) => {
         );
         
         // Enviar email
-        const isAdmin = admin.length > 0;
         const mailOptions = {
             from: process.env.EMAIL_FROM || 'Precompeonato <noreply@precompeonato.com.br>',
             to: email,

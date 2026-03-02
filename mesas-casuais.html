@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mesas Casuais - Precompeonato</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="tema.js"></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>PRECOMPEONATO</h1>
+            <nav>
+                <a href="index.html">Início</a>
+                <a href="inscricao.html">Inscrição</a>
+                <a href="rodadas.html">Rodadas</a>
+                <a href="mesas-casuais.html" class="active">Mesas Casuais</a>
+                <a href="ranking.html">Ranking</a>
+                <a href="estatisticas.html">Estatísticas</a>
+                <a href="regras.html">Regras</a>
+                <a href="perfil.html">Perfil</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h2>🎮 Mesas Casuais</h2>
+                <p>Organize e participe de jogos casuais de Commander com precons</p>
+                <button id="btnCriarMesa" class="btn-primary" style="margin-top: 1rem;">Criar Nova Mesa</button>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <!-- Filtros -->
+                <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+                    <button class="btn-secondary" onclick="filtrarMesas('todas')">Todas</button>
+                    <button class="btn-secondary" onclick="filtrarMesas('abertas')">Abertas</button>
+                    <button class="btn-secondary" onclick="filtrarMesas('minhas')">Minhas Mesas</button>
+                </div>
+
+                <!-- Lista de Mesas -->
+                <div id="mesasList"></div>
+
+                <!-- Mensagem vazia -->
+                <div id="emptyState" style="display: none; text-align: center; padding: 3rem; color: var(--gray-600);">
+                    <h3>Nenhuma mesa encontrada</h3>
+                    <p>Seja o primeiro a criar uma mesa casual!</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Criar Mesa -->
+    <div id="modalCriarMesa" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 2rem; border-radius: 1rem; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
+            <h2 style="margin-bottom: 1.5rem;">Criar Mesa Casual</h2>
+            <form id="formCriarMesa">
+                <div class="form-group">
+                    <label>Título da Mesa</label>
+                    <input type="text" name="titulo" placeholder="Ex: Mesa Casual - Sexta à Noite" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <textarea name="descricao" rows="3" placeholder="Descreva a mesa, regras especiais, etc."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Data e Hora</label>
+                    <input type="datetime-local" name="data_hora" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Máximo de Jogadores</label>
+                    <select name="max_jogadores">
+                        <option value="2">2 jogadores</option>
+                        <option value="3">3 jogadores</option>
+                        <option value="4" selected>4 jogadores</option>
+                        <option value="5">5 jogadores</option>
+                        <option value="6">6 jogadores</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Seu Deck (opcional)</label>
+                    <input type="text" id="deckBuscaCasual" placeholder="Buscar precon..." autocomplete="off">
+                    <div id="deckSugestoesCasual" style="display: none;"></div>
+                    <input type="hidden" name="deck_precon_id" id="deckIdCasual">
+                </div>
+                
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="submit" class="btn-primary" style="flex: 1;">Criar Mesa</button>
+                    <button type="button" class="btn-secondary" onclick="fecharModal()" style="flex: 1;">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Precompeonato - Todos os direitos reservados</p>
+        </div>
+    </footer>
+
+    <script src="mesas-casuais.js"></script>
+</body>
+</html>
