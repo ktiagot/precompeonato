@@ -366,7 +366,7 @@ document.getElementById('mesaResultado').addEventListener('change', async (e) =>
         <div style="background: var(--gray-50); padding: 1.5rem; border-radius: 0.5rem; border: 2px solid var(--primary);">
             <h4 style="margin-bottom: 1rem; color: var(--primary);">Selecione as posições finais</h4>
             <p style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 1.5rem;">
-                Escolha o jogador para cada posição (1º lugar é obrigatório)
+                Escolha o 1º e 2º lugar da mesa (ambos obrigatórios)
             </p>
             
             <div style="display: grid; gap: 1rem;">
@@ -389,8 +389,8 @@ document.getElementById('mesaResultado').addEventListener('change', async (e) =>
                         <span style="background: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; min-width: 100px; text-align: center;">
                             🥈 2º Lugar
                         </span>
-                        <select name="segundo" style="flex: 1; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 0.5rem; font-size: 1rem;">
-                            <option value="">Selecione o jogador (opcional)</option>
+                        <select name="segundo" required style="flex: 1; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 0.5rem; font-size: 1rem;">
+                            <option value="">Selecione o jogador</option>
                             ${jogadoresOptions}
                         </select>
                     </label>
@@ -410,6 +410,16 @@ document.getElementById('resultadoForm').addEventListener('submit', async (e) =>
     
     if (!primeiroId) {
         showAlert('Selecione o 1º lugar', 'error');
+        return;
+    }
+    
+    if (!segundoId) {
+        showAlert('Selecione o 2º lugar', 'error');
+        return;
+    }
+    
+    if (primeiroId === segundoId) {
+        showAlert('O 1º e 2º lugar devem ser jogadores diferentes', 'error');
         return;
     }
     
