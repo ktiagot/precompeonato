@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ranking - Precompeonato</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="tema.js"></script>
+    <style>
+        .ranking-table {
+            width: 100%;
+            background: var(--white);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            border: 1px solid var(--gray-300);
+        }
+        
+        .ranking-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .ranking-table th {
+            background: var(--primary);
+            color: var(--white);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .ranking-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+            color: var(--gray-700);
+        }
+        
+        .ranking-table tr:hover {
+            background: var(--gray-50);
+        }
+        
+        .ranking-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .posicao {
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--primary);
+            min-width: 50px;
+        }
+        
+        .posicao.top1 {
+            color: #FFD700;
+        }
+        
+        .posicao.top2 {
+            color: #C0C0C0;
+        }
+        
+        .posicao.top3 {
+            color: #CD7F32;
+        }
+        
+        .jogador-nome {
+            font-weight: 600;
+            color: var(--dark);
+            cursor: pointer;
+            text-decoration: none;
+        }
+        
+        .jogador-nome:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+        
+        .stat-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: var(--gray-100);
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        @media (max-width: 768px) {
+            .ranking-table {
+                overflow-x: auto;
+            }
+            
+            .ranking-table th,
+            .ranking-table td {
+                padding: 0.75rem 0.5rem;
+                font-size: 0.875rem;
+            }
+            
+            .hide-mobile {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>PRECOMPEONATO</h1>
+            <nav>
+                <a href="index.html">Início</a>
+                <a href="inscricao.html">Inscrição</a>
+                <a href="rodadas.html">Rodadas</a>
+                <a href="mesas-casuais.html">Mesas Casuais</a>
+                <a href="ranking.html" class="active">Ranking</a>
+                <a href="estatisticas.html">Estatísticas</a>
+                <a href="regras.html">Regras</a>
+                <a href="perfil.html">Perfil</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h2>🏆 Ranking de Jogadores</h2>
+                <p>Os melhores jogadores do Precompeonato</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <!-- Filtros -->
+                <div style="max-width: 400px; margin: 0 auto 2rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Filtrar por Campeonato</label>
+                    <select id="filtroCampeonato" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 0.5rem; font-size: 1rem;">
+                        <option value="">Todos os Campeonatos</option>
+                    </select>
+                </div>
+
+                <!-- Pódio (Top 3) -->
+                <div id="podio" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+                    <!-- Será preenchido via JavaScript -->
+                </div>
+
+                <!-- Tabela de Ranking -->
+                <div class="ranking-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">#</th>
+                                <th>Jogador</th>
+                                <th class="hide-mobile">Campeonatos</th>
+                                <th>Pontos</th>
+                                <th class="hide-mobile">Vitórias</th>
+                                <th>Win Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rankingBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 3rem; color: var(--gray-600);">
+                                    Carregando ranking...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" style="display: none; text-align: center; padding: 3rem; color: var(--gray-600);">
+                    <h3>Nenhum jogador encontrado</h3>
+                    <p>Seja o primeiro a participar de um campeonato!</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Precompeonato - Todos os direitos reservados</p>
+        </div>
+    </footer>
+
+    <script src="ranking.js"></script>
+</body>
+</html>
