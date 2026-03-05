@@ -786,7 +786,8 @@ app.get('/api/ranking', async (req, res) => {
                 SUM(i.vitorias) as vitorias_totais,
                 SUM(i.segundos_lugares) as segundos_totais,
                 COUNT(DISTINCT i.campeonato_id) as campeonatos_participados,
-                ROUND(SUM(i.vitorias) * 100.0 / NULLIF(COUNT(DISTINCT h.mesa_id), 0), 1) as winrate
+                COUNT(DISTINCT h.id) as total_partidas,
+                ROUND(SUM(i.vitorias) * 100.0 / NULLIF(COUNT(DISTINCT h.id), 0), 1) as winrate
             FROM inscricoes i
             ${temPerfis ? 'LEFT JOIN perfis_usuarios pu ON i.email = pu.email' : ''}
             LEFT JOIN historico_partidas h ON i.id = h.jogador_id

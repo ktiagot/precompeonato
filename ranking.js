@@ -70,13 +70,11 @@ function aplicarFiltros() {
 // Exibir ranking
 function exibirRanking() {
     const tbody = document.getElementById('rankingBody');
-    const podio = document.getElementById('podio');
     const emptyState = document.getElementById('emptyState');
     const busca = document.getElementById('buscaJogador').value.trim();
     
     if (rankingFiltrado.length === 0) {
         tbody.innerHTML = '';
-        podio.innerHTML = '';
         emptyState.style.display = 'block';
         
         if (busca) {
@@ -94,36 +92,6 @@ function exibirRanking() {
     }
     
     emptyState.style.display = 'none';
-    
-    // Exibir pódio (top 3) apenas se não houver busca
-    if (!busca) {
-        const top3 = rankingFiltrado.slice(0, 3);
-        podio.innerHTML = top3.map((jogador, index) => {
-            const posicao = index + 1;
-            const medalha = posicao === 1 ? '🥇' : posicao === 2 ? '🥈' : '🥉';
-            const corBorda = posicao === 1 ? '#FFD700' : posicao === 2 ? '#C0C0C0' : '#CD7F32';
-            
-            return `
-                <div style="background: var(--white); border: 3px solid ${corBorda}; border-radius: 1rem; padding: 2rem; text-align: center; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-                    <div style="font-size: 3rem; margin-bottom: 0.5rem;">${medalha}</div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: ${corBorda}; margin-bottom: 0.5rem;">#${posicao}</div>
-                    <a href="perfil.html?email=${encodeURIComponent(jogador.email)}" style="font-size: 1.125rem; font-weight: 600; color: var(--dark); text-decoration: none; display: block; margin-bottom: 1rem;">
-                        ${jogador.nome || jogador.email}
-                    </a>
-                    <div style="display: grid; gap: 0.5rem; font-size: 0.875rem; color: var(--gray-600);">
-                        <div><strong style="color: var(--primary);">${jogador.pontos_totais || 0}</strong> pontos</div>
-                        <div><strong>${jogador.vitorias_totais || 0}</strong> vitórias</div>
-                        <div><strong>${jogador.winrate || 0}%</strong> win rate</div>
-                        <div>${jogador.campeonatos_participados || 0} campeonatos</div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-        podio.style.display = 'grid';
-    } else {
-        podio.innerHTML = '';
-        podio.style.display = 'none';
-    }
     
     // Exibir tabela completa
     tbody.innerHTML = rankingFiltrado.map((jogador, index) => {
