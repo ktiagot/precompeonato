@@ -184,12 +184,12 @@ function exibirMesas(mesas) {
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                     ${ehCriador ? `
                         ${!mesa.link_jogo && mesa.status !== 'cancelada' ? `
-                            <button onclick="adicionarLinkJogo(${mesa.id})" class="btn-primary">
+                            <button onclick="adicionarLinkJogo(${mesa.id})" class="btn-secondary">
                                 Adicionar Link do Jogo
                             </button>
                         ` : ''}
                         ${mesa.status === 'aberta' || mesa.status === 'cheia' ? `
-                            <button onclick="cancelarMesa(${mesa.id})" class="btn-secondary" style="background: var(--danger); color: white;">
+                            <button onclick="cancelarMesa(${mesa.id})" style="padding: 0.625rem 1.25rem; background: var(--danger); color: white; border: none; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
                                 Cancelar Mesa
                             </button>
                         ` : ''}

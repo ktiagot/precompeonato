@@ -655,10 +655,18 @@ app.get('/api/perfil/:email', async (req, res) => {
     try {
         const { email } = req.params;
         
-        // Buscar dados do perfil
-        const [perfil] = await db.query(`
-            SELECT * FROM perfis_usuarios WHERE email = ?
-        `, [email]);
+        // Verificar se tabela perfis_usuarios existe
+        const [tables] = await db.query("SHOW TABLES LIKE 'perfis_usuarios'");
+        const temPerfis = tables.length > 0;
+        
+        // Buscar dados do perfil (se a tabela existir)
+        let perfil = [{ email }];
+        if (temPerfis) {
+            perfil = await db.query(`
+                SELECT * FROM perfis_usuarios WHERE email = ?
+            `, [email]);
+            perfil = perfil[0];
+        }
         
         // Buscar estatísticas gerais
         const [stats] = await db.query(`
@@ -766,17 +774,21 @@ app.get('/api/ranking', async (req, res) => {
     try {
         const { campeonato_id } = req.query;
         
+        // Verificar se tabela perfis_usuarios existe
+        const [tables] = await db.query("SHOW TABLES LIKE 'perfis_usuarios'");
+        const temPerfis = tables.length > 0;
+        
         let query = `
             SELECT 
                 i.email,
-                MAX(pu.nome) as nome,
+                ${temPerfis ? 'MAX(pu.nome)' : 'MAX(i.nome)'} as nome,
                 SUM(i.pontos) as pontos_totais,
                 SUM(i.vitorias) as vitorias_totais,
                 SUM(i.segundos_lugares) as segundos_totais,
                 COUNT(DISTINCT i.campeonato_id) as campeonatos_participados,
                 ROUND(SUM(i.vitorias) * 100.0 / NULLIF(COUNT(DISTINCT h.mesa_id), 0), 1) as winrate
             FROM inscricoes i
-            LEFT JOIN perfis_usuarios pu ON i.email = pu.email
+            ${temPerfis ? 'LEFT JOIN perfis_usuarios pu ON i.email = pu.email' : ''}
             LEFT JOIN historico_partidas h ON i.id = h.jogador_id
             WHERE i.ativo = TRUE
         `;
