@@ -346,23 +346,61 @@ function renderizarRodadas() {
         
         // Criar grid de mesas em 2 colunas
         const mesasHtml = rodada.mesas && rodada.mesas.length > 0 
-            ? `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 1rem; margin-top: 1rem;">
-                ${rodada.mesas.map((mesa, idx) => `
-                    <div class="mesa">
-                        <h4>Mesa ${mesa.numero_mesa || idx + 1}</h4>
-                        ${mesa.jogadores && mesa.jogadores.length > 0 ? mesa.jogadores.map(j => `
-                            <div class="jogador">${j.nome} - ${j.deck_nome || 'Deck não definido'}</div>
-                        `).join('') : '<p>Nenhum jogador</p>'}
-                        ${mesa.vencedor_nome ? `<p><strong>Vencedor: ${mesa.vencedor_nome}</strong></p>` : ''}
+            ? `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(450px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+                ${rodada.mesas.map((mesa, idx) => {
+                    const mesaFinalizada = mesa.finalizada;
+                    const statusBadge = mesaFinalizada 
+                        ? '<span style="background: var(--success); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; margin-left: 0.5rem;">Finalizada</span>'
+                        : '<span style="background: var(--warning); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; margin-left: 0.5rem;">Em andamento</span>';
+                    
+                    return `
+                    <div class="card" style="padding: 1.5rem;">
+                        <h4 style="margin: 0 0 1rem 0; display: flex; align-items: center; justify-content: space-between;">
+                            <span>Mesa ${mesa.numero_mesa || idx + 1}</span>
+                            ${statusBadge}
+                        </h4>
+                        ${mesa.jogadores && mesa.jogadores.length > 0 ? `
+                            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                ${mesa.jogadores.map(j => {
+                                    const isVencedor = mesa.vencedor_id === j.id;
+                                    const isSegundo = mesa.segundo_id === j.id;
+                                    const badge = isVencedor 
+                                        ? '<span style="color: var(--warning); font-weight: bold; margin-left: 0.5rem;">🥇</span>'
+                                        : isSegundo 
+                                        ? '<span style="color: var(--gray-500); font-weight: bold; margin-left: 0.5rem;">🥈</span>'
+                                        : '';
+                                    
+                                    return `
+                                    <div style="padding: 0.75rem; background: var(--gray-50); border-radius: 0.5rem; border-left: 3px solid ${isVencedor ? 'var(--warning)' : isSegundo ? 'var(--gray-400)' : 'var(--primary)'};">
+                                        <div style="font-weight: 600; color: var(--gray-900); margin-bottom: 0.25rem;">
+                                            ${j.nome}${badge}
+                                        </div>
+                                        <div style="font-size: 0.875rem; color: var(--gray-600);">
+                                            ${j.deck_nome || 'Deck não definido'}
+                                            ${j.comandante ? `<br><span style="color: var(--primary);">⚔️ ${j.comandante}</span>` : ''}
+                                        </div>
+                                    </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        ` : '<p style="color: var(--gray-500); text-align: center;">Nenhum jogador</p>'}
+                        ${mesa.vencedor_nome ? `
+                            <div style="margin-top: 1rem; padding: 0.75rem; background: linear-gradient(135deg, var(--warning), var(--secondary)); color: white; border-radius: 0.5rem; text-align: center; font-weight: 600;">
+                                🏆 Vencedor: ${mesa.vencedor_nome}
+                            </div>
+                        ` : ''}
                     </div>
-                `).join('')}
+                `;
+                }).join('')}
             </div>`
-            : '<p>Nenhuma mesa criada</p>';
+            : '<p style="text-align: center; color: var(--gray-500); padding: 2rem;">Nenhuma mesa criada</p>';
         
         return `
-            <div class="rodada-card">
-                <h3>Rodada ${rodada.numero}</h3>
-                <p>Data: ${dataFormatada}</p>
+            <div class="card" style="margin-bottom: 2rem; padding: 2rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; border-bottom: 2px solid var(--primary); padding-bottom: 1rem;">
+                    <h3 style="margin: 0; color: var(--primary);">Rodada ${rodada.numero}</h3>
+                    <span style="color: var(--gray-600); font-size: 0.95rem;">📅 ${dataFormatada}</span>
+                </div>
                 ${mesasHtml}
             </div>
         `;
@@ -370,7 +408,7 @@ function renderizarRodadas() {
     
     const botaoHtml = todasRodadas.length > 1 ? `
         <button onclick="toggleRodadas()" class="btn-primary" style="margin-top: 1rem; width: 100%;">
-            ${mostrandoTodas ? 'Mostrar menos' : `Mostrar mais (${todasRodadas.length - 1} rodadas anteriores)`}
+            ${mostrandoTodas ? '▲ Mostrar menos' : `▼ Mostrar todas as rodadas (${todasRodadas.length - 1} anteriores)`}
         </button>
     ` : '';
     
