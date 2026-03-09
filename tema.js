@@ -7,9 +7,36 @@
     
     const CACHE_KEY = 'precompeonato_tema';
     const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+    
+    let BETA_MODE = false; // Será atualizado pela API
+
+    // Função para esconder links no modo beta
+    function gerenciarMenuBeta() {
+        if (!BETA_MODE) return;
+        
+        // Links a ocultar no modo beta
+        const linksParaOcultar = [
+            'inscricao.html',
+            'mesas-casuais.html',
+            'ranking.html',
+            'perfil.html',
+            'login.html'
+        ];
+        
+        linksParaOcultar.forEach(href => {
+            const links = document.querySelectorAll(`a[href="${href}"]`);
+            links.forEach(link => {
+                link.style.display = 'none';
+            });
+        });
+        
+        console.log('🔒 Modo Beta: Links de autenticação e perfil ocultos');
+    }
 
     // Função para esconder link de inscrição se usuário estiver logado
     function gerenciarLinkInscricao() {
+        if (BETA_MODE) return; // No modo beta, já está oculto
+        
         const token = localStorage.getItem('auth_token');
         const inscricaoLinks = document.querySelectorAll('a[href="inscricao.html"]');
         
@@ -100,8 +127,23 @@
     
     // Executar ao carregar a página
     document.addEventListener('DOMContentLoaded', () => {
+        gerenciarMenuBeta();
         gerenciarLinkInscricao();
     });
+    
+    // Verificar modo beta
+    fetch(`${TEMA_API_URL}/beta-status`)
+        .then(response => response.json())
+        .then(data => {
+            BETA_MODE = data.beta_mode;
+            if (BETA_MODE) {
+                console.log('🔒 Modo Beta ativado');
+                gerenciarMenuBeta();
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao verificar modo beta:', error);
+        });
     
     // Tentar aplicar tema do cache imediatamente
     try {

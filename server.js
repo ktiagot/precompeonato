@@ -35,6 +35,18 @@ const db = {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const BETA_MODE = process.env.BETA_MODE === 'true';
+
+// Middleware para bloquear endpoints em modo beta
+function betaBlockMiddleware(req, res, next) {
+    if (BETA_MODE) {
+        return res.status(503).json({ 
+            error: 'Esta funcionalidade está temporariamente indisponível no modo beta',
+            beta: true 
+        });
+    }
+    next();
+}
 
 // Função helper para logar erros SQL
 function logSQLError(endpoint, error, query = '') {
@@ -54,6 +66,7 @@ console.log('  - DB_HOST:', process.env.DB_HOST || 'NÃO DEFINIDO');
 console.log('  - DB_USER:', process.env.DB_USER || 'NÃO DEFINIDO');
 console.log('  - DB_NAME:', process.env.DB_NAME || 'NÃO DEFINIDO');
 console.log('  - PORT:', PORT);
+console.log('  - BETA_MODE:', BETA_MODE ? '🔒 ATIVADO' : '✅ DESATIVADO');
 
 app.use(cors());
 app.use(express.json());
@@ -156,6 +169,7 @@ app.get('/api/health', async (req, res) => {
         res.json({ 
             status: 'ok', 
             database: 'connected',
+            beta_mode: BETA_MODE,
             env: {
                 hasDbHost: !!process.env.DB_HOST,
                 hasDbUser: !!process.env.DB_USER,
@@ -177,10 +191,15 @@ app.get('/api/health', async (req, res) => {
     }
 });
 
+// Endpoint para verificar modo beta (público)
+app.get('/api/beta-status', (req, res) => {
+    res.json({ beta_mode: BETA_MODE });
+});
+
 // ========== AUTENTICAÇÃO ==========
 
-// Solicitar código de verificação (ABERTO PARA QUALQUER EMAIL)
-app.post('/api/auth/solicitar-codigo', async (req, res) => {
+// Solicitar código de verificação (BLOQUEADO EM MODO BETA)
+app.post('/api/auth/solicitar-codigo', betaBlockMiddleware, async (req, res) => {
     try {
         if (!transporter) {
             return res.status(503).json({ error: 'Sistema de email não configurado. Contate o administrador.' });
@@ -240,7 +259,7 @@ app.post('/api/auth/solicitar-codigo', async (req, res) => {
 });
 
 // Verificar código e criar sessão
-app.post('/api/auth/verificar-codigo', async (req, res) => {
+app.post('/api/auth/verificar-codigo', betaBlockMiddleware, async (req, res) => {
     try {
         const { email, codigo } = req.body;
         
@@ -294,7 +313,7 @@ app.post('/api/auth/verificar-codigo', async (req, res) => {
 });
 
 // Verificar sessão atual
-app.get('/api/auth/me', authMiddleware, async (req, res) => {
+app.get('/api/auth/me', betaBlockMiddleware, authMiddleware, async (req, res) => {
     res.json({
         email: req.user.email,
         is_admin: req.user.isAdmin
@@ -302,7 +321,7 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
 });
 
 // Logout
-app.post('/api/auth/logout', authMiddleware, async (req, res) => {
+app.post('/api/auth/logout', betaBlockMiddleware, authMiddleware, async (req, res) => {
     try {
         const token = req.headers.authorization?.replace('Bearer ', '');
         await db.query('DELETE FROM sessoes WHERE token = ?', [token]);
@@ -313,7 +332,7 @@ app.post('/api/auth/logout', authMiddleware, async (req, res) => {
 });
 
 // Minhas mesas (usuário logado)
-app.get('/api/minhas-mesas', authMiddleware, async (req, res) => {
+app.get('/api/minhas-mesas', betaBlockMiddleware, authMiddleware, async (req, res) => {
     try {
         const userEmail = req.user.email;
         
@@ -397,7 +416,7 @@ app.get('/api/minhas-mesas', authMiddleware, async (req, res) => {
 // ========== MESAS CASUAIS ==========
 
 // Listar mesas casuais abertas
-app.get('/api/mesas-casuais', async (req, res) => {
+app.get('/api/mesas-casuais', betaBlockMiddleware, async (req, res) => {
     try {
         const { status, futuras } = req.query;
         
@@ -451,7 +470,7 @@ app.get('/api/mesas-casuais', async (req, res) => {
 });
 
 // Criar mesa casual
-app.post('/api/mesas-casuais', authMiddleware, async (req, res) => {
+app.post('/api/mesas-casuais', betaBlockMiddleware, authMiddleware, async (req, res) => {
     try {
         const { titulo, descricao, data_hora, max_jogadores, deck_precon_id, comandante_1, comandante_2 } = req.body;
         const criadorEmail = req.user.email;
@@ -481,7 +500,7 @@ app.post('/api/mesas-casuais', authMiddleware, async (req, res) => {
 });
 
 // Entrar em uma mesa casual
-app.post('/api/mesas-casuais/:id/join', authMiddleware, async (req, res) => {
+app.post('/api/mesas-casuais/:id/join', betaBlockMiddleware, authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
         const { deck_precon_id, comandante_1, comandante_2 } = req.body;
@@ -534,7 +553,7 @@ app.post('/api/mesas-casuais/:id/join', authMiddleware, async (req, res) => {
 });
 
 // Sair de uma mesa casual
-app.delete('/api/mesas-casuais/:id/leave', authMiddleware, async (req, res) => {
+app.delete('/api/mesas-casuais/:id/leave', betaBlockMiddleware, authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
         const jogadorEmail = req.user.email;
@@ -566,7 +585,7 @@ app.delete('/api/mesas-casuais/:id/leave', authMiddleware, async (req, res) => {
 });
 
 // Atualizar mesa casual (apenas criador)
-app.put('/api/mesas-casuais/:id', authMiddleware, async (req, res) => {
+app.put('/api/mesas-casuais/:id', betaBlockMiddleware, authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
         const { link_jogo, status } = req.body;
@@ -616,7 +635,7 @@ app.put('/api/mesas-casuais/:id', authMiddleware, async (req, res) => {
 });
 
 // Cancelar mesa (apenas criador)
-app.delete('/api/mesas-casuais/:id', authMiddleware, async (req, res) => {
+app.delete('/api/mesas-casuais/:id', betaBlockMiddleware, authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
         const jogadorEmail = req.user.email;
@@ -651,7 +670,7 @@ app.delete('/api/mesas-casuais/:id', authMiddleware, async (req, res) => {
 // ========== PERFIL E RANKING ==========
 
 // Buscar perfil de um jogador (público)
-app.get('/api/perfil/:email', async (req, res) => {
+app.get('/api/perfil/:email', betaBlockMiddleware, async (req, res) => {
     try {
         const { email } = req.params;
         
@@ -737,7 +756,7 @@ app.get('/api/perfil/:email', async (req, res) => {
 });
 
 // Atualizar perfil (próprio usuário)
-app.put('/api/perfil', authMiddleware, async (req, res) => {
+app.put('/api/perfil', betaBlockMiddleware, authMiddleware, async (req, res) => {
     try {
         const { nome, bio, discord, whatsapp, avatar_url } = req.body;
         const email = req.user.email;
@@ -770,7 +789,7 @@ app.put('/api/perfil', authMiddleware, async (req, res) => {
 });
 
 // Ranking geral de jogadores
-app.get('/api/ranking', async (req, res) => {
+app.get('/api/ranking', betaBlockMiddleware, async (req, res) => {
     try {
         const { campeonato_id } = req.query;
         
@@ -1060,7 +1079,7 @@ app.delete('/api/emails-permitidos/:email', authMiddleware, adminMiddleware, asy
 });
 
 // ========== INSCRIÇÕES ==========
-app.get('/api/inscricoes', async (req, res) => {
+app.get('/api/inscricoes', betaBlockMiddleware, async (req, res) => {
     try {
         const [inscricoes] = await db.query(`
             SELECT i.*, p.nome as deck_nome_completo, p.comandante_principal as comandante, p.set_nome
@@ -1075,7 +1094,7 @@ app.get('/api/inscricoes', async (req, res) => {
     }
 });
 
-app.post('/api/inscricoes', async (req, res) => {
+app.post('/api/inscricoes', betaBlockMiddleware, async (req, res) => {
     try {
         const { nome, email, discord, whatsapp, deckId, deckNome, campeonatoId, comandante_1, comandante_2 } = req.body;
         
