@@ -43,14 +43,16 @@ async function carregarCampeonatos() {
             selectGeral.appendChild(option);
         });
         
-        // Filtro das minhas estatísticas
+        // Filtro das minhas estatísticas (só se existir - pode estar oculto no modo beta)
         const select = document.getElementById('filtroCampeonato');
-        campeonatos.forEach(c => {
-            const option = document.createElement('option');
-            option.value = c.id;
-            option.textContent = `${c.nome} - ${c.edicao}`;
-            select.appendChild(option);
-        });
+        if (select) {
+            campeonatos.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c.id;
+                option.textContent = `${c.nome} - ${c.edicao}`;
+                select.appendChild(option);
+            });
+        }
     } catch (error) {
         console.error('Erro ao carregar campeonatos:', error);
     }
@@ -228,10 +230,20 @@ document.getElementById('filtroCampeonatoGeral').addEventListener('change', carr
 async function carregarMinhasEstatisticas() {
     const token = localStorage.getItem('auth_token');
     
+    // Verificar se os elementos existem (podem estar ocultos no modo beta)
+    const naoLogado = document.getElementById('naoLogado');
+    const semDados = document.getElementById('semDados');
+    const statsContainer = document.getElementById('statsContainer');
+    
+    if (!naoLogado || !semDados || !statsContainer) {
+        console.log('Elementos de minhas estatísticas não encontrados (modo beta?)');
+        return;
+    }
+    
     if (!token) {
-        document.getElementById('naoLogado').style.display = 'block';
-        document.getElementById('semDados').style.display = 'none';
-        document.getElementById('statsContainer').style.display = 'none';
+        naoLogado.style.display = 'block';
+        semDados.style.display = 'none';
+        statsContainer.style.display = 'none';
         return;
     }
     
@@ -243,9 +255,9 @@ async function carregarMinhasEstatisticas() {
         
         if (!authResponse.ok) {
             localStorage.clear();
-            document.getElementById('naoLogado').style.display = 'block';
-            document.getElementById('semDados').style.display = 'none';
-            document.getElementById('statsContainer').style.display = 'none';
+            naoLogado.style.display = 'block';
+            semDados.style.display = 'none';
+            statsContainer.style.display = 'none';
             return;
         }
         
@@ -257,29 +269,28 @@ async function carregarMinhasEstatisticas() {
         const stats = await statsResponse.json();
         
         if (stats.totalPartidas === 0) {
-            document.getElementById('naoLogado').style.display = 'none';
-            document.getElementById('semDados').style.display = 'block';
-            document.getElementById('statsContainer').style.display = 'none';
+            naoLogado.style.display = 'none';
+            semDados.style.display = 'block';
+            statsContainer.style.display = 'none';
             return;
         }
         
-        document.getElementById('naoLogado').style.display = 'none';
-        document.getElementById('semDados').style.display = 'none';
-        document.getElementById('statsContainer').style.display = 'block';
+        naoLogado.style.display = 'none';
+        semDados.style.display = 'none';
+        statsContainer.style.display = 'block';
         
         // Exibir nome e email
-        if (stats.meusDecks && stats.meusDecks.length > 0) {
-            // Pegar nome da primeira inscrição
-            const primeiraInscricao = stats.meusDecks[0];
-            document.getElementById('emailJogador').textContent = email;
+        const emailJogador = document.getElementById('emailJogador');
+        if (emailJogador && stats.meusDecks && stats.meusDecks.length > 0) {
+            emailJogador.textContent = email;
         }
         
         exibirEstatisticas(stats);
     } catch (error) {
         console.error('Erro ao carregar minhas estatísticas:', error);
-        document.getElementById('naoLogado').style.display = 'none';
-        document.getElementById('semDados').style.display = 'block';
-        document.getElementById('statsContainer').style.display = 'none';
+        naoLogado.style.display = 'none';
+        semDados.style.display = 'block';
+        statsContainer.style.display = 'none';
     }
 }
 
