@@ -191,12 +191,26 @@
                 
                 // Mostrar apenas as 2 últimas rodadas
                 const ultimasRodadas = rodadas.slice(0, 2);
-                container.innerHTML = ultimasRodadas.map(r => `
-                    <div class="card">
-                        <h3>Rodada ${r.numero}</h3>
-                        <p>${r.mesas ? r.mesas.length : 0} mesas jogadas</p>
-                    </div>
-                `).join('');
+                container.innerHTML = ultimasRodadas.map(r => {
+                    const totalMesas = r.mesas ? r.mesas.length : 0;
+                    const mesasFinalizadas = r.mesas ? r.mesas.filter(m => m.finalizada).length : 0;
+                    
+                    return `
+                        <div class="card" style="margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                                <div>
+                                    <h3 style="margin: 0 0 0.5rem 0;">Rodada ${r.numero}</h3>
+                                    <p style="margin: 0; color: var(--gray-600);">
+                                        ${totalMesas} mesas • ${mesasFinalizadas} finalizadas
+                                    </p>
+                                </div>
+                                <a href="rodadas.html" class="btn-secondary" style="white-space: nowrap;">
+                                    Ver Mesas
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
             } catch (error) {
                 console.error('Erro ao carregar resumo:', error);
             }
