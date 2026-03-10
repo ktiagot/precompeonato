@@ -377,7 +377,6 @@ function renderizarRodadas() {
                                         </div>
                                         <div style="font-size: 0.875rem; color: var(--gray-600);">
                                             ${j.deck_nome || 'Deck não definido'}
-                                            ${j.comandante ? `<br><span style="color: var(--primary);">⚔️ ${j.comandante}</span>` : ''}
                                         </div>
                                     </div>
                                     `;
