@@ -43,7 +43,13 @@
             tabMinhasContent.style.display = 'none';
         }
         
-        console.log('🔒 Modo Beta: Links de autenticação, perfil, regras e minhas estatísticas ocultos');
+        // Ocultar seção "Sobre o Campeonato" na página inicial
+        const sobreCampeonato = document.getElementById('sobreCampeonato');
+        if (sobreCampeonato) {
+            sobreCampeonato.style.display = 'none';
+        }
+        
+        console.log('🔒 Modo Beta: Links de autenticação, perfil, regras, minhas estatísticas e sobre o campeonato ocultos');
     }
 
     // Função para esconder link de inscrição se usuário estiver logado
