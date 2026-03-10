@@ -1885,10 +1885,6 @@ app.get('/api/estatisticas/geral', async (req, res) => {
             
             [metagame] = await db.query(queryMetagame, paramsMetagame);
         } else {
-                ORDER BY COUNT(i.id) DESC
-                LIMIT 20
-            `, campeonato_id ? [campeonato_id, campeonato_id] : []);
-        } else {
             // Buscar do histórico
             if (temNovaEstrutura) {
                 // Nova estrutura com Partner
