@@ -1796,15 +1796,27 @@ app.get('/api/estatisticas/geral', async (req, res) => {
             console.log('   ⚠️  Sem histórico de partidas, buscando dados das inscrições...');
             
             // Buscar dados das inscrições
-            const inscricoesFilter = campeonato_id ? 'WHERE i.campeonato_id = ?' : '';
-            const [statsInscricoes] = await db.query(`
+            let queryInscricoes = `
                 SELECT 
                     COUNT(DISTINCT i.id) as total_jogadores,
                     COUNT(DISTINCT i.deck_id) as total_decks
                 FROM inscricoes i
-                ${inscricoesFilter}
-                AND i.ativo = TRUE
-            `, params);
+                WHERE i.ativo = TRUE
+            `;
+            
+            let paramsInscricoes = [];
+            if (campeonato_id) {
+                queryInscricoes = `
+                    SELECT 
+                        COUNT(DISTINCT i.id) as total_jogadores,
+                        COUNT(DISTINCT i.deck_id) as total_decks
+                    FROM inscricoes i
+                    WHERE i.campeonato_id = ? AND i.ativo = TRUE
+                `;
+                paramsInscricoes = [campeonato_id];
+            }
+            
+            const [statsInscricoes] = await db.query(queryInscricoes, paramsInscricoes);
             
             totalJogadores = parseInt(statsInscricoes[0].total_jogadores);
             totalDecks = parseInt(statsInscricoes[0].total_decks);
@@ -1834,21 +1846,45 @@ app.get('/api/estatisticas/geral', async (req, res) => {
         // Se não há histórico, buscar das inscrições
         if (totalPartidas === 0) {
             console.log('   ⚠️  Sem histórico, buscando metagame das inscrições...');
-            const inscricoesFilter = campeonato_id ? 'WHERE i.campeonato_id = ?' : '';
             
-            [metagame] = await db.query(`
+            let queryMetagame = `
                 SELECT 
                     p.nome as deck_nome,
                     p.set_nome,
                     COUNT(i.id) as vezes_usado,
                     0 as vitorias,
                     0 as winrate,
-                    ROUND((COUNT(i.id) * 100.0 / (SELECT COUNT(*) FROM inscricoes i2 ${inscricoesFilter} AND i2.ativo = TRUE)), 1) as porcentagem
+                    ROUND((COUNT(i.id) * 100.0 / (SELECT COUNT(*) FROM inscricoes i2 WHERE i2.ativo = TRUE)), 1) as porcentagem
                 FROM inscricoes i
                 JOIN precons p ON i.deck_id = p.id
-                ${inscricoesFilter}
-                AND i.ativo = TRUE
+                WHERE i.ativo = TRUE
                 GROUP BY p.id
+                ORDER BY COUNT(i.id) DESC
+                LIMIT 20
+            `;
+            
+            let paramsMetagame = [];
+            if (campeonato_id) {
+                queryMetagame = `
+                    SELECT 
+                        p.nome as deck_nome,
+                        p.set_nome,
+                        COUNT(i.id) as vezes_usado,
+                        0 as vitorias,
+                        0 as winrate,
+                        ROUND((COUNT(i.id) * 100.0 / (SELECT COUNT(*) FROM inscricoes i2 WHERE i2.campeonato_id = ? AND i2.ativo = TRUE)), 1) as porcentagem
+                    FROM inscricoes i
+                    JOIN precons p ON i.deck_id = p.id
+                    WHERE i.campeonato_id = ? AND i.ativo = TRUE
+                    GROUP BY p.id
+                    ORDER BY COUNT(i.id) DESC
+                    LIMIT 20
+                `;
+                paramsMetagame = [campeonato_id, campeonato_id];
+            }
+            
+            [metagame] = await db.query(queryMetagame, paramsMetagame);
+        } else {
                 ORDER BY COUNT(i.id) DESC
                 LIMIT 20
             `, campeonato_id ? [campeonato_id, campeonato_id] : []);
