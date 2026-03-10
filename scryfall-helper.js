@@ -74,17 +74,19 @@ const ScryfallHelper = {
     
     /**
      * Cria HTML string para imagem (para uso em innerHTML)
-     * @param {string} comandante - Nome do comandante
+     * @param {string} comandante - Nome do comandante (pode ser null)
      * @param {string} deckNome - Nome do deck
      * @param {string} width - Largura da imagem (padrão: 200px)
      * @param {string} height - Altura da imagem (padrão: 150px)
      * @returns {string} HTML string
      */
     getImageHTML(comandante, deckNome, width = '200px', height = '150px') {
+        // Se não tem comandante, usar o nome do deck para buscar
+        const searchName = comandante || deckNome;
         return `<img 
             src="${this.getPlaceholder()}" 
-            alt="${comandante || deckNome}"
-            data-comandante="${comandante || ''}"
+            alt="${deckNome}"
+            data-comandante="${searchName || ''}"
             class="commander-art"
             style="width: ${width}; height: ${height}; border-radius: 8px; object-fit: cover; border: 2px solid var(--gray-300); flex-shrink: 0;"
             loading="lazy"

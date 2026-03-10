@@ -105,10 +105,10 @@ function exibirEstatisticasGerais(stats) {
     const metagameParaMostrar = mostrandoTodosMetagame ? metagameCompleto : metagameCompleto.slice(0, 6);
     const metagameHtml = metagameParaMostrar.map(d => `
         <div class="metagame-item" style="display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: var(--white); border: 1px solid var(--gray-300); border-radius: 0.5rem;">
-            ${ScryfallHelper.getImageHTML(d.comandante, d.deck_nome, '200px', '150px')}
+            ${ScryfallHelper.getImageHTML(d.comandante || null, d.deck_nome, '200px', '150px')}
             <div style="flex: 1; min-width: 0; overflow: hidden;">
                 <h4 style="margin: 0 0 0.25rem 0; word-wrap: break-word;">${d.deck_nome}</h4>
-                <p style="margin: 0 0 0.5rem 0; color: var(--gray-600); font-size: 0.875rem; word-wrap: break-word;"><strong>${d.comandante}</strong> - ${d.set_nome}</p>
+                <p style="margin: 0 0 0.5rem 0; color: var(--gray-600); font-size: 0.875rem; word-wrap: break-word;">${d.set_nome}</p>
                 <div class="metagame-stats" style="display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.875rem;">
                     <span><strong>Usado:</strong> ${d.vezes_usado}x (${d.porcentagem}%)</span>
                     <span><strong>Vitórias:</strong> ${d.vitorias}</span>
@@ -132,11 +132,10 @@ function exibirEstatisticasGerais(stats) {
     const topDecksParaMostrar = mostrandoTodosTopDecks ? topDecksCompleto : topDecksCompleto.slice(0, 6);
     const topDecksHtml = topDecksParaMostrar.map(d => `
         <div class="metagame-item" style="display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: var(--white); border: 1px solid var(--gray-300); border-radius: 0.5rem;">
-            ${ScryfallHelper.getImageHTML(d.comandante, d.deck_nome, '200px', '150px')}
+            ${ScryfallHelper.getImageHTML(d.comandante || null, d.deck_nome, '200px', '150px')}
             <div style="flex: 1; min-width: 0; overflow: hidden;">
                 <h4 style="margin: 0 0 0.25rem 0; word-wrap: break-word;">${d.deck_nome}</h4>
-                <p style="margin: 0 0 0.5rem 0; color: var(--gray-600); font-size: 0.875rem; word-wrap: break-word;"><strong>${d.comandante}</strong></p>
-                <div class="metagame-stats" style="display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.875rem;">
+                <div class="metagame-stats" style="display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.875rem; margin-top: 0.5rem;">
                     <span><strong>Partidas:</strong> ${d.partidas}</span>
                     <span><strong>Vitórias:</strong> ${d.vitorias}</span>
                     <span><strong>Win Rate:</strong> ${d.winrate}%</span>
@@ -314,7 +313,7 @@ function exibirEstatisticas(stats) {
     const meusDecksHtml = stats.meusDecks.map(d => `
         <div class="deck-stat">
             <h4>${d.deck_nome}</h4>
-            <p><strong>${d.comandante}</strong> - ${d.set_nome}</p>
+            <p>${d.set_nome}</p>
             <p>Usado em ${d.vezes_usado} partida(s)</p>
         </div>
     `).join('');
@@ -357,7 +356,7 @@ function exibirEstatisticas(stats) {
                 <span class="partida-data">${new Date(h.data_partida).toLocaleDateString('pt-BR')}</span>
             </div>
             <div class="partida-info">
-                <p><strong>Seu deck:</strong> ${h.deck_nome} (${h.comandante})</p>
+                <p><strong>Seu deck:</strong> ${h.deck_nome}</p>
                 <p><strong>Posição:</strong> ${h.posicao_final}º lugar (+${h.pontos_ganhos} pontos)</p>
                 <p><strong>Oponentes:</strong></p>
                 <ul>
