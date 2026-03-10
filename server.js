@@ -393,7 +393,6 @@ app.get('/api/minhas-mesas', betaBlockMiddleware, authMiddleware, async (req, re
                     i.nome,
                     i.email,
                     i.deck_nome,
-                    p.comandante_principal as comandante,
                     h.posicao_final
                 FROM mesa_jogadores mj
                 JOIN inscricoes i ON mj.inscricao_id = i.id
@@ -1207,26 +1206,13 @@ app.get('/api/rodadas', async (req, res) => {
                     SELECT 
                         i.id, 
                         i.nome, 
-                        i.deck_nome, 
-                        p.comandante_principal as comandante,
-                        CASE 
-                            WHEN i.comandante_2 IS NOT NULL THEN CONCAT(i.comandante_1, ' + ', i.comandante_2)
-                            ELSE i.comandante_1
-                        END as comandante_completo
+                        i.deck_nome
                     FROM mesa_jogadores mj
                     JOIN inscricoes i ON mj.inscricao_id = i.id
                     LEFT JOIN precons p ON i.deck_id = p.id
                     WHERE mj.mesa_id = ?
                     ORDER BY mj.posicao
                 `, [mesa.id]);
-                
-                // Usar comandante_completo se disponível, senão usar comandante da tabela precons
-                jogadores.forEach(j => {
-                    if (j.comandante_completo) {
-                        j.comandante = j.comandante_completo;
-                    }
-                    delete j.comandante_completo;
-                });
                 
                 mesa.jogadores = jogadores;
             }
@@ -1459,7 +1445,6 @@ app.get('/api/admin/rodadas/:id/mesas', authMiddleware, adminMiddleware, async (
                     i.id,
                     i.nome,
                     i.deck_nome,
-                    p.comandante_principal as comandante,
                     mj.posicao_final
                 FROM mesa_jogadores mj
                 JOIN inscricoes i ON mj.inscricao_id = i.id
@@ -1495,8 +1480,7 @@ app.get('/api/admin/mesas/:id', authMiddleware, adminMiddleware, async (req, res
             SELECT 
                 mj.inscricao_id,
                 i.nome,
-                i.deck_nome,
-                p.comandante_principal as comandante
+                i.deck_nome
             FROM mesa_jogadores mj
             JOIN inscricoes i ON mj.inscricao_id = i.id
             LEFT JOIN precons p ON i.deck_id = p.id
