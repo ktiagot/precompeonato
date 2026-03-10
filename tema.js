@@ -20,7 +20,8 @@
             'mesas-casuais.html',
             'ranking.html',
             'perfil.html',
-            'login.html'
+            'login.html',
+            'regras.html'
         ];
         
         linksParaOcultar.forEach(href => {
@@ -30,7 +31,19 @@
             });
         });
         
-        console.log('🔒 Modo Beta: Links de autenticação e perfil ocultos');
+        // Ocultar tab "Minhas Estatísticas" na página de estatísticas
+        const tabMinhas = document.querySelector('.tab-btn[data-tab="minhas"]');
+        if (tabMinhas) {
+            tabMinhas.style.display = 'none';
+        }
+        
+        // Ocultar conteúdo da tab "Minhas Estatísticas"
+        const tabMinhasContent = document.getElementById('tab-minhas');
+        if (tabMinhasContent) {
+            tabMinhasContent.style.display = 'none';
+        }
+        
+        console.log('🔒 Modo Beta: Links de autenticação, perfil, regras e minhas estatísticas ocultos');
     }
 
     // Função para esconder link de inscrição se usuário estiver logado
