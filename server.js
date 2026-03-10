@@ -1850,6 +1850,7 @@ app.get('/api/estatisticas/geral', async (req, res) => {
             let queryMetagame = `
                 SELECT 
                     p.nome as deck_nome,
+                    p.comandante_principal as comandante,
                     p.set_nome,
                     COUNT(i.id) as vezes_usado,
                     0 as vitorias,
@@ -1868,6 +1869,7 @@ app.get('/api/estatisticas/geral', async (req, res) => {
                 queryMetagame = `
                     SELECT 
                         p.nome as deck_nome,
+                        p.comandante_principal as comandante,
                         p.set_nome,
                         COUNT(i.id) as vezes_usado,
                         0 as vitorias,

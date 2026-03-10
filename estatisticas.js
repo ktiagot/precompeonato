@@ -105,7 +105,7 @@ function exibirEstatisticasGerais(stats) {
     const metagameParaMostrar = mostrandoTodosMetagame ? metagameCompleto : metagameCompleto.slice(0, 6);
     const metagameHtml = metagameParaMostrar.map(d => `
         <div class="metagame-item" style="display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: var(--white); border: 1px solid var(--gray-300); border-radius: 0.5rem;">
-            ${ScryfallHelper.getImageHTML(d.comandante || null, d.deck_nome, '200px', '150px')}
+            ${ScryfallHelper.getImageHTML(d.comandante, d.deck_nome, '200px', '150px')}
             <div style="flex: 1; min-width: 0; overflow: hidden;">
                 <h4 style="margin: 0 0 0.25rem 0; word-wrap: break-word;">${d.deck_nome}</h4>
                 <p style="margin: 0 0 0.5rem 0; color: var(--gray-600); font-size: 0.875rem; word-wrap: break-word;">${d.set_nome}</p>
@@ -132,7 +132,7 @@ function exibirEstatisticasGerais(stats) {
     const topDecksParaMostrar = mostrandoTodosTopDecks ? topDecksCompleto : topDecksCompleto.slice(0, 6);
     const topDecksHtml = topDecksParaMostrar.map(d => `
         <div class="metagame-item" style="display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; background: var(--white); border: 1px solid var(--gray-300); border-radius: 0.5rem;">
-            ${ScryfallHelper.getImageHTML(d.comandante || null, d.deck_nome, '200px', '150px')}
+            ${ScryfallHelper.getImageHTML(d.comandante, d.deck_nome, '200px', '150px')}
             <div style="flex: 1; min-width: 0; overflow: hidden;">
                 <h4 style="margin: 0 0 0.25rem 0; word-wrap: break-word;">${d.deck_nome}</h4>
                 <div class="metagame-stats" style="display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.875rem; margin-top: 0.5rem;">
