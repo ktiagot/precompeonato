@@ -414,22 +414,28 @@ function renderizarRodadas() {
                                 }).join('')}
                             </div>
                         ` : '<p style="color: var(--gray-500); text-align: center;">Nenhum jogador</p>'}
-                        ${mesaFinalizada && (mesa.vencedor_nome || mesa.segundo_nome) ? `
+                        ${mesaFinalizada ? `
                             <div style="margin-top: 1rem; padding: 0.75rem; background: ${mesa.ic_empate === 1 ? '#fff3e0' : 'var(--gray-100)'}; border-radius: 0.5rem; ${mesa.ic_empate === 1 ? 'border: 2px solid #ff9800;' : ''}">
                                 ${mesa.ic_empate === 1 ? `
                                     <div style="text-align: center; margin-bottom: 0.75rem; padding: 0.5rem; background: #ff9800; color: white; border-radius: 0.25rem; font-weight: 700; font-size: 0.95rem;">
                                         🤝 MESA EMPATADA
                                     </div>
-                                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                                        <span style="font-size: 1.25rem;">🤝</span>
-                                        <span style="font-weight: 600; color: var(--gray-900);">${mesa.vencedor_nome}</span>
-                                        <span style="color: #ff9800; font-size: 0.875rem; font-weight: 600;">+1 pt</span>
-                                    </div>
-                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <span style="font-size: 1.25rem;">🤝</span>
-                                        <span style="font-weight: 600; color: var(--gray-900);">${mesa.segundo_nome}</span>
-                                        <span style="color: #ff9800; font-size: 0.875rem; font-weight: 600;">+1 pt</span>
-                                    </div>
+                                    ${mesa.vencedor_nome && mesa.segundo_nome ? `
+                                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                            <span style="font-size: 1.25rem;">🤝</span>
+                                            <span style="font-weight: 600; color: var(--gray-900);">${mesa.vencedor_nome}</span>
+                                            <span style="color: #ff9800; font-size: 0.875rem; font-weight: 600;">+1 pt</span>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <span style="font-size: 1.25rem;">🤝</span>
+                                            <span style="font-weight: 600; color: var(--gray-900);">${mesa.segundo_nome}</span>
+                                            <span style="color: #ff9800; font-size: 0.875rem; font-weight: 600;">+1 pt</span>
+                                        </div>
+                                    ` : `
+                                        <div style="text-align: center; color: var(--gray-600); font-size: 0.875rem;">
+                                            Aguardando definição dos jogadores empatados
+                                        </div>
+                                    `}
                                 ` : `
                                     ${mesa.vencedor_nome ? `
                                         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: ${mesa.segundo_nome ? '0.5rem' : '0'};">
