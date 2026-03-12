@@ -404,14 +404,14 @@ function renderizarRodadas() {
                                         🤝 EMPATE
                                     </div>
                                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                                        <span style="font-size: 1.25rem;">🥇</span>
+                                        <span style="font-size: 1.25rem;">🤝</span>
                                         <span style="font-weight: 600; color: var(--gray-900);">${mesa.vencedor_nome}</span>
-                                        <span style="color: var(--success); font-size: 0.875rem; font-weight: 600;">+3 pts</span>
+                                        <span style="color: var(--primary); font-size: 0.875rem; font-weight: 600;">+1 pt</span>
                                     </div>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <span style="font-size: 1.25rem;">🥇</span>
+                                        <span style="font-size: 1.25rem;">🤝</span>
                                         <span style="font-weight: 600; color: var(--gray-900);">${mesa.segundo_nome}</span>
-                                        <span style="color: var(--success); font-size: 0.875rem; font-weight: 600;">+3 pts</span>
+                                        <span style="color: var(--primary); font-size: 0.875rem; font-weight: 600;">+1 pt</span>
                                     </div>
                                 ` : `
                                     ${mesa.vencedor_nome ? `
