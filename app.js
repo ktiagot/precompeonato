@@ -417,9 +417,6 @@ function renderizarRodadas() {
                         ${mesaFinalizada ? `
                             <div style="margin-top: 1rem; padding: 0.75rem; background: ${mesa.ic_empate === 1 ? '#fff3e0' : 'var(--gray-100)'}; border-radius: 0.5rem; ${mesa.ic_empate === 1 ? 'border: 2px solid #ff9800;' : ''}">
                                 ${mesa.ic_empate === 1 ? `
-                                    <div style="text-align: center; margin-bottom: 0.75rem; padding: 0.5rem; background: #ff9800; color: white; border-radius: 0.25rem; font-weight: 700; font-size: 0.95rem;">
-                                        🤝 MESA EMPATADA
-                                    </div>
                                     ${mesa.vencedor_nome && mesa.segundo_nome ? `
                                         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
                                             <span style="font-size: 1.25rem;">🤝</span>
