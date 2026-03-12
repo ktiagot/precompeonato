@@ -331,6 +331,8 @@ function renderizarRodadas() {
     const container = document.getElementById('rodadasList');
     const rodadasParaMostrar = mostrandoTodas ? todasRodadas : [todasRodadas[0]];
     
+    console.log('Renderizando rodadas:', rodadasParaMostrar);
+    
     const rodadasHtml = rodadasParaMostrar.map(rodada => {
         let dataFormatada = 'Data não definida';
         if (rodada.data_rodada) {
@@ -353,6 +355,13 @@ function renderizarRodadas() {
                         ? '<span style="background: var(--success); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; margin-left: 0.5rem;">Finalizada</span>'
                         : '<span style="background: var(--warning); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; margin-left: 0.5rem;">Em andamento</span>';
                     
+                    console.log(`Mesa ${mesa.numero_mesa}:`, {
+                        ic_empate: mesa.ic_empate,
+                        vencedor_id: mesa.vencedor_id,
+                        segundo_id: mesa.segundo_id,
+                        finalizada: mesa.finalizada
+                    });
+                    
                     return `
                     <div class="card" style="padding: 1.5rem;">
                         <h4 style="margin: 0 0 1rem 0; display: flex; align-items: center; justify-content: space-between;">
@@ -365,6 +374,15 @@ function renderizarRodadas() {
                                     const isVencedor = mesa.vencedor_id === j.id;
                                     const isSegundo = mesa.segundo_id === j.id;
                                     const isEmpate = mesa.ic_empate === 1;
+                                    
+                                    if (mesa.numero_mesa === 5) {
+                                        console.log(`Jogador ${j.nome}:`, {
+                                            isVencedor,
+                                            isSegundo,
+                                            isEmpate,
+                                            ic_empate_raw: mesa.ic_empate
+                                        });
+                                    }
                                     
                                     let badge = '';
                                     let backgroundColor = 'var(--gray-50)';
