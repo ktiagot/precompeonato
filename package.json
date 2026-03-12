@@ -8,7 +8,9 @@
     "dev": "nodemon server.js",
     "setup-db": "node setup-database.js",
     "build": "echo 'No build needed'",
-    "postbuild": "bash postbuild.sh && chmod +x start.sh"
+    "postbuild": "bash postbuild.sh && chmod +x start.sh",
+    "version": "node auto-version.js",
+    "deploy": "node deploy.js"
   },
   "dependencies": {
     "express": "^4.18.2",

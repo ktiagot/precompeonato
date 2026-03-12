@@ -79,8 +79,12 @@ console.log('  - DB_NAME:', process.env.DB_NAME || 'NÃO DEFINIDO');
 console.log('  - PORT:', PORT);
 console.log('  - BETA_MODE:', BETA_MODE ? '🔒 ATIVADO' : '✅ DESATIVADO');
 
+// Importar middleware de versionamento
+const { versionMiddleware } = require('./version-middleware');
+
 app.use(cors());
 app.use(express.json());
+app.use(versionMiddleware); // Injetar versões automaticamente
 app.use(express.static('.'));
 
 // Middleware global de erro para capturar erros SQL

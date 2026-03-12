@@ -1,6 +1,6 @@
 // Sistema de notificação de atualização
 (function() {
-    const CURRENT_VERSION = '1.0.3';
+    const CURRENT_VERSION = 'mmnotpjn';
     const VERSION_KEY = 'site_version';
     
     // Verificar versão armazenada
