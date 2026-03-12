@@ -1202,6 +1202,7 @@ app.get('/api/rodadas', async (req, res) => {
             `, [rodada.id]);
             
             for (let mesa of mesas) {
+                // Buscar jogadores da mesa
                 const [jogadores] = await db.query(`
                     SELECT 
                         i.id, 

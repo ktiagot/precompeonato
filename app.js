@@ -361,19 +361,33 @@ function renderizarRodadas() {
                         </h4>
                         ${mesa.jogadores && mesa.jogadores.length > 0 ? `
                             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                                ${mesa.jogadores.map(j => {
+                ${mesa.jogadores.map(j => {
                                     const isVencedor = mesa.vencedor_id === j.id;
                                     const isSegundo = mesa.segundo_id === j.id;
-                                    const badge = isVencedor 
-                                        ? '<span style="color: var(--warning); font-weight: bold; margin-left: 0.5rem;">🥇</span>'
+                                    const isEmpate = mesa.ic_empate === 1;
+                                    
+                                    let badge = '';
+                                    if (isEmpate && (isVencedor || isSegundo)) {
+                                        badge = '<span style="color: var(--warning); font-weight: bold; margin-left: 0.5rem;" title="Empate">🤝 Empate</span>';
+                                    } else if (isVencedor) {
+                                        badge = '<span style="color: var(--warning); font-weight: bold; margin-left: 0.5rem;" title="1º Lugar">🥇 1º</span>';
+                                    } else if (isSegundo) {
+                                        badge = '<span style="color: var(--gray-500); font-weight: bold; margin-left: 0.5rem;" title="2º Lugar">🥈 2º</span>';
+                                    }
+                                    
+                                    const borderColor = isEmpate && (isVencedor || isSegundo) 
+                                        ? 'var(--warning)' 
+                                        : isVencedor 
+                                        ? 'var(--warning)' 
                                         : isSegundo 
-                                        ? '<span style="color: var(--gray-500); font-weight: bold; margin-left: 0.5rem;">🥈</span>'
-                                        : '';
+                                        ? 'var(--gray-400)' 
+                                        : 'var(--primary)';
                                     
                                     return `
-                                    <div style="padding: 0.75rem; background: var(--gray-50); border-radius: 0.5rem; border-left: 3px solid ${isVencedor ? 'var(--warning)' : isSegundo ? 'var(--gray-400)' : 'var(--primary)'};">
-                                        <div style="font-weight: 600; color: var(--gray-900); margin-bottom: 0.25rem;">
-                                            ${j.nome}${badge}
+                                    <div style="padding: 0.75rem; background: var(--gray-50); border-radius: 0.5rem; border-left: 3px solid ${borderColor};">
+                                        <div style="font-weight: 600; color: var(--gray-900); margin-bottom: 0.25rem; display: flex; align-items: center; justify-content: space-between;">
+                                            <span>${j.nome}</span>
+                                            ${badge}
                                         </div>
                                         <div style="font-size: 0.875rem; color: var(--gray-600);">
                                             ${j.deck_nome || 'Deck não definido'}
@@ -383,9 +397,38 @@ function renderizarRodadas() {
                                 }).join('')}
                             </div>
                         ` : '<p style="color: var(--gray-500); text-align: center;">Nenhum jogador</p>'}
-                        ${mesa.vencedor_nome ? `
-                            <div style="margin-top: 1rem; padding: 0.75rem; background: linear-gradient(135deg, var(--warning), var(--secondary)); color: white; border-radius: 0.5rem; text-align: center; font-weight: 600;">
-                                🏆 Vencedor: ${mesa.vencedor_nome}
+                        ${mesaFinalizada && (mesa.vencedor_nome || mesa.segundo_nome) ? `
+                            <div style="margin-top: 1rem; padding: 0.75rem; background: var(--gray-100); border-radius: 0.5rem;">
+                                ${mesa.ic_empate === 1 ? `
+                                    <div style="text-align: center; margin-bottom: 0.5rem; font-weight: 600; color: var(--warning);">
+                                        🤝 EMPATE
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                        <span style="font-size: 1.25rem;">🥇</span>
+                                        <span style="font-weight: 600; color: var(--gray-900);">${mesa.vencedor_nome}</span>
+                                        <span style="color: var(--success); font-size: 0.875rem; font-weight: 600;">+3 pts</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span style="font-size: 1.25rem;">🥇</span>
+                                        <span style="font-weight: 600; color: var(--gray-900);">${mesa.segundo_nome}</span>
+                                        <span style="color: var(--success); font-size: 0.875rem; font-weight: 600;">+3 pts</span>
+                                    </div>
+                                ` : `
+                                    ${mesa.vencedor_nome ? `
+                                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: ${mesa.segundo_nome ? '0.5rem' : '0'};">
+                                            <span style="font-size: 1.25rem;">🥇</span>
+                                            <span style="font-weight: 600; color: var(--gray-900);">${mesa.vencedor_nome}</span>
+                                            <span style="color: var(--success); font-size: 0.875rem; font-weight: 600;">+3 pts</span>
+                                        </div>
+                                    ` : ''}
+                                    ${mesa.segundo_nome ? `
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <span style="font-size: 1.25rem;">🥈</span>
+                                            <span style="font-weight: 600; color: var(--gray-700);">${mesa.segundo_nome}</span>
+                                            <span style="color: var(--primary); font-size: 0.875rem; font-weight: 600;">+1 pt</span>
+                                        </div>
+                                    ` : ''}
+                                `}
                             </div>
                         ` : ''}
                     </div>
