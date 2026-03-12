@@ -367,24 +367,23 @@ function renderizarRodadas() {
                                     const isEmpate = mesa.ic_empate === 1;
                                     
                                     let badge = '';
+                                    let backgroundColor = 'var(--gray-50)';
+                                    let borderColor = 'var(--primary)';
+                                    
                                     if (isEmpate && (isVencedor || isSegundo)) {
-                                        badge = '<span style="color: var(--warning); font-weight: bold; margin-left: 0.5rem;" title="Empate">🤝 Empate</span>';
+                                        badge = '<span style="background: #ff9800; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;" title="Empate">🤝 EMPATE</span>';
+                                        backgroundColor = '#fff3e0';
+                                        borderColor = '#ff9800';
                                     } else if (isVencedor) {
                                         badge = '<span style="color: var(--warning); font-weight: bold; margin-left: 0.5rem;" title="1º Lugar">🥇 1º</span>';
+                                        borderColor = 'var(--warning)';
                                     } else if (isSegundo) {
                                         badge = '<span style="color: var(--gray-500); font-weight: bold; margin-left: 0.5rem;" title="2º Lugar">🥈 2º</span>';
+                                        borderColor = 'var(--gray-400)';
                                     }
                                     
-                                    const borderColor = isEmpate && (isVencedor || isSegundo) 
-                                        ? 'var(--warning)' 
-                                        : isVencedor 
-                                        ? 'var(--warning)' 
-                                        : isSegundo 
-                                        ? 'var(--gray-400)' 
-                                        : 'var(--primary)';
-                                    
                                     return `
-                                    <div style="padding: 0.75rem; background: var(--gray-50); border-radius: 0.5rem; border-left: 3px solid ${borderColor};">
+                                    <div style="padding: 0.75rem; background: ${backgroundColor}; border-radius: 0.5rem; border-left: 3px solid ${borderColor};">
                                         <div style="font-weight: 600; color: var(--gray-900); margin-bottom: 0.25rem; display: flex; align-items: center; justify-content: space-between;">
                                             <span>${j.nome}</span>
                                             ${badge}
@@ -398,20 +397,20 @@ function renderizarRodadas() {
                             </div>
                         ` : '<p style="color: var(--gray-500); text-align: center;">Nenhum jogador</p>'}
                         ${mesaFinalizada && (mesa.vencedor_nome || mesa.segundo_nome) ? `
-                            <div style="margin-top: 1rem; padding: 0.75rem; background: var(--gray-100); border-radius: 0.5rem;">
+                            <div style="margin-top: 1rem; padding: 0.75rem; background: ${mesa.ic_empate === 1 ? '#fff3e0' : 'var(--gray-100)'}; border-radius: 0.5rem; ${mesa.ic_empate === 1 ? 'border: 2px solid #ff9800;' : ''}">
                                 ${mesa.ic_empate === 1 ? `
-                                    <div style="text-align: center; margin-bottom: 0.5rem; font-weight: 600; color: var(--warning);">
-                                        🤝 EMPATE
+                                    <div style="text-align: center; margin-bottom: 0.75rem; padding: 0.5rem; background: #ff9800; color: white; border-radius: 0.25rem; font-weight: 700; font-size: 0.95rem;">
+                                        🤝 MESA EMPATADA
                                     </div>
                                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
                                         <span style="font-size: 1.25rem;">🤝</span>
                                         <span style="font-weight: 600; color: var(--gray-900);">${mesa.vencedor_nome}</span>
-                                        <span style="color: var(--primary); font-size: 0.875rem; font-weight: 600;">+1 pt</span>
+                                        <span style="color: #ff9800; font-size: 0.875rem; font-weight: 600;">+1 pt</span>
                                     </div>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                                         <span style="font-size: 1.25rem;">🤝</span>
                                         <span style="font-weight: 600; color: var(--gray-900);">${mesa.segundo_nome}</span>
-                                        <span style="color: var(--primary); font-size: 0.875rem; font-weight: 600;">+1 pt</span>
+                                        <span style="color: #ff9800; font-size: 0.875rem; font-weight: 600;">+1 pt</span>
                                     </div>
                                 ` : `
                                     ${mesa.vencedor_nome ? `
