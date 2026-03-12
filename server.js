@@ -1193,7 +1193,8 @@ app.get('/api/rodadas', async (req, res) => {
             const [mesas] = await db.query(`
                 SELECT m.*, 
                        v.nome as vencedor_nome,
-                       s.nome as segundo_nome
+                       s.nome as segundo_nome,
+                       m.ic_empate
                 FROM mesas m
                 LEFT JOIN inscricoes v ON m.vencedor_id = v.id
                 LEFT JOIN inscricoes s ON m.segundo_id = s.id
