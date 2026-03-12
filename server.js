@@ -37,6 +37,17 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const BETA_MODE = process.env.BETA_MODE === 'true';
 
+// Middleware para evitar cache de arquivos estáticos
+app.use((req, res, next) => {
+    // Não fazer cache de HTML, JS, CSS
+    if (req.url.endsWith('.html') || req.url.endsWith('.js') || req.url.endsWith('.css')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+    }
+    next();
+});
+
 // Middleware para bloquear endpoints em modo beta
 function betaBlockMiddleware(req, res, next) {
     if (BETA_MODE) {
