@@ -20,8 +20,6 @@ const metaTags = `    <meta http-equiv="Cache-Control" content="no-cache, no-sto
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">`;
 
-const cacheNoticeScript = `    <script src="cache-notice.js?v=${VERSION}"></script>`;
-
 htmlFiles.forEach(file => {
     try {
         let content = fs.readFileSync(file, 'utf8');
@@ -34,13 +32,11 @@ htmlFiles.forEach(file => {
             );
         }
         
-        // Adicionar script de notificação de cache se não existir
-        if (!content.includes('cache-notice.js')) {
-            content = content.replace(
-                /<\/head>/,
-                `${cacheNoticeScript}\n</head>`
-            );
-        }
+        // Remover referências ao cache-notice.js se existirem
+        content = content.replace(
+            /<script src="cache-notice\.js(\?v=[^"]+)?"><\/script>\n?/g,
+            ''
+        );
         
         // Atualizar versão nos arquivos CSS
         content = content.replace(
@@ -64,5 +60,4 @@ htmlFiles.forEach(file => {
 console.log(`\n✓ Cache busting aplicado! Versão: ${VERSION}`);
 console.log('\nPara atualizar a versão no futuro:');
 console.log('1. Edite a constante VERSION neste arquivo');
-console.log('2. Edite a constante CURRENT_VERSION em cache-notice.js');
-console.log('3. Execute: node add-cache-busting.js');
+console.log('2. Execute: node add-cache-busting.js');

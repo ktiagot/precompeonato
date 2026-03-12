@@ -19,8 +19,7 @@ pm2 restart precompeonato
 
 1. ✅ Gera hashes MD5 de todos os arquivos JS/CSS
 2. ✅ Salva em `versions.json`
-3. ✅ Atualiza versão do `cache-notice.js`
-4. ✅ Mostra próximos passos
+3. ✅ Mostra próximos passos
 
 ## Como Funciona o Cache Busting Automático?
 
@@ -30,9 +29,9 @@ pm2 restart precompeonato
 - Hash muda apenas quando arquivo muda
 
 ### No Cliente
-- `cache-notice.js` detecta nova versão
-- Mostra banner orientando usuário a fazer Ctrl+F5
-- Banner aparece apenas uma vez por versão
+- Navegador vê nova versão do arquivo
+- Baixa automaticamente quando hash é diferente
+- Mantém cache quando hash é o mesmo (performance)
 
 ## Vantagens
 
@@ -60,7 +59,6 @@ npm run dev
 - `version-middleware.js` - Injeta versões
 - `versions.json` - Hashes dos arquivos (gerado)
 - `deploy.js` - Script de deploy
-- `cache-notice.js` - Banner de atualização
 
 ## Troubleshooting
 
@@ -75,6 +73,6 @@ npm run dev
 3. Reinicie o servidor
 
 **Banner não aparece?**
-1. Verifique se `cache-notice.js` está nos HTMLs
-2. Verifique o console do navegador
-3. Limpe o localStorage: `localStorage.clear()`
+1. Sistema de banner foi removido
+2. Usuários devem fazer Ctrl+F5 manualmente
+3. Versões automáticas garantem atualização quando necessário

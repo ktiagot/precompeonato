@@ -14,24 +14,7 @@ try {
     process.exit(1);
 }
 
-// 2. Atualizar versão no cache-notice.js
-console.log('\n🔄 Atualizando cache-notice.js...');
-try {
-    const versions = JSON.parse(fs.readFileSync('versions.json', 'utf8'));
-    const timestamp = Date.now().toString(36);
-    
-    let cacheNotice = fs.readFileSync('cache-notice.js', 'utf8');
-    cacheNotice = cacheNotice.replace(
-        /const CURRENT_VERSION = '[^']+'/,
-        `const CURRENT_VERSION = '${timestamp}'`
-    );
-    fs.writeFileSync('cache-notice.js', cacheNotice);
-    console.log(`✓ Versão atualizada para: ${timestamp}`);
-} catch (error) {
-    console.error('⚠️  Aviso: Não foi possível atualizar cache-notice.js');
-}
-
-// 3. Informações finais
+// 2. Informações finais
 console.log('\n✅ Deploy preparado com sucesso!');
 console.log('\n📋 Próximos passos:');
 console.log('   1. Commit das mudanças: git add . && git commit -m "Deploy vX.X.X"');
