@@ -4,6 +4,11 @@ const API_URL = window.location.hostname === 'localhost'
 
 let deckSelecionadoAtual = null;
 
+function mostrarSecaoApoiador() {
+    const secao = document.getElementById('secaoApoiador');
+    if (secao) secao.style.display = 'block';
+}
+
 // Verificar se inscrições estão abertas e se usuário está logado
 async function verificarInscricoesAbertas() {
     try {
@@ -21,6 +26,11 @@ async function verificarInscricoesAbertas() {
             } else {
                 document.getElementById('semCampeonato').style.display = 'block';
             }
+            // Se não está logado, mostrar seção apoiador também
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                mostrarSecaoApoiador();
+            }
             return false;
         }
         
@@ -28,6 +38,7 @@ async function verificarInscricoesAbertas() {
         const token = localStorage.getItem('auth_token');
         if (!token) {
             document.getElementById('naoLogado').style.display = 'block';
+            mostrarSecaoApoiador();
             return false;
         }
         
@@ -38,6 +49,7 @@ async function verificarInscricoesAbertas() {
         
         if (!authResponse.ok) {
             document.getElementById('naoLogado').style.display = 'block';
+            mostrarSecaoApoiador();
             return false;
         }
         
