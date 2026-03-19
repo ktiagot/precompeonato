@@ -333,9 +333,7 @@ document.getElementById('formCriarMesa').addEventListener('submit', async (e) =>
 async function entrarNaMesa(mesaId) {
     const autenticado = await verificarAuth(true);
     if (!autenticado) {
-        if (confirm('Você precisa fazer login para entrar em uma mesa. Ir para a página de login?')) {
-            window.location.href = 'login.html';
-        }
+        window.location.href = 'login.html';
         return;
     }
     
