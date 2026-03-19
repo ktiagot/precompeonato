@@ -40,11 +40,12 @@ const BETA_MODE = process.env.BETA_MODE === 'true';
 
 // Middleware para evitar cache de arquivos estáticos
 app.use((req, res, next) => {
-    // Não fazer cache de HTML, JS, CSS
-    if (req.url.endsWith('.html') || req.url.endsWith('.js') || req.url.endsWith('.css')) {
-        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    const url = req.url.split('?')[0]; // ignorar query string
+    if (url.endsWith('.html') || url === '/' || url.endsWith('.js') || url.endsWith('.css')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
         res.setHeader('Pragma', 'no-cache');
         res.setHeader('Expires', '0');
+        res.setHeader('Surrogate-Control', 'no-store');
     }
     next();
 });
@@ -79,6 +80,14 @@ console.log('  - DB_USER:', process.env.DB_USER || 'NÃO DEFINIDO');
 console.log('  - DB_NAME:', process.env.DB_NAME || 'NÃO DEFINIDO');
 console.log('  - PORT:', PORT);
 console.log('  - BETA_MODE:', BETA_MODE ? '🔒 ATIVADO' : '✅ DESATIVADO');
+
+// Gerar versões automaticamente ao iniciar
+try {
+    require('./auto-version');
+    console.log('✓ Versões dos arquivos geradas automaticamente');
+} catch (e) {
+    console.warn('⚠️  Erro ao gerar versões:', e.message);
+}
 
 // Importar middleware de versionamento
 const { versionMiddleware } = require('./version-middleware');
@@ -1161,9 +1170,32 @@ app.get('/api/inscricoes', betaBlockMiddleware, async (req, res) => {
     }
 });
 
-app.post('/api/inscricoes', betaBlockMiddleware, async (req, res) => {
+// Verificar se usuário já está inscrito em um campeonato
+app.get('/api/inscricoes/check', async (req, res) => {
     try {
-        const { nome, email, discord, whatsapp, deckId, deckNome, campeonatoId, comandante_1, comandante_2 } = req.body;
+        const { email, campeonato_id } = req.query;
+        if (!email || !campeonato_id) {
+            return res.status(400).json({ error: 'email e campeonato_id são obrigatórios' });
+        }
+        
+        const [inscricao] = await db.query(
+            'SELECT id, deck_nome FROM inscricoes WHERE email = ? AND campeonato_id = ? AND ativo = TRUE',
+            [email.toLowerCase(), campeonato_id]
+        );
+        
+        res.json({
+            inscrito: inscricao.length > 0,
+            deck_nome: inscricao.length > 0 ? inscricao[0].deck_nome : null
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/inscricoes', authMiddleware, async (req, res) => {
+    try {
+        const { nome, discord, whatsapp, deckId, deckNome, campeonatoId, comandante_1, comandante_2 } = req.body;
+        const email = req.user.email;
         
         // Se não especificar campeonato, pegar o ativo
         let campId = campeonatoId;
@@ -1177,22 +1209,6 @@ app.post('/api/inscricoes', betaBlockMiddleware, async (req, res) => {
             campId = campAtivo[0].id;
         }
         
-        // Validar email via APOIA.se
-        const resultado = await verificarApoiador(email);
-        
-        if (resultado.fallback) {
-            // API indisponível, usar tabela emails_permitidos como fallback
-            const [emailCheck] = await db.query(
-                'SELECT email FROM emails_permitidos WHERE email = ? AND ativo = TRUE',
-                [email.toLowerCase()]
-            );
-            if (emailCheck.length === 0) {
-                return res.status(403).json({ error: 'Email não autorizado. Você precisa ser apoiador ativo no APOIA.se para se inscrever.' });
-            }
-        } else if (!resultado.valido) {
-            return res.status(403).json({ error: 'Email não autorizado. Você precisa ser apoiador ativo no APOIA.se para se inscrever.' });
-        }
-        
         // Verificar se já está inscrito neste campeonato
         const [existente] = await db.query(
             'SELECT id FROM inscricoes WHERE email = ? AND campeonato_id = ?',
@@ -1200,7 +1216,7 @@ app.post('/api/inscricoes', betaBlockMiddleware, async (req, res) => {
         );
         
         if (existente.length > 0) {
-            return res.status(400).json({ error: 'Email já cadastrado neste campeonato' });
+            return res.status(400).json({ error: 'Você já está inscrito neste campeonato' });
         }
         
         // Verificar se a tabela tem as novas colunas comandante_1 e comandante_2

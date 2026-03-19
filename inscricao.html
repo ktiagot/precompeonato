@@ -18,7 +18,7 @@
                 <a href="index.html">Início</a>
                 <a href="inscricao.html" class="active">Inscrição</a>
                 <a href="rodadas.html">Rodadas</a>
-                <a href="mesas-casuais.html">Mes�es</a>
+                <a href="mesas-casuais.html">Mes�es</a>
                 <a href="ranking.html">Ranking</a>
                 <a href="estatisticas.html">Estatísticas</a>
                 <a href="regras.html">Regras</a>
@@ -32,6 +32,13 @@
             <div class="container">
                 <h2>Inscrição no Campeonato</h2>
                 
+                <!-- Mensagem: precisa fazer login -->
+                <div id="naoLogado" style="display: none; text-align: center; padding: 3rem;">
+                    <h3 style="color: var(--gray-600); margin-bottom: 1rem;">🔒 Faça login para se inscrever</h3>
+                    <p style="color: var(--gray-600); margin-bottom: 2rem;">Você precisa estar logado para se inscrever no campeonato.</p>
+                    <a href="login.html" class="btn-primary">Fazer Login</a>
+                </div>
+
                 <!-- Mensagem quando inscrições estão fechadas -->
                 <div id="inscricoesFechadas" style="display: none; text-align: center; padding: 3rem;">
                     <h3 style="color: var(--primary); margin-bottom: 1rem;">🏆 Campeonato em Andamento</h3>
@@ -48,23 +55,26 @@
                     <h3 style="color: var(--gray-600); margin-bottom: 1rem;">📅 Nenhum Campeonato Ativo</h3>
                     <p style="color: var(--gray-600);">Não há campeonatos com inscrições abertas no momento.</p>
                 </div>
+
+                <!-- Mensagem: já inscrito -->
+                <div id="jaInscrito" style="display: none; text-align: center; padding: 3rem;">
+                    <h3 style="color: var(--success); margin-bottom: 1rem;">✅ Você já está inscrito!</h3>
+                    <p style="color: var(--gray-600); margin-bottom: 0.5rem;">Deck: <strong id="jaInscritoDeck"></strong></p>
+                    <p style="color: var(--gray-600); margin-bottom: 2rem;">Aguarde o início das rodadas.</p>
+                    <a href="rodadas.html" class="btn-primary">Ver Rodadas</a>
+                </div>
                 
-                <div id="formContainer">
-                    <p style="margin-bottom: 2rem; color: var(--gray-600);">
-                        Preencha o formulário abaixo para se inscrever no campeonato. 
-                        Seu e-mail deve estar previamente autorizado pelos organizadores.
-                    </p>
+                <div id="formContainer" style="display: none;">
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: var(--gray-50); border-radius: 0.5rem; border-left: 4px solid var(--primary);">
+                        <p style="margin: 0; color: var(--gray-700);">
+                            Logado como: <strong id="emailLogado"></strong>
+                        </p>
+                    </div>
                     
                     <form id="inscricaoForm">
                     <div class="form-group">
-                        <label for="nome">Nome Completo</label>
-                        <input type="text" name="nome" id="nome" placeholder="Digite seu nome completo" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="email">E-mail</label>
-                        <input type="email" name="email" id="email" placeholder="seu@email.com" required>
-                        <small>Use o e-mail autorizado pelos organizadores</small>
+                        <label for="nome">Nome (como aparecerá no campeonato)</label>
+                        <input type="text" name="nome" id="nome" placeholder="Digite seu nome" required>
                     </div>
                     
                     <div class="form-group">
@@ -74,8 +84,8 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="whatsapp">WhatsApp</label>
-                        <input type="tel" name="whatsapp" id="whatsapp" placeholder="(11) 99999-9999" required>
+                        <label for="whatsapp">WhatsApp (opcional)</label>
+                        <input type="tel" name="whatsapp" id="whatsapp" placeholder="(11) 99999-9999">
                         <small>Número com DDD para contato</small>
                     </div>
                     
@@ -97,7 +107,7 @@
                     </div>
                     
                     <button type="submit" class="btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem;">
-                        Confirmar Inscrição
+                        Inscrever no Campeonato
                     </button>
                 </form>
                 </div>

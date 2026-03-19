@@ -1,13 +1,17 @@
 const fs = require('fs');
 const path = require('path');
 
-// Carregar versões dos arquivos
+// Carregar versões dos arquivos (sempre ler do disco pra pegar versão mais recente)
 let versions = {};
-try {
-    versions = JSON.parse(fs.readFileSync('versions.json', 'utf8'));
-} catch (error) {
-    console.warn('⚠️  versions.json não encontrado. Execute: node auto-version.js');
+function loadVersions() {
+    try {
+        delete require.cache[require.resolve('./versions.json')];
+        versions = JSON.parse(fs.readFileSync('versions.json', 'utf8'));
+    } catch (error) {
+        console.warn('⚠️  versions.json não encontrado. Execute: node auto-version.js');
+    }
 }
+loadVersions();
 
 // Middleware para injetar versões nos arquivos HTML
 function versionMiddleware(req, res, next) {

@@ -4,7 +4,7 @@ const API_URL = window.location.hostname === 'localhost'
 
 let deckSelecionadoAtual = null;
 
-// Verificar se inscrições estão abertas
+// Verificar se inscrições estão abertas e se usuário está logado
 async function verificarInscricoesAbertas() {
     try {
         const response = await fetch(`${API_URL}/campeonatos`);
@@ -14,7 +14,6 @@ async function verificarInscricoesAbertas() {
         const campeonatoAberto = campeonatos.find(c => c.status === 'inscricoes');
         
         if (!campeonatoAberto) {
-            // Verificar se tem campeonato em andamento
             const campeonatoEmAndamento = campeonatos.find(c => c.status === 'em_andamento');
             
             if (campeonatoEmAndamento) {
@@ -22,9 +21,43 @@ async function verificarInscricoesAbertas() {
             } else {
                 document.getElementById('semCampeonato').style.display = 'block';
             }
-            document.getElementById('formContainer').style.display = 'none';
             return false;
         }
+        
+        // Verificar se está logado
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+            document.getElementById('naoLogado').style.display = 'block';
+            return false;
+        }
+        
+        // Verificar sessão
+        const authResponse = await fetch(`${API_URL}/auth/me`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!authResponse.ok) {
+            document.getElementById('naoLogado').style.display = 'block';
+            return false;
+        }
+        
+        const user = await authResponse.json();
+        const userEmail = user.email;
+        
+        // Verificar se já está inscrito neste campeonato
+        const inscResponse = await fetch(`${API_URL}/inscricoes/check?email=${encodeURIComponent(userEmail)}&campeonato_id=${campeonatoAberto.id}`);
+        if (inscResponse.ok) {
+            const inscData = await inscResponse.json();
+            if (inscData.inscrito) {
+                document.getElementById('jaInscrito').style.display = 'block';
+                document.getElementById('jaInscritoDeck').textContent = inscData.deck_nome || 'Não definido';
+                return false;
+            }
+        }
+        
+        // Mostrar formulário preenchido
+        document.getElementById('formContainer').style.display = 'block';
+        document.getElementById('emailLogado').textContent = userEmail;
         
         return true;
     } catch (error) {
@@ -284,9 +317,13 @@ document.getElementById('inscricaoForm')?.addEventListener('submit', async (e) =
     }
     
     try {
+        const token = localStorage.getItem('auth_token');
         const response = await fetch(`${API_URL}/inscricoes`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify(data)
         });
         
