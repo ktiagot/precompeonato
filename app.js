@@ -55,7 +55,20 @@ async function verificarInscricoesAbertas() {
             }
         }
         
-        // Mostrar formulário preenchido
+        // Mostrar formulário — mas primeiro verificar se é apoiador APOIA.se
+        const apoiaResponse = await fetch(`${API_URL}/apoia/meu-status`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (apoiaResponse.ok) {
+            const apoiaData = await apoiaResponse.json();
+            if (!apoiaData.apoiador && !apoiaData.indisponivel) {
+                document.getElementById('naoApoiador').style.display = 'block';
+                document.getElementById('naoApoiadorEmail').textContent = userEmail;
+                return false;
+            }
+        }
+        
         document.getElementById('formContainer').style.display = 'block';
         document.getElementById('emailLogado').textContent = userEmail;
         

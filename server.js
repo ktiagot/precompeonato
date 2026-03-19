@@ -247,7 +247,7 @@ app.post('/api/auth/solicitar-codigo', betaBlockMiddleware, async (req, res) => 
             return res.status(400).json({ error: 'Email é obrigatório' });
         }
         
-        // Verificar se é admin (admins não precisam ser apoiadores)
+        // Verificar se é admin
         const [admin] = await db.query(
             'SELECT * FROM admins WHERE email = ? AND ativo = TRUE',
             [email]
@@ -255,17 +255,8 @@ app.post('/api/auth/solicitar-codigo', betaBlockMiddleware, async (req, res) => 
         
         const isAdmin = admin.length > 0;
         
-        // Se não for admin, verificar se é apoiador ativo na APOIA.se
-        if (!isAdmin) {
-            const resultado = await verificarApoiador(email);
-            
-            if (resultado.fallback) {
-                // API indisponível — não conseguimos validar, bloquear por segurança
-                return res.status(503).json({ error: 'Sistema de verificação temporariamente indisponível. Tente novamente em alguns minutos.' });
-            } else if (!resultado.valido) {
-                return res.status(403).json({ error: 'Email não autorizado. Você precisa ser apoiador ativo no APOIA.se para acessar o sistema.' });
-            }
-        }
+        // Qualquer email pode fazer login (cadastro aberto)
+        // A validação APOIA.se acontece apenas na inscrição do campeonato
         
         // Gerar código de 6 dígitos
         const codigo = Math.floor(100000 + Math.random() * 900000).toString();
@@ -1107,14 +1098,13 @@ app.get('/api/precons/:id/comandantes', async (req, res) => {
 });
 
 // ========== APOIADORES (via API APOIA.se) ==========
-// Lista emails do sistema e verifica status na APOIA.se
+
+// Listar emails do sistema (sessões + inscrições)
 app.get('/api/emails-permitidos', authMiddleware, adminMiddleware, async (req, res) => {
     try {
-        // Buscar emails únicos do sistema (sessões + inscrições)
         const [emailsSessoes] = await db.query(`SELECT DISTINCT email FROM sessoes`);
         const [emailsInscricoes] = await db.query(`SELECT DISTINCT email, nome FROM inscricoes WHERE ativo = TRUE`);
         
-        // Montar mapa de emails únicos com nome
         const emailMap = new Map();
         for (const e of emailsSessoes) {
             emailMap.set(e.email, { email: e.email, nome: null });
@@ -1124,33 +1114,36 @@ app.get('/api/emails-permitidos', authMiddleware, adminMiddleware, async (req, r
             emailMap.set(e.email, { email: e.email, nome: e.nome || (existing && existing.nome) });
         }
         
-        // Verificar status de cada email na APOIA.se
-        const resultados = [];
-        for (const e of emailMap.values()) {
-            const resultado = await verificarApoiador(e.email);
-            resultados.push({
-                email: e.email,
-                nome: e.nome,
-                apoiador_ativo: resultado.valido === true,
-                api_indisponivel: resultado.fallback === true
-            });
-        }
-        
+        const resultados = Array.from(emailMap.values());
         resultados.sort((a, b) => a.email.localeCompare(b.email));
         res.json(resultados);
     } catch (error) {
-        console.error('Erro ao listar apoiadores:', error);
+        console.error('Erro ao listar emails:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
 // ========== APOIA.SE ==========
-// Verificar se um email é apoiador ativo
+// Verificar se um email é apoiador ativo (admin)
 app.get('/api/apoia/verificar/:email', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         const { email } = req.params;
         const resultado = await verificarApoiador(email);
         res.json(resultado);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Verificar se o próprio usuário logado é apoiador
+app.get('/api/apoia/meu-status', authMiddleware, async (req, res) => {
+    try {
+        const resultado = await verificarApoiador(req.user.email);
+        res.json({ 
+            email: req.user.email,
+            apoiador: resultado.valido === true,
+            indisponivel: resultado.fallback === true
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -1209,6 +1202,22 @@ app.post('/api/inscricoes', authMiddleware, async (req, res) => {
     try {
         const { nome, discord, whatsapp, deckId, deckNome, campeonatoId, comandante_1, comandante_2 } = req.body;
         const email = req.user.email;
+        
+        // Verificar se é apoiador ativo na APOIA.se (obrigatório para campeonato)
+        const [admin] = await db.query(
+            'SELECT * FROM admins WHERE email = ? AND ativo = TRUE',
+            [email]
+        );
+        
+        if (admin.length === 0) {
+            const resultado = await verificarApoiador(email);
+            
+            if (resultado.fallback) {
+                return res.status(503).json({ error: 'Sistema de verificação temporariamente indisponível. Tente novamente em alguns minutos.' });
+            } else if (!resultado.valido) {
+                return res.status(403).json({ error: 'Você precisa ser apoiador ativo no APOIA.se para se inscrever no campeonato. Use o mesmo email cadastrado na APOIA.se.' });
+            }
+        }
         
         // Se não especificar campeonato, pegar o ativo
         let campId = campeonatoId;

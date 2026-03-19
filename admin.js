@@ -572,46 +572,121 @@ document.getElementById('preconForm').addEventListener('submit', async (e) => {
 async function carregarEmails() {
     try {
         const container = document.getElementById('emailsList');
-        container.innerHTML = '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Carregando apoiadores...</p>';
+        container.innerHTML = '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Carregando...</p>';
         
         const response = await authFetch(`${API_URL}/emails-permitidos`);
         
         if (!response.ok) {
-            throw new Error('Erro ao buscar apoiadores');
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.error || 'Erro ao buscar emails');
         }
         
         const emails = await response.json();
         
         if (emails.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: var(--gray-600); padding: 2rem;">Nenhum email encontrado no sistema.</p>';
+            container.innerHTML = '<p style="text-align: center; color: var(--gray-600); padding: 2rem;">Nenhum email no sistema.</p>';
             return;
         }
         
-        container.innerHTML = emails.map(e => {
-            let statusBadge = '';
-            if (e.api_indisponivel) {
-                statusBadge = '<span class="badge badge-warning">API indisponível</span>';
-            } else if (e.apoiador_ativo) {
-                statusBadge = '<span class="badge badge-success">Apoiador ativo</span>';
-            } else {
-                statusBadge = '<span class="badge badge-danger" style="background: var(--danger); color: white;">Inativo</span>';
-            }
-            
-            return `
-            <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; margin-bottom: 0.5rem;">
-                <div>
-                    ${e.nome ? `<div style="font-weight: 600; margin-bottom: 0.25rem;">${e.nome}</div>` : ''}
-                    <div style="font-family: monospace; font-size: 0.95rem; color: ${e.nome ? 'var(--gray-600)' : 'inherit'};">${e.email}</div>
+        container.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <p style="color: var(--gray-600); margin: 0;">${emails.length} emails no sistema</p>
+                <button onclick="verificarTodos()" id="btnVerificarTodos" class="btn-primary" style="padding: 0.5rem 1rem;">
+                    Verificar Todos na APOIA.se
+                </button>
+            </div>
+            <div id="emailCards">
+            ${emails.map(e => `
+                <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; margin-bottom: 0.5rem;" data-email="${e.email}">
+                    <div>
+                        ${e.nome ? `<div style="font-weight: 600; margin-bottom: 0.25rem;">${e.nome}</div>` : ''}
+                        <div style="font-family: monospace; font-size: 0.95rem; color: ${e.nome ? 'var(--gray-600)' : 'inherit'};">${e.email}</div>
+                    </div>
+                    <span class="badge status-badge" style="background: var(--gray-200); color: var(--gray-600); cursor: pointer;" onclick="verificarUm('${e.email}', this)">
+                        Verificar
+                    </span>
                 </div>
-                ${statusBadge}
+            `).join('')}
             </div>
         `;
-        }).join('');
     } catch (error) {
         console.error('Erro ao carregar emails:', error);
-        document.getElementById('emailsList').innerHTML = '<p style="text-align: center; color: var(--danger); padding: 2rem;">Erro ao carregar apoiadores.</p>';
+        document.getElementById('emailsList').innerHTML = `<p style="text-align: center; color: var(--danger); padding: 2rem;">Erro: ${error.message}</p>`;
     }
 }
+
+window.verificarUm = async function(email, el) {
+    el.textContent = '...';
+    el.style.background = 'var(--gray-300)';
+    el.style.cursor = 'default';
+    el.onclick = null;
+    try {
+        const response = await authFetch(`${API_URL}/apoia/verificar/${encodeURIComponent(email)}`);
+        const data = await response.json();
+        aplicarStatusBadge(el, data);
+    } catch (error) {
+        el.textContent = 'Erro';
+        el.style.background = 'var(--danger)';
+        el.style.color = 'white';
+    }
+};
+
+function aplicarStatusBadge(el, data) {
+    if (data.fallback) {
+        el.textContent = 'API indisponível';
+        el.style.background = '#f59e0b';
+        el.style.color = 'white';
+    } else if (data.valido) {
+        el.textContent = 'Apoiador ativo';
+        el.style.background = 'var(--success)';
+        el.style.color = 'white';
+    } else {
+        el.textContent = 'Inativo';
+        el.style.background = 'var(--danger)';
+        el.style.color = 'white';
+    }
+}
+
+window.verificarTodos = async function() {
+    const btn = document.getElementById('btnVerificarTodos');
+    btn.disabled = true;
+    btn.textContent = 'Verificando...';
+    
+    const cards = document.querySelectorAll('#emailCards [data-email]');
+    const emails = Array.from(cards).map(c => ({
+        email: c.dataset.email,
+        badge: c.querySelector('.status-badge')
+    }));
+    
+    // Rate limit: 4 por segundo (margem de segurança, API permite 5/s)
+    for (let i = 0; i < emails.length; i++) {
+        const { email, badge } = emails[i];
+        badge.textContent = '...';
+        badge.style.background = 'var(--gray-300)';
+        badge.style.cursor = 'default';
+        badge.onclick = null;
+        
+        try {
+            const response = await authFetch(`${API_URL}/apoia/verificar/${encodeURIComponent(email)}`);
+            const data = await response.json();
+            aplicarStatusBadge(badge, data);
+        } catch (error) {
+            badge.textContent = 'Erro';
+            badge.style.background = 'var(--danger)';
+            badge.style.color = 'white';
+        }
+        
+        btn.textContent = `Verificando... ${i + 1}/${emails.length}`;
+        
+        // Esperar 250ms entre cada (4/segundo)
+        if (i < emails.length - 1) {
+            await new Promise(r => setTimeout(r, 250));
+        }
+    }
+    
+    btn.textContent = 'Verificação concluída';
+    btn.disabled = false;
+};
 
 // Remover email
 // Inicializar
