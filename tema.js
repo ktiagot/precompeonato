@@ -18,6 +18,7 @@
         const linksParaOcultar = [
             'inscricao.html',
             'mesas-casuais.html',
+            'ranking.html',
             'perfil.html',
             'login.html',
             'regras.html'
