@@ -32,12 +32,19 @@
     ExpiresByType image/png "access plus 1 year"
 </IfModule>
 
-# Headers para evitar cache de HTML/JS/CSS
+# Headers para evitar cache de HTML
 <IfModule mod_headers.c>
-    <FilesMatch "\.(html|js|css)$">
+    <FilesMatch "\.(html)$">
         Header set Cache-Control "no-cache, no-store, must-revalidate, max-age=0"
         Header set Pragma "no-cache"
         Header set Expires "0"
         Header set Surrogate-Control "no-store"
+    </FilesMatch>
+    # JS/CSS versionados (?v=hash) são cacheados pelo Node.js
+    # JS/CSS sem versão não cachear
+    <FilesMatch "\.(js|css)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate, max-age=0"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
     </FilesMatch>
 </IfModule>

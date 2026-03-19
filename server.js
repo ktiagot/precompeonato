@@ -38,14 +38,25 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const BETA_MODE = process.env.BETA_MODE === 'true';
 
-// Middleware para evitar cache de arquivos estáticos
+// Middleware para controlar cache de arquivos estáticos
 app.use((req, res, next) => {
-    const url = req.url.split('?')[0]; // ignorar query string
-    if (url.endsWith('.html') || url === '/' || url.endsWith('.js') || url.endsWith('.css')) {
+    const url = req.url.split('?')[0];
+    const hasVersionParam = req.url.includes('?v=');
+    
+    if (url.endsWith('.html') || url === '/') {
+        // HTMLs nunca cachear
         res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
         res.setHeader('Pragma', 'no-cache');
         res.setHeader('Expires', '0');
         res.setHeader('Surrogate-Control', 'no-store');
+    } else if ((url.endsWith('.js') || url.endsWith('.css')) && hasVersionParam) {
+        // JS/CSS com versão no query string — cachear por 1 ano (hash muda quando arquivo muda)
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else if (url.endsWith('.js') || url.endsWith('.css')) {
+        // JS/CSS sem versão — não cachear
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
     }
     next();
 });

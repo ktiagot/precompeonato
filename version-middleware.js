@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-// Carregar versões dos arquivos (sempre ler do disco pra pegar versão mais recente)
+// Carregar versões dos arquivos
 let versions = {};
 function loadVersions() {
     try {
@@ -13,45 +13,56 @@ function loadVersions() {
 }
 loadVersions();
 
-// Middleware para injetar versões nos arquivos HTML
+// Middleware que intercepta HTMLs ANTES do express.static
+// Lê o arquivo do disco, injeta versões, e envia direto
 function versionMiddleware(req, res, next) {
-    // Apenas para arquivos HTML
-    if (!req.path.endsWith('.html') && req.path !== '/') {
+    // Determinar qual arquivo HTML servir
+    let filePath = null;
+    
+    if (req.path === '/') {
+        filePath = path.join(__dirname, 'index.html');
+    } else if (req.path.endsWith('.html')) {
+        filePath = path.join(__dirname, req.path);
+    }
+    
+    if (!filePath) {
         return next();
     }
-
-    // Capturar o método send original
-    const originalSend = res.send;
     
-    res.send = function(data) {
-        // Se for HTML, injetar versões
-        if (typeof data === 'string' && data.includes('</html>')) {
-            // Substituir referências a arquivos JS/CSS com versões
-            Object.entries(versions).forEach(([file, hash]) => {
-                // Remover versões antigas primeiro
-                const fileWithoutExt = file.replace(/\.(js|css)$/, '');
-                const ext = path.extname(file);
-                
-                // Regex para encontrar o arquivo com ou sem versão
-                const regex = new RegExp(
-                    `(src|href)=["']${file.replace('.', '\\.')}(\\?v=[^"']*)?["']`,
-                    'g'
-                );
-                
-                // Substituir com nova versão
-                const attr = ext === '.css' ? 'href' : 'src';
-                data = data.replace(regex, `${attr}="${file}?v=${hash}"`);
-            });
-        }
+    // Verificar se o arquivo existe
+    if (!fs.existsSync(filePath)) {
+        return next();
+    }
+    
+    try {
+        let html = fs.readFileSync(filePath, 'utf8');
         
-        // Chamar o send original
-        originalSend.call(this, data);
-    };
-    
-    next();
+        // Injetar versões em todas as referências JS/CSS
+        Object.entries(versions).forEach(([file, hash]) => {
+            // Regex para encontrar o arquivo com ou sem versão existente
+            const escapedFile = file.replace(/\./g, '\\.');
+            const regex = new RegExp(
+                `((?:src|href)=["'])${escapedFile}(\\?v=[^"']*)?(['"])`,
+                'g'
+            );
+            html = html.replace(regex, `$1${file}?v=${hash}$3`);
+        });
+        
+        // Headers anti-cache
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        res.setHeader('Surrogate-Control', 'no-store');
+        res.setHeader('ETag', Object.values(versions).join('').substring(0, 16));
+        res.send(html);
+    } catch (error) {
+        console.error('Erro ao processar HTML:', error.message);
+        next();
+    }
 }
 
-// Função para recarregar versões (útil em desenvolvimento)
+// Recarregar versões
 function reloadVersions() {
     try {
         delete require.cache[require.resolve('./versions.json')];
