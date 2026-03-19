@@ -300,7 +300,8 @@ window.verMesasRodada = async function(rodadaId) {
                                 <strong>${j.nome}</strong>
                                 <span style="color: var(--gray-600); font-size: 0.875rem;"> - ${j.deck_nome || 'Deck não definido'}</span>
                             </div>
-                            ${m.finalizada ? `<span class="badge badge-info">${j.posicao_final || '?'}º lugar</span>` : ''}
+                            ${m.finalizada && j.posicao_final === 1 ? `<span class="badge badge-success">1º lugar</span>` : ''}
+                            ${m.finalizada && j.posicao_final === 2 ? `<span class="badge badge-info">2º lugar</span>` : ''}
                         </div>
                     `).join('')}
                     ${m.finalizada ? `

@@ -1547,10 +1547,11 @@ app.get('/api/admin/rodadas/:id/mesas', authMiddleware, adminMiddleware, async (
                     i.id,
                     i.nome,
                     i.deck_nome,
-                    mj.posicao_final
+                    h.posicao_final
                 FROM mesa_jogadores mj
                 JOIN inscricoes i ON mj.inscricao_id = i.id
                 LEFT JOIN precons p ON i.deck_id = p.id
+                LEFT JOIN historico_partidas h ON h.mesa_id = mj.mesa_id AND h.jogador_id = i.id
                 WHERE mj.mesa_id = ?
                 ORDER BY mj.posicao
             `, [mesa.id]);
