@@ -9,6 +9,7 @@ const cors = require('cors');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const dbOriginal = require('./db');
+const { verificarApoiador, limparCache: limparCacheApoia } = require('./apoia-helper');
 
 // Wrapper para logar todas as queries SQL
 const db = {
@@ -226,13 +227,31 @@ app.post('/api/auth/solicitar-codigo', betaBlockMiddleware, async (req, res) => 
             return res.status(400).json({ error: 'Email é obrigatório' });
         }
         
-        // Verificar se é admin
+        // Verificar se é admin (admins não precisam ser apoiadores)
         const [admin] = await db.query(
             'SELECT * FROM admins WHERE email = ? AND ativo = TRUE',
             [email]
         );
         
         const isAdmin = admin.length > 0;
+        
+        // Se não for admin, verificar se é apoiador ativo na APOIA.se
+        if (!isAdmin) {
+            const resultado = await verificarApoiador(email);
+            
+            if (resultado.fallback) {
+                // API indisponível, usar tabela emails_permitidos como fallback
+                const [emailCheck] = await db.query(
+                    'SELECT email FROM emails_permitidos WHERE email = ? AND ativo = TRUE',
+                    [email.toLowerCase()]
+                );
+                if (emailCheck.length === 0) {
+                    return res.status(403).json({ error: 'Email não autorizado. Você precisa ser apoiador ativo no APOIA.se para acessar o sistema.' });
+                }
+            } else if (!resultado.valido) {
+                return res.status(403).json({ error: 'Email não autorizado. Você precisa ser apoiador ativo no APOIA.se para acessar o sistema.' });
+            }
+        }
         
         // Gerar código de 6 dígitos
         const codigo = Math.floor(100000 + Math.random() * 900000).toString();
@@ -1053,7 +1072,8 @@ app.get('/api/precons/:id/comandantes', async (req, res) => {
     }
 });
 
-// ========== EMAILS PERMITIDOS ==========
+// ========== EMAILS PERMITIDOS (FALLBACK) ==========
+// Mantido como fallback caso a API APOIA.se esteja indisponível
 app.get('/api/emails-permitidos', async (req, res) => {
     try {
         const [emails] = await db.query(`
@@ -1092,6 +1112,29 @@ app.delete('/api/emails-permitidos/:email', authMiddleware, adminMiddleware, asy
     }
 });
 
+// ========== APOIA.SE ==========
+// Verificar se um email é apoiador ativo
+app.get('/api/apoia/verificar/:email', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { email } = req.params;
+        const resultado = await verificarApoiador(email);
+        res.json(resultado);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Limpar cache da APOIA.se
+app.post('/api/apoia/limpar-cache', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { email } = req.body;
+        limparCacheApoia(email);
+        res.json({ success: true, message: email ? `Cache limpo para ${email}` : 'Cache completo limpo' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // ========== INSCRIÇÕES ==========
 app.get('/api/inscricoes', betaBlockMiddleware, async (req, res) => {
     try {
@@ -1124,14 +1167,20 @@ app.post('/api/inscricoes', betaBlockMiddleware, async (req, res) => {
             campId = campAtivo[0].id;
         }
         
-        // Validar email
-        const [emailCheck] = await db.query(
-            'SELECT email FROM emails_permitidos WHERE email = ? AND ativo = TRUE',
-            [email.toLowerCase()]
-        );
+        // Validar email via APOIA.se
+        const resultado = await verificarApoiador(email);
         
-        if (emailCheck.length === 0) {
-            return res.status(403).json({ error: 'Email não autorizado' });
+        if (resultado.fallback) {
+            // API indisponível, usar tabela emails_permitidos como fallback
+            const [emailCheck] = await db.query(
+                'SELECT email FROM emails_permitidos WHERE email = ? AND ativo = TRUE',
+                [email.toLowerCase()]
+            );
+            if (emailCheck.length === 0) {
+                return res.status(403).json({ error: 'Email não autorizado. Você precisa ser apoiador ativo no APOIA.se para se inscrever.' });
+            }
+        } else if (!resultado.valido) {
+            return res.status(403).json({ error: 'Email não autorizado. Você precisa ser apoiador ativo no APOIA.se para se inscrever.' });
         }
         
         // Verificar se já está inscrito neste campeonato
@@ -1803,47 +1852,39 @@ app.get('/api/estatisticas/geral', async (req, res) => {
             ${campeonatoFilter}
         `, params);
         
-        // Se não há histórico, buscar dados das inscrições e mesas
-        let totalJogadores = parseInt(statsGerais[0].total_jogadores);
         let totalDecks = parseInt(statsGerais[0].total_decks);
         let totalPartidas = parseInt(statsGerais[0].total_partidas);
         let totalRodadas = parseInt(statsGerais[0].total_rodadas);
         
+        // Jogadores sempre vem das inscrições ativas
+        let queryJogadores = `
+            SELECT COUNT(DISTINCT i.id) as total_jogadores
+            FROM inscricoes i
+            WHERE i.ativo = TRUE
+        `;
+        let paramsJogadores = [];
+        if (campeonato_id) {
+            queryJogadores += ' AND i.campeonato_id = ?';
+            paramsJogadores = [campeonato_id];
+        }
+        const [statsJogadores] = await db.query(queryJogadores, paramsJogadores);
+        let totalJogadores = parseInt(statsJogadores[0].total_jogadores);
+        
         if (totalPartidas === 0) {
             console.log('   ⚠️  Sem histórico de partidas, buscando dados das inscrições...');
             
-            // Buscar dados das inscrições
-            let queryInscricoes = `
-                SELECT 
-                    COUNT(DISTINCT i.id) as total_jogadores,
-                    COUNT(DISTINCT i.deck_id) as total_decks
+            const [statsInscricoes] = await db.query(`
+                SELECT COUNT(DISTINCT i.deck_id) as total_decks
                 FROM inscricoes i
-                WHERE i.ativo = TRUE
-            `;
+                WHERE i.ativo = TRUE ${campeonato_id ? 'AND i.campeonato_id = ?' : ''}
+            `, campeonato_id ? [campeonato_id] : []);
             
-            let paramsInscricoes = [];
-            if (campeonato_id) {
-                queryInscricoes = `
-                    SELECT 
-                        COUNT(DISTINCT i.id) as total_jogadores,
-                        COUNT(DISTINCT i.deck_id) as total_decks
-                    FROM inscricoes i
-                    WHERE i.campeonato_id = ? AND i.ativo = TRUE
-                `;
-                paramsInscricoes = [campeonato_id];
-            }
-            
-            const [statsInscricoes] = await db.query(queryInscricoes, paramsInscricoes);
-            
-            totalJogadores = parseInt(statsInscricoes[0].total_jogadores);
             totalDecks = parseInt(statsInscricoes[0].total_decks);
             
-            // Buscar rodadas criadas
-            const rodadasFilter = campeonato_id ? 'WHERE r.campeonato_id = ?' : '';
             const [statsRodadas] = await db.query(`
                 SELECT COUNT(DISTINCT r.id) as total_rodadas
                 FROM rodadas r
-                ${rodadasFilter}
+                ${campeonato_id ? 'WHERE r.campeonato_id = ?' : ''}
             `, params);
             
             totalRodadas = parseInt(statsRodadas[0].total_rodadas);
