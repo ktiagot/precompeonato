@@ -260,14 +260,8 @@ app.post('/api/auth/solicitar-codigo', betaBlockMiddleware, async (req, res) => 
             const resultado = await verificarApoiador(email);
             
             if (resultado.fallback) {
-                // API indisponível, usar tabela emails_permitidos como fallback
-                const [emailCheck] = await db.query(
-                    'SELECT email FROM emails_permitidos WHERE email = ? AND ativo = TRUE',
-                    [email.toLowerCase()]
-                );
-                if (emailCheck.length === 0) {
-                    return res.status(403).json({ error: 'Email não autorizado. Você precisa ser apoiador ativo no APOIA.se para acessar o sistema.' });
-                }
+                // API indisponível — não conseguimos validar, bloquear por segurança
+                return res.status(503).json({ error: 'Sistema de verificação temporariamente indisponível. Tente novamente em alguns minutos.' });
             } else if (!resultado.valido) {
                 return res.status(403).json({ error: 'Email não autorizado. Você precisa ser apoiador ativo no APOIA.se para acessar o sistema.' });
             }
@@ -1112,42 +1106,42 @@ app.get('/api/precons/:id/comandantes', async (req, res) => {
     }
 });
 
-// ========== EMAILS PERMITIDOS (FALLBACK) ==========
-// Mantido como fallback caso a API APOIA.se esteja indisponível
-app.get('/api/emails-permitidos', async (req, res) => {
+// ========== APOIADORES (via API APOIA.se) ==========
+// Lista emails do sistema e verifica status na APOIA.se
+app.get('/api/emails-permitidos', authMiddleware, adminMiddleware, async (req, res) => {
     try {
+        // Buscar emails únicos do sistema (sessões + inscrições)
         const [emails] = await db.query(`
-            SELECT 
-                ep.email,
-                MAX(i.nome) as nome
-            FROM emails_permitidos ep
-            LEFT JOIN inscricoes i ON ep.email = i.email AND i.ativo = TRUE
-            WHERE ep.ativo = TRUE
-            GROUP BY ep.email
-            ORDER BY ep.email
+            SELECT DISTINCT email, nome FROM (
+                SELECT s.email, MAX(i.nome) as nome
+                FROM sessoes s
+                LEFT JOIN inscricoes i ON s.email = i.email AND i.ativo = TRUE
+                GROUP BY s.email
+                UNION
+                SELECT i.email, MAX(i.nome) as nome
+                FROM inscricoes i
+                WHERE i.ativo = TRUE
+                GROUP BY i.email
+            ) as todos
+            GROUP BY email
+            ORDER BY email
         `);
-        res.json(emails);
+        
+        // Verificar status de cada email na APOIA.se
+        const resultados = [];
+        for (const e of emails) {
+            const resultado = await verificarApoiador(e.email);
+            resultados.push({
+                email: e.email,
+                nome: e.nome,
+                apoiador_ativo: resultado.valido === true,
+                api_indisponivel: resultado.fallback === true
+            });
+        }
+        
+        res.json(resultados);
     } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.post('/api/emails-permitidos', async (req, res) => {
-    try {
-        const { email } = req.body;
-        await db.query('INSERT INTO emails_permitidos (email) VALUES (?)', [email.toLowerCase()]);
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.delete('/api/emails-permitidos/:email', authMiddleware, adminMiddleware, async (req, res) => {
-    try {
-        const { email } = req.params;
-        await db.query('UPDATE emails_permitidos SET ativo = FALSE WHERE email = ?', [email.toLowerCase()]);
-        res.json({ success: true });
-    } catch (error) {
+        console.error('Erro ao listar apoiadores:', error);
         res.status(500).json({ error: error.message });
     }
 });

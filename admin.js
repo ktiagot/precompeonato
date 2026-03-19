@@ -571,73 +571,44 @@ document.getElementById('preconForm').addEventListener('submit', async (e) => {
 // Carregar emails permitidos
 async function carregarEmails() {
     try {
-        const response = await fetch(`${API_URL}/emails-permitidos`);
+        const container = document.getElementById('emailsList');
+        container.innerHTML = '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Carregando apoiadores...</p>';
+        
+        const response = await authFetch(`${API_URL}/emails-permitidos`);
         const emails = await response.json();
         
-        const container = document.getElementById('emailsList');
-        
         if (emails.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: var(--gray-600); padding: 2rem;">Nenhum email cadastrado ainda.</p>';
+            container.innerHTML = '<p style="text-align: center; color: var(--gray-600); padding: 2rem;">Nenhum email encontrado no sistema.</p>';
             return;
         }
         
-        container.innerHTML = emails.map(e => `
+        container.innerHTML = emails.map(e => {
+            let statusBadge = '';
+            if (e.api_indisponivel) {
+                statusBadge = '<span class="badge badge-warning">API indisponível</span>';
+            } else if (e.apoiador_ativo) {
+                statusBadge = '<span class="badge badge-success">Apoiador ativo</span>';
+            } else {
+                statusBadge = '<span class="badge badge-danger" style="background: var(--danger); color: white;">Inativo</span>';
+            }
+            
+            return `
             <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; margin-bottom: 0.5rem;">
                 <div>
                     ${e.nome ? `<div style="font-weight: 600; margin-bottom: 0.25rem;">${e.nome}</div>` : ''}
                     <div style="font-family: monospace; font-size: 0.95rem; color: ${e.nome ? 'var(--gray-600)' : 'inherit'};">${e.email}</div>
                 </div>
-                <button onclick="removerEmail('${e.email}')" class="btn-secondary" style="border-color: var(--danger); color: var(--danger); padding: 0.5rem 1rem;">
-                    Remover
-                </button>
+                ${statusBadge}
             </div>
-        `).join('');
+        `;
+        }).join('');
     } catch (error) {
         console.error('Erro ao carregar emails:', error);
+        document.getElementById('emailsList').innerHTML = '<p style="text-align: center; color: var(--danger); padding: 2rem;">Erro ao carregar apoiadores.</p>';
     }
 }
 
 // Remover email
-window.removerEmail = async function(email) {
-    if (!confirm(`Tem certeza que deseja remover o email ${email}?`)) {
-        return;
-    }
-    
-    try {
-        const response = await authFetch(`${API_URL}/emails-permitidos/${encodeURIComponent(email)}`, {
-            method: 'DELETE'
-        });
-        
-        if (response.ok) {
-            showAlert('Email removido com sucesso!', 'success');
-            carregarEmails();
-        } else {
-            showAlert('Erro ao remover email', 'error');
-        }
-    } catch (error) {
-        showAlert('Erro ao conectar com o servidor', 'error');
-    }
-};
-
-document.getElementById('emailForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData);
-    
-    const response = await authFetch(`${API_URL}/emails-permitidos`, {
-        method: 'POST',
-        body: JSON.stringify(data)
-    });
-    
-    if (response.ok) {
-        showAlert('Email adicionado com sucesso!', 'success');
-        e.target.reset();
-        carregarEmails();
-    } else {
-        showAlert('Erro ao adicionar email', 'error');
-    }
-});
-
 // Inicializar
 checkAuth().then(authenticated => {
     if (authenticated) {

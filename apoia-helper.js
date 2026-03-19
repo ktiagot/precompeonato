@@ -33,7 +33,7 @@ async function verificarApoiador(email) {
 
     // Verificar se as credenciais estão configuradas
     if (!APOIA_API_KEY || !APOIA_API_SECRET) {
-        console.warn('⚠️  APOIA.se: Credenciais não configuradas. Usando fallback para emails_permitidos.');
+        console.warn('⚠️  APOIA.se: Credenciais não configuradas.');
         return { valido: false, erro: 'API APOIA.se não configurada', fallback: true };
     }
 
