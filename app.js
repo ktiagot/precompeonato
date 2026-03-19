@@ -12,10 +12,10 @@ async function verificarInscricoesAbertas() {
         
         // Buscar campeonato com status 'inscricoes'
         const campeonatoAberto = campeonatos.find(c => c.status === 'inscricoes');
+        const campeonatoEmAndamento = campeonatos.find(c => c.status === 'em_andamento');
         
+        // Se não tem inscrições abertas, mostrar mensagem adequada (independente de login)
         if (!campeonatoAberto) {
-            const campeonatoEmAndamento = campeonatos.find(c => c.status === 'em_andamento');
-            
             if (campeonatoEmAndamento) {
                 document.getElementById('inscricoesFechadas').style.display = 'block';
             } else {
@@ -24,7 +24,7 @@ async function verificarInscricoesAbertas() {
             return false;
         }
         
-        // Verificar se está logado
+        // Tem inscrições abertas — agora sim verificar login
         const token = localStorage.getItem('auth_token');
         if (!token) {
             document.getElementById('naoLogado').style.display = 'block';

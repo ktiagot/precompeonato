@@ -52,19 +52,10 @@
         console.log('🔒 Modo Beta: Links de autenticação, perfil, regras, minhas estatísticas e sobre o campeonato ocultos');
     }
 
-    // Função para esconder link de inscrição se usuário estiver logado
+    // Inscrição agora é separada do login — link sempre visível
     function gerenciarLinkInscricao() {
-        if (BETA_MODE) return; // No modo beta, já está oculto
-        
-        const token = localStorage.getItem('auth_token');
-        const inscricaoLinks = document.querySelectorAll('a[href="inscricao.html"]');
-        
-        if (token) {
-            // Esconder todos os links de inscrição
-            inscricaoLinks.forEach(link => {
-                link.style.display = 'none';
-            });
-        }
+        // Não esconder mais o link de inscrição para usuários logados
+        // A página de inscrição agora gerencia os estados (já inscrito, formulário, etc.)
     }
 
     // Função para aplicar tema
