@@ -160,7 +160,7 @@ function exibirMesas(mesas) {
                 
                 ${mesa.link_jogo ? `
                     <div style="margin-bottom: 1rem;">
-                        <a href="${mesa.link_jogo}" target="_blank" class="btn-secondary" style="display: inline-block; text-decoration: none;">
+                        <a href="${mesa.link_jogo.startsWith('http') ? mesa.link_jogo : 'https://' + mesa.link_jogo}" target="_blank" class="btn-secondary" style="display: inline-block; text-decoration: none;">
                             🎮 Entrar no Jogo
                         </a>
                     </div>
@@ -177,7 +177,7 @@ function exibirMesas(mesas) {
                                     ${j.deck_nome ? ` - ${j.deck_nome}` : ''}
                                     ${j.comandante_1 ? ` (${j.comandante_2 ? j.comandante_1 + ' + ' + j.comandante_2 : j.comandante_1})` : ''}
                                 </div>
-                                ${j.deck_link ? `<a href="${j.deck_link}" target="_blank" style="color: var(--primary); text-decoration: none; font-size: 0.8rem;">📋 Ver Deck</a>` : ''}
+                                ${j.deck_link ? `<a href="${j.deck_link.startsWith('http') ? j.deck_link : 'https://' + j.deck_link}" target="_blank" style="color: var(--primary); text-decoration: none; font-size: 0.8rem;">📋 Ver Deck</a>` : ''}
                             </div>
                         `).join('')}
                     </div>
@@ -219,10 +219,7 @@ function exibirMesas(mesas) {
 document.getElementById('btnCriarMesa').addEventListener('click', async () => {
     const autenticado = await verificarAuth(true);
     if (!autenticado) {
-        // Redirecionar para login
-        if (confirm('Você precisa fazer login para criar uma mesa. Ir para a página de login?')) {
-            window.location.href = 'login.html';
-        }
+        window.location.href = 'login.html';
         return;
     }
     
