@@ -400,8 +400,14 @@ async function sairDaMesa(mesaId) {
 
 // Adicionar link do jogo
 async function adicionarLinkJogo(mesaId) {
-    const link = prompt('Cole o link do jogo (SpellTable, Discord, etc.):');
+    let link = prompt('Cole o link do jogo (SpellTable, Discord, etc.):');
     if (!link) return;
+    
+    // Garantir que o link tenha protocolo
+    link = link.trim();
+    if (!link.startsWith('http://') && !link.startsWith('https://')) {
+        link = 'https://' + link;
+    }
     
     try {
         const response = await fetch(`${API_URL}/mesas-casuais/${mesaId}`, {
