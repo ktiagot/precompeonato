@@ -150,7 +150,14 @@ document.getElementById('buscaJogador').addEventListener('input', () => {
 });
 
 // Inicializar
-document.addEventListener('DOMContentLoaded', () => {
-    carregarCampeonatos();
+document.addEventListener('DOMContentLoaded', async () => {
+    await carregarCampeonatos();
+    
+    // Selecionar o campeonato mais recente por padrão
+    const select = document.getElementById('filtroCampeonato');
+    if (select.options.length > 1) {
+        select.value = select.options[select.options.length - 1].value;
+    }
+    
     carregarRanking();
 });

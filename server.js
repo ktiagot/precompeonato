@@ -822,7 +822,7 @@ app.put('/api/perfil', betaBlockMiddleware, authMiddleware, async (req, res) => 
 });
 
 // Ranking geral de jogadores
-app.get('/api/ranking', betaBlockMiddleware, async (req, res) => {
+app.get('/api/ranking', async (req, res) => {
     try {
         const { campeonato_id } = req.query;
         
