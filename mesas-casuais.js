@@ -171,10 +171,13 @@ function exibirMesas(mesas) {
                     <strong style="display: block; margin-bottom: 0.5rem; color: var(--dark);">Jogadores:</strong>
                     <div style="display: grid; gap: 0.5rem;">
                         ${mesa.jogadores.map(j => `
-                            <div style="padding: 0.5rem; background: var(--gray-50); border-radius: 0.5rem; font-size: 0.875rem;">
-                                <strong>${j.jogador_email}</strong>
-                                ${j.deck_nome ? ` - ${j.deck_nome}` : ''}
-                                ${j.comandante_1 ? ` (${j.comandante_2 ? j.comandante_1 + ' + ' + j.comandante_2 : j.comandante_1})` : ''}
+                            <div style="padding: 0.5rem; background: var(--gray-50); border-radius: 0.5rem; font-size: 0.875rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                                <div>
+                                    <strong>${j.jogador_email}</strong>
+                                    ${j.deck_nome ? ` - ${j.deck_nome}` : ''}
+                                    ${j.comandante_1 ? ` (${j.comandante_2 ? j.comandante_1 + ' + ' + j.comandante_2 : j.comandante_1})` : ''}
+                                </div>
+                                ${j.deck_link ? `<a href="${j.deck_link}" target="_blank" style="color: var(--primary); text-decoration: none; font-size: 0.8rem;">📋 Ver Deck</a>` : ''}
                             </div>
                         `).join('')}
                     </div>
@@ -300,6 +303,7 @@ document.getElementById('formCriarMesa').addEventListener('submit', async (e) =>
         data_hora: formData.get('data_hora'),
         max_jogadores: parseInt(formData.get('max_jogadores')),
         deck_precon_id: document.getElementById('deckIdCasual').value || null,
+        deck_link: formData.get('deck_link') || null,
         comandante_1: null,
         comandante_2: null
     };
@@ -340,6 +344,8 @@ async function entrarNaMesa(mesaId) {
     
     // Por enquanto, entrar sem deck
     try {
+        const deckLink = prompt('Cole o link do seu deck (opcional, ex: Moxfield):');
+        
         const response = await fetch(`${API_URL}/mesas-casuais/${mesaId}/join`, {
             method: 'POST',
             headers: {
@@ -349,7 +355,8 @@ async function entrarNaMesa(mesaId) {
             body: JSON.stringify({
                 deck_precon_id: null,
                 comandante_1: null,
-                comandante_2: null
+                comandante_2: null,
+                deck_link: deckLink || null
             })
         });
         

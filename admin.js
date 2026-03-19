@@ -40,7 +40,11 @@ async function checkAuth() {
         });
         
         if (!response.ok) {
-            localStorage.clear();
+            if (response.status === 401) {
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_email');
+                localStorage.removeItem('is_admin');
+            }
             window.location.href = 'login.html';
             return false;
         }
@@ -49,7 +53,7 @@ async function checkAuth() {
         document.getElementById('userEmail').textContent = user.email;
         return true;
     } catch (error) {
-        localStorage.clear();
+        // Não limpar localStorage em erro de rede
         window.location.href = 'login.html';
         return false;
     }

@@ -58,8 +58,8 @@
                     </div>
                 </div>
                 
-                <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap;">
-                    <a href="inscricao.html" class="btn-primary">Inscreva-se Agora</a>
+                <div id="heroBotoes" style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap;">
+                    <a href="inscricao.html" id="btnInscreva" class="btn-primary">Inscreva-se Agora</a>
                     <a href="rodadas.html" class="btn-secondary">Ver Rodadas</a>
                     <a href="estatisticas.html" class="btn-secondary">Ver Estatísticas</a>
                 </div>
@@ -222,7 +222,26 @@
         document.addEventListener('DOMContentLoaded', () => {
             iniciarTimer();
             carregarResumoRodadas();
+            verificarBotaoInscricao();
         });
+        
+        // Esconder botão de inscrição se campeonato em andamento
+        async function verificarBotaoInscricao() {
+            try {
+                const response = await fetch(`${API_URL}/campeonatos`);
+                const campeonatos = await response.json();
+                const campeonatoAtivo = campeonatos.find(c => c.status === 'inscricoes' || c.status === 'em_andamento');
+                
+                const btnInscreva = document.getElementById('btnInscreva');
+                if (btnInscreva) {
+                    if (!campeonatoAtivo || campeonatoAtivo.status === 'em_andamento') {
+                        btnInscreva.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao verificar status do campeonato:', error);
+            }
+        }
     </script>
 </body>
 </html>

@@ -484,6 +484,7 @@ app.get('/api/mesas-casuais', betaBlockMiddleware, async (req, res) => {
                     mj.jogador_email,
                     mj.comandante_1,
                     mj.comandante_2,
+                    mj.deck_link,
                     mj.joined_at,
                     p.nome as deck_nome
                 FROM mesa_casual_jogadores mj
@@ -505,7 +506,7 @@ app.get('/api/mesas-casuais', betaBlockMiddleware, async (req, res) => {
 // Criar mesa casual
 app.post('/api/mesas-casuais', betaBlockMiddleware, authMiddleware, async (req, res) => {
     try {
-        const { titulo, descricao, data_hora, max_jogadores, deck_precon_id, comandante_1, comandante_2 } = req.body;
+        const { titulo, descricao, data_hora, max_jogadores, deck_precon_id, deck_link, comandante_1, comandante_2 } = req.body;
         const criadorEmail = req.user.email;
         
         // Criar mesa
@@ -518,9 +519,9 @@ app.post('/api/mesas-casuais', betaBlockMiddleware, authMiddleware, async (req, 
         
         // Adicionar criador como primeiro jogador
         await db.query(`
-            INSERT INTO mesa_casual_jogadores (mesa_id, jogador_email, deck_precon_id, comandante_1, comandante_2)
-            VALUES (?, ?, ?, ?, ?)
-        `, [mesaId, criadorEmail, deck_precon_id, comandante_1, comandante_2]);
+            INSERT INTO mesa_casual_jogadores (mesa_id, jogador_email, deck_precon_id, comandante_1, comandante_2, deck_link)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `, [mesaId, criadorEmail, deck_precon_id, comandante_1, comandante_2, deck_link || null]);
         
         res.json({ 
             id: mesaId,
@@ -536,7 +537,7 @@ app.post('/api/mesas-casuais', betaBlockMiddleware, authMiddleware, async (req, 
 app.post('/api/mesas-casuais/:id/join', betaBlockMiddleware, authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
-        const { deck_precon_id, comandante_1, comandante_2 } = req.body;
+        const { deck_precon_id, comandante_1, comandante_2, deck_link } = req.body;
         const jogadorEmail = req.user.email;
         
         // Verificar se mesa existe e está aberta
@@ -574,9 +575,9 @@ app.post('/api/mesas-casuais/:id/join', betaBlockMiddleware, authMiddleware, asy
         
         // Adicionar jogador
         await db.query(`
-            INSERT INTO mesa_casual_jogadores (mesa_id, jogador_email, deck_precon_id, comandante_1, comandante_2)
-            VALUES (?, ?, ?, ?, ?)
-        `, [id, jogadorEmail, deck_precon_id, comandante_1, comandante_2]);
+            INSERT INTO mesa_casual_jogadores (mesa_id, jogador_email, deck_precon_id, comandante_1, comandante_2, deck_link)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `, [id, jogadorEmail, deck_precon_id, comandante_1, comandante_2, deck_link || null]);
         
         res.json({ message: 'Você entrou na mesa!' });
     } catch (error) {
@@ -826,38 +827,47 @@ app.get('/api/ranking', betaBlockMiddleware, async (req, res) => {
     try {
         const { campeonato_id } = req.query;
         
-        // Verificar se tabela perfis_usuarios existe
-        const [tables] = await db.query("SHOW TABLES LIKE 'perfis_usuarios'");
-        const temPerfis = tables.length > 0;
-        
-        let query = `
-            SELECT 
-                i.email,
-                ${temPerfis ? 'MAX(pu.nome)' : 'MAX(i.nome)'} as nome,
-                SUM(i.pontos) as pontos_totais,
-                SUM(i.vitorias) as vitorias_totais,
-                SUM(i.segundos_lugares) as segundos_totais,
-                COUNT(DISTINCT i.campeonato_id) as campeonatos_participados,
-                COUNT(DISTINCT h.id) as total_partidas,
-                ROUND(SUM(i.vitorias) * 100.0 / NULLIF(COUNT(DISTINCT h.id), 0), 1) as winrate
-            FROM inscricoes i
-            ${temPerfis ? 'LEFT JOIN perfis_usuarios pu ON i.email = pu.email' : ''}
-            LEFT JOIN historico_partidas h ON i.id = h.jogador_id
-            WHERE i.ativo = TRUE
-        `;
-        
-        const params = [];
+        let query, params = [];
         
         if (campeonato_id) {
-            query += ' AND i.campeonato_id = ?';
-            params.push(campeonato_id);
+            // Ranking de um campeonato específico - direto das inscrições
+            query = `
+                SELECT 
+                    i.email,
+                    i.nome,
+                    i.pontos as pontos_totais,
+                    i.vitorias as vitorias_totais,
+                    i.segundos_lugares as segundos_totais,
+                    1 as campeonatos_participados,
+                    i.deck_nome,
+                    ROUND(i.vitorias * 100.0 / NULLIF(
+                        (SELECT COUNT(DISTINCT mj.mesa_id) FROM mesa_jogadores mj 
+                         JOIN mesas m ON mj.mesa_id = m.id 
+                         WHERE mj.inscricao_id = i.id AND m.finalizada = TRUE), 0), 1) as winrate
+                FROM inscricoes i
+                WHERE i.campeonato_id = ? AND i.ativo = TRUE
+                ORDER BY i.pontos DESC, i.vitorias DESC, i.segundos_lugares DESC
+                LIMIT 100
+            `;
+            params = [campeonato_id];
+        } else {
+            // Ranking geral - somar de todos os campeonatos
+            query = `
+                SELECT 
+                    i.email,
+                    MAX(i.nome) as nome,
+                    SUM(i.pontos) as pontos_totais,
+                    SUM(i.vitorias) as vitorias_totais,
+                    SUM(i.segundos_lugares) as segundos_totais,
+                    COUNT(DISTINCT i.campeonato_id) as campeonatos_participados,
+                    NULL as winrate
+                FROM inscricoes i
+                WHERE i.ativo = TRUE
+                GROUP BY i.email
+                ORDER BY SUM(i.pontos) DESC, SUM(i.vitorias) DESC, SUM(i.segundos_lugares) DESC
+                LIMIT 100
+            `;
         }
-        
-        query += `
-            GROUP BY i.email
-            ORDER BY SUM(i.pontos) DESC, SUM(i.vitorias) DESC
-            LIMIT 100
-        `;
         
         const [ranking] = await db.query(query, params);
         
@@ -2304,9 +2314,45 @@ const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Servidor rodando na porta ${PORT}`);
     console.log(`📊 Database: ${process.env.DB_NAME || 'não configurado'}`);
     console.log(`📧 Email: ${process.env.EMAIL_USER ? 'configurado' : 'não configurado'}`);
-    console.log(`🧹 Limpeza automática ativada (a cada 5 minutos)`);
+    console.log(`🧹 Limpeza de mesas casuais agendada para 02:00 (UTC-3)`);
     console.log(`✅ Aplicação iniciada com sucesso!`);
 });
+
+// Limpeza automática de mesas casuais antigas (todo dia às 02:00 UTC-3 = 05:00 UTC)
+async function limparMesasCasuaisAntigas() {
+    try {
+        const [result] = await db.query(`
+            DELETE FROM mesas_casuais 
+            WHERE data_hora < NOW() - INTERVAL 1 DAY
+        `);
+        if (result.affectedRows > 0) {
+            console.log(`🧹 Limpeza: ${result.affectedRows} mesa(s) casual(is) antiga(s) removida(s)`);
+        }
+    } catch (error) {
+        console.error('❌ Erro na limpeza de mesas casuais:', error.message);
+    }
+}
+
+function agendarLimpezaMesasCasuais() {
+    const agora = new Date();
+    // Calcular próxima execução às 05:00 UTC (02:00 UTC-3)
+    const proxima = new Date(agora);
+    proxima.setUTCHours(5, 0, 0, 0);
+    if (proxima <= agora) {
+        proxima.setUTCDate(proxima.getUTCDate() + 1);
+    }
+    const delay = proxima.getTime() - agora.getTime();
+    
+    setTimeout(() => {
+        limparMesasCasuaisAntigas();
+        // Repetir a cada 24h
+        setInterval(limparMesasCasuaisAntigas, 24 * 60 * 60 * 1000);
+    }, delay);
+    
+    console.log(`⏰ Próxima limpeza de mesas casuais em ${Math.round(delay / 1000 / 60)} minutos`);
+}
+
+agendarLimpezaMesasCasuais();
 
 server.on('error', (error) => {
     console.error('❌ Erro ao iniciar servidor:', error);

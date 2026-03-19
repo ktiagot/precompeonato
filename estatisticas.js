@@ -253,7 +253,11 @@ async function carregarMinhasEstatisticas() {
         });
         
         if (!authResponse.ok) {
-            localStorage.clear();
+            if (authResponse.status === 401) {
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_email');
+                localStorage.removeItem('is_admin');
+            }
             naoLogado.style.display = 'block';
             semDados.style.display = 'none';
             statsContainer.style.display = 'none';
