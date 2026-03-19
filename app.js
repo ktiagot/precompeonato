@@ -413,9 +413,11 @@ function renderizarRodadas() {
                                         borderColor = '#ff9800';
                                     } else if (isVencedor) {
                                         badge = '<span style="color: var(--warning); font-weight: bold; margin-left: 0.5rem;" title="1º Lugar">🥇 1º</span>';
-                                        borderColor = 'var(--warning)';
+                                        backgroundColor = '#fef9e7';
+                                        borderColor = '#d4a017';
                                     } else if (isSegundo) {
                                         badge = '<span style="color: var(--gray-500); font-weight: bold; margin-left: 0.5rem;" title="2º Lugar">🥈 2º</span>';
+                                        backgroundColor = '#f3f4f6';
                                         borderColor = 'var(--gray-400)';
                                     }
                                     
