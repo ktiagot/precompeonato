@@ -1111,25 +1111,22 @@ app.get('/api/precons/:id/comandantes', async (req, res) => {
 app.get('/api/emails-permitidos', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         // Buscar emails únicos do sistema (sessões + inscrições)
-        const [emails] = await db.query(`
-            SELECT DISTINCT email, nome FROM (
-                SELECT s.email, MAX(i.nome) as nome
-                FROM sessoes s
-                LEFT JOIN inscricoes i ON s.email = i.email AND i.ativo = TRUE
-                GROUP BY s.email
-                UNION
-                SELECT i.email, MAX(i.nome) as nome
-                FROM inscricoes i
-                WHERE i.ativo = TRUE
-                GROUP BY i.email
-            ) as todos
-            GROUP BY email
-            ORDER BY email
-        `);
+        const [emailsSessoes] = await db.query(`SELECT DISTINCT email FROM sessoes`);
+        const [emailsInscricoes] = await db.query(`SELECT DISTINCT email, nome FROM inscricoes WHERE ativo = TRUE`);
+        
+        // Montar mapa de emails únicos com nome
+        const emailMap = new Map();
+        for (const e of emailsSessoes) {
+            emailMap.set(e.email, { email: e.email, nome: null });
+        }
+        for (const e of emailsInscricoes) {
+            const existing = emailMap.get(e.email);
+            emailMap.set(e.email, { email: e.email, nome: e.nome || (existing && existing.nome) });
+        }
         
         // Verificar status de cada email na APOIA.se
         const resultados = [];
-        for (const e of emails) {
+        for (const e of emailMap.values()) {
             const resultado = await verificarApoiador(e.email);
             resultados.push({
                 email: e.email,
@@ -1139,6 +1136,7 @@ app.get('/api/emails-permitidos', authMiddleware, adminMiddleware, async (req, r
             });
         }
         
+        resultados.sort((a, b) => a.email.localeCompare(b.email));
         res.json(resultados);
     } catch (error) {
         console.error('Erro ao listar apoiadores:', error);

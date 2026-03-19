@@ -575,6 +575,11 @@ async function carregarEmails() {
         container.innerHTML = '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Carregando apoiadores...</p>';
         
         const response = await authFetch(`${API_URL}/emails-permitidos`);
+        
+        if (!response.ok) {
+            throw new Error('Erro ao buscar apoiadores');
+        }
+        
         const emails = await response.json();
         
         if (emails.length === 0) {
