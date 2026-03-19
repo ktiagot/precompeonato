@@ -839,41 +839,51 @@ app.get('/api/ranking', betaBlockMiddleware, async (req, res) => {
         let query, params = [];
         
         if (campeonato_id) {
-            // Ranking de um campeonato específico - direto das inscrições
+            // Ranking de um campeonato específico - calcular tudo do historico_partidas
             query = `
                 SELECT 
                     i.email,
                     i.nome,
-                    i.pontos as pontos_totais,
-                    i.vitorias as vitorias_totais,
-                    i.segundos_lugares as segundos_totais,
-                    1 as campeonatos_participados,
                     i.deck_nome,
-                    ROUND(i.vitorias * 100.0 / NULLIF(
-                        (SELECT COUNT(DISTINCT mj.mesa_id) FROM mesa_jogadores mj 
-                         JOIN mesas m ON mj.mesa_id = m.id 
-                         WHERE mj.inscricao_id = i.id AND m.finalizada = TRUE), 0), 1) as winrate
+                    1 as campeonatos_participados,
+                    SUM(h.pontos_ganhos) as pontos_totais,
+                    SUM(CASE WHEN h.posicao_final = 1 AND h.ic_empate = 0 THEN 1 ELSE 0 END) as vitorias_totais,
+                    SUM(CASE WHEN h.posicao_final = 2 OR h.ic_empate = 1 THEN 1 ELSE 0 END) as segundos_totais,
+                    COUNT(h.id) as partidas_jogadas,
+                    ROUND(
+                        SUM(CASE WHEN h.posicao_final = 1 AND h.ic_empate = 0 THEN 1 ELSE 0 END) * 100.0 
+                        / NULLIF(COUNT(h.id), 0), 1
+                    ) as winrate
                 FROM inscricoes i
+                JOIN historico_partidas h ON h.jogador_id = i.id AND h.campeonato_id = ?
                 WHERE i.campeonato_id = ? AND i.ativo = TRUE
-                ORDER BY i.pontos DESC, i.vitorias DESC, i.segundos_lugares DESC
+                GROUP BY i.id, i.email, i.nome, i.deck_nome
+                ORDER BY SUM(h.pontos_ganhos) DESC, 
+                         SUM(CASE WHEN h.posicao_final = 1 AND h.ic_empate = 0 THEN 1 ELSE 0 END) DESC,
+                         SUM(CASE WHEN h.posicao_final = 2 OR h.ic_empate = 1 THEN 1 ELSE 0 END) DESC
                 LIMIT 100
             `;
-            params = [campeonato_id];
+            params = [campeonato_id, campeonato_id];
         } else {
-            // Ranking geral - somar de todos os campeonatos
+            // Ranking geral - somar de todos os campeonatos via historico_partidas
             query = `
                 SELECT 
                     i.email,
                     MAX(i.nome) as nome,
-                    SUM(i.pontos) as pontos_totais,
-                    SUM(i.vitorias) as vitorias_totais,
-                    SUM(i.segundos_lugares) as segundos_totais,
+                    SUM(h.pontos_ganhos) as pontos_totais,
+                    SUM(CASE WHEN h.posicao_final = 1 AND h.ic_empate = 0 THEN 1 ELSE 0 END) as vitorias_totais,
+                    SUM(CASE WHEN h.posicao_final = 2 OR h.ic_empate = 1 THEN 1 ELSE 0 END) as segundos_totais,
                     COUNT(DISTINCT i.campeonato_id) as campeonatos_participados,
-                    NULL as winrate
+                    ROUND(
+                        SUM(CASE WHEN h.posicao_final = 1 AND h.ic_empate = 0 THEN 1 ELSE 0 END) * 100.0 
+                        / NULLIF(COUNT(h.id), 0), 1
+                    ) as winrate
                 FROM inscricoes i
+                JOIN historico_partidas h ON h.jogador_id = i.id
                 WHERE i.ativo = TRUE
                 GROUP BY i.email
-                ORDER BY SUM(i.pontos) DESC, SUM(i.vitorias) DESC, SUM(i.segundos_lugares) DESC
+                ORDER BY SUM(h.pontos_ganhos) DESC, 
+                         SUM(CASE WHEN h.posicao_final = 1 AND h.ic_empate = 0 THEN 1 ELSE 0 END) DESC
                 LIMIT 100
             `;
         }
